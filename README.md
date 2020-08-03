@@ -1,0 +1,2 @@
+# NSL
+ Simple scripting language
