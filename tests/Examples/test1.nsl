@@ -1,0 +1,8 @@
+echo "Hello world!"
+
+getEntites "door" |> filter !{ getProp "open" } | setProp "open" false
+
+instEntity (makeDoor |{
+	setPos 12 15 9
+	setProp "open" false
+})
