@@ -1,0 +1,18 @@
+name: C# Version
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Build and run C# console test
+
+    env:
+      PROJECT_FOLDER: ./tests/NSLCSharpConsole
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup project
+      run: node ./setup cs_con
+    - name: Run the code
+      run: dotnet run
+      working-directory: ${{env.PROJECT_FOLDER}}

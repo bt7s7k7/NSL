@@ -28,10 +28,10 @@ function link(source, target) {
 }
 
 /**
- * @type {Record<number, {name : string, callback: () => void}}
+ * @type {Record<string, {name : string, callback: () => void}}
  */
 const projects = {
-    1: {
+    cs_con: {
         name: "C# Console Test",
         callback: () => {
             link("./src/NSLCSharp", "./tests/NSLCSharpConsole/NSLCSharp")
