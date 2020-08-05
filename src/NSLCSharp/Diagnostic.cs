@@ -7,5 +7,17 @@ namespace NSL
         public string text;
         public Position start;
         public Position end;
+
+        public Diagnostic(string text, Position start, Position end)
+        {
+            this.text = text;
+            this.start = start;
+            this.end = end;
+        }
+
+        public override string ToString()
+        {
+            return text + " at " + start.ToString();
+        }
     }
 }

@@ -1,8 +1,12 @@
 echo "Hello world!"
 
-getEntites "door" |> filter !{ getProp "open" } | setProp "open" false
+getEntities "door" |> filter !{ getProp "open" } | setProp "open" false
 
 instEntity (makeDoor |{
-	setPos 12 15 9
+	setPos 12 15.28 9
 	setProp "open" false
 })
+
+var $x (52)
+
+range 0 $x |> echo (concat "  " $x ": " (add $x 1))
