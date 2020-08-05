@@ -22,7 +22,7 @@ namespace NSLCSharpConsole
                 script = reader.ReadToEnd();
             }
 
-            var tokenizer = TokenizerFactory.Build();
+            var tokenizer = new NSLTokenizer();
             var tokenizationResult = tokenizer.Tokenize(script, Path.GetFullPath(FILE_PATH));
 
             Console.WriteLine("");

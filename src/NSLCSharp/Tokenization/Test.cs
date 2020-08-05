@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace NSL.Tokenization
 {
-    public static class TokenizerFactory
+    public class NSLTokenizer : Tokenizer<NSLTokenizer.TokenType, NSLTokenizer.StateType>
     {
         public enum TokenType
         {
@@ -32,9 +32,8 @@ namespace NSL.Tokenization
             String
         }
 
-        public static Tokenizer<TokenType, StateType> Build()
-        {
-            return new Tokenizer<TokenType, StateType>(new Dictionary<StateType, List<TokenDefinition<TokenType, StateType>>> {
+        public NSLTokenizer() : base(
+            new Dictionary<StateType, List<TokenDefinition<TokenType, StateType>>> {
                 { StateType.Default, new List<TokenDefinition<TokenType, StateType>>{
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\n", RegexOptions.Compiled),type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
@@ -107,7 +106,9 @@ namespace NSL.Tokenization
                         return true;
                     })
                 } }
-             });
-        }
+             }
+        )
+        { }
+
     }
 }
