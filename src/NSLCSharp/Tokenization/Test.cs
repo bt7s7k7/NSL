@@ -22,8 +22,7 @@ namespace NSL.Tokenization
             InlineStart,
             InlineEnd,
             StatementEnd,
-            Variable,
-            Declaration
+            VariableDecl
         }
 
         public enum StateType
@@ -39,9 +38,9 @@ namespace NSL.Tokenization
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^true", RegexOptions.Compiled),type: TokenType.Literal, processor: (token, state) => token.value = true),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^false", RegexOptions.Compiled),type: TokenType.Literal, processor: (token, state) => token.value = false),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^var", RegexOptions.Compiled),type: TokenType.Declaration),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^var", RegexOptions.Compiled),type: TokenType.VariableDecl),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Variable),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|>{", RegexOptions.Compiled),type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|{", RegexOptions.Compiled),type: TokenType.PipeStart),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|>", RegexOptions.Compiled),type: TokenType.PipeForEach),
@@ -75,10 +74,10 @@ namespace NSL.Tokenization
                             return false;
                         }
 
-                        for (var curr = state.code[state.index];; curr = state.code[state.index]) {
+                        for (var curr = state.code[state.position.index];; curr = state.code[state.position.index]) {
                             if (curr == '\\') {
                                 if (next()) return true;
-                                curr = state.code[state.index];
+                                curr = state.code[state.position.index];
                                 if (curr == 'n') builder.Append('\n');
                                 else if (curr == 't') builder.Append('\t');
                                 else if (curr == '"') builder.Append('"');

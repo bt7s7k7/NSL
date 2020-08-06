@@ -19,5 +19,10 @@ namespace NSL
         {
             return text + " at " + start.ToString();
         }
+
+        public void Log()
+        {
+            Logger.instance?.Source("/\\/").Message(text).Pos(start).End();
+        }
     }
 }

@@ -28,20 +28,18 @@ namespace NSL.Tokenization.General
             public Position position;
             public S state;
             public bool isEnd;
-            public int index;
 
             public TokenizationState(string code, string file)
             {
                 this.code = code;
                 this.state = (S)(object)0;
                 this.isEnd = false;
-                this.position = new Position(0, 0, file);
-                this.index = 0;
+                this.position = new Position(0, 0, file, 0, new Code(code));
             }
 
             public bool EatSpace()
             {
-                if (Char.IsWhiteSpace(code[index]))
+                if (Char.IsWhiteSpace(code[position.index]))
                 {
                     Next();
                     return true;
@@ -51,17 +49,21 @@ namespace NSL.Tokenization.General
 
             public bool Next()
             {
-                var curr = code[index];
+                var curr = code[position.index];
                 if (curr == '\n')
                 {
                     position.line++;
                     position.col = 0;
-                    index++;
+                    position.index++;
+                    if (position.index == code.Length - 1)
+                    {
+                        isEnd = true;
+                    }
                     return true;
                 }
                 position.col++;
-                index++;
-                if (index == code.Length - 1)
+                position.index++;
+                if (position.index == code.Length - 1)
                 {
                     isEnd = true;
                 }
@@ -70,7 +72,7 @@ namespace NSL.Tokenization.General
 
             public bool Match(Regex pattern, [NotNullWhen(true)] out string? text)
             {
-                var match = pattern.Match(code.Substring(index));
+                var match = pattern.Match(code.Substring(position.index));
                 if (match.Success)
                 {
                     text = match.Value;
@@ -109,6 +111,8 @@ namespace NSL.Tokenization.General
         public TokenizationResult Tokenize(string code, string file = "anon")
         {
             Logger.instance?.Source("TOK").Message($"Starting tokenization in '{file}'").End();
+
+            code = code + "\n";
 
             var state = new TokenizationState(code, file);
 
