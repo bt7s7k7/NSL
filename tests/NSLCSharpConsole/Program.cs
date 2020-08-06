@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.Json;
 using NSL;
+using NSL.Parsing;
 using NSL.Tokenization;
 using NSL.Tokenization.General;
 
@@ -13,7 +14,6 @@ namespace NSLCSharpConsole
 
         static void Main(string[] args)
         {
-            Logger.instance = new ConsoleLogger();
 
             string? script = null;
 
@@ -26,13 +26,17 @@ namespace NSLCSharpConsole
             var tokenizationResult = tokenizer.Tokenize(script, Path.GetFullPath(FILE_PATH));
 
             Console.WriteLine("");
+
+            Logger.instance = new ConsoleLogger();
+
+            var parsingResult = Parser.Parse(tokenizationResult);
+
             Console.WriteLine("");
 
-            foreach (var diagnostic in tokenizationResult.diagnostics)
+            foreach (var diagnostic in parsingResult.diagnostics)
             {
-                Logger.instance.Error().Message(diagnostic.ToString()).End();
+                diagnostic.Log();
             }
-
         }
     }
 
