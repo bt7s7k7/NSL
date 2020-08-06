@@ -37,6 +37,14 @@ namespace NSLCSharpConsole
             {
                 diagnostic.Log();
             }
+
+            Console.WriteLine("");
+            Console.WriteLine(parsingResult.rootNode.ToString());
+
+            if (parsingResult.diagnostics.Count > 0)
+            {
+                Environment.ExitCode = 1;
+            }
         }
     }
 
@@ -68,7 +76,8 @@ namespace NSLCSharpConsole
         public override Logger Pos(Position pos)
         {
             SetColor(ConsoleColor.DarkGray);
-            Console.Write("at " + pos.ToString() + " ");
+            Console.Write("at " + pos.ToString() + " " + "\n");
+            Console.Write(pos.GetDebugLineArrow(3));
             SetColor();
             return this;
         }

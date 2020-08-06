@@ -7,6 +7,8 @@ instEntity (makeDoor |{
 	setProp "open" false
 })
 
-var $x (52)
+var $x 52
 
-range 0 $x |> echo (concat "  " $x ": " (add $x 1))
+range 0 $x |>{
+    echo (concat "  " $x ": " (add $x 1))
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NSL.Parsing.Nodes;
 using NSL.Tokenization;
@@ -11,12 +12,15 @@ namespace NSL.Parsing
         {
             public List<Diagnostic> diagnostics;
 
-            public ParsingResult(List<Diagnostic> diagnostics)
+            public ParsingResult(List<Diagnostic> diagnostics, StatementRootNode rootNode)
             {
                 this.diagnostics = diagnostics;
+                this.rootNode = rootNode;
             }
 
             public List<ASTNode> statements = new List<ASTNode>();
+
+            public StatementRootNode rootNode;
         }
 
         public class ParsingState : ParsingResult
@@ -24,16 +28,24 @@ namespace NSL.Parsing
             public Stack<ASTNode> stack = new Stack<ASTNode>();
             protected List<Token<NSLTokenizer.TokenType>> tokens;
 
-            public ParsingState(List<Token<NSLTokenizer.TokenType>> tokens, List<Diagnostic> diagnostics) : base(diagnostics)
+            public ParsingState(List<Token<NSLTokenizer.TokenType>> tokens, List<Diagnostic> diagnostics) : base(diagnostics, new StatementRootNode(tokens[0].start, tokens[tokens.Count - 1].end))
             {
                 this.tokens = tokens;
+                this.stack.Push(rootNode);
             }
 
             public int index = 0;
 
             public Token<NSLTokenizer.TokenType>? Lookahead()
             {
-                return tokens[index];
+                try
+                {
+                    return tokens[index];
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    return null;
+                }
             }
 
             public Token<NSLTokenizer.TokenType>? Next()
@@ -45,12 +57,14 @@ namespace NSL.Parsing
 
             public void Push(ASTNode node)
             {
+                Logger.instance?.Source("PAR").Message("Pushed node").Name(node.GetType().Name).Pos(node.start).End();
                 stack.Push(node);
             }
 
             public void Pop()
             {
-                stack.Pop();
+                var node = stack.Pop();
+                Logger.instance?.Source("PAR").Message("Popped node").Name(node.GetType().Name).Object(node.GetAdditionalInfo()).Pos(node.start).End();
             }
 
             public ASTNode Top()
@@ -72,14 +86,13 @@ namespace NSL.Parsing
                 return state;
             }
 
-            state.Push(new StatementBlockNode(tokenized.tokens[0].start, tokenized.tokens[tokenized.tokens.Count - 1].end));
-
             while (state.Lookahead() != null)
             {
                 var index = state.index;
+                var stackSize = state.stack.Count;
                 var topNode = state.Top();
                 topNode.Execute(state);
-                if (index == state.index) throw new InternalNSLExcpetion($"Top node ({topNode.GetType().Name}) failed to increment state index at {state.Lookahead()?.start}");
+                if (index == state.index && stackSize == state.stack.Count) throw new InternalNSLExcpetion($"Top node ({topNode.GetType().Name}) failed to increment state or modify stack index at {state.Lookahead()?.start}");
             }
 
             if (state.stack.Count > 1)
