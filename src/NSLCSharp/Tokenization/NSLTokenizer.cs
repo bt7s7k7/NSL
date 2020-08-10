@@ -28,7 +28,8 @@ namespace NSL.Tokenization
         public enum StateType
         {
             Default,
-            String
+            String,
+            Comment
         }
 
         public NSLTokenizer() : base(
@@ -47,6 +48,7 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|", RegexOptions.Compiled),type: TokenType.Pipe),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^!{", RegexOptions.Compiled),type: TokenType.ActionStart),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^}", RegexOptions.Compiled),type: TokenType.BlockEnd),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^#", RegexOptions.Compiled),resultState: StateType.Comment),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\(", RegexOptions.Compiled),type: TokenType.InlineStart),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\)", RegexOptions.Compiled),type: TokenType.InlineEnd),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^;", RegexOptions.Compiled),type: TokenType.StatementEnd),
@@ -104,6 +106,10 @@ namespace NSL.Tokenization
 
                         return true;
                     })
+                } },
+                { StateType.Comment, new List<TokenDefinition<TokenType, StateType>> {
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\n", RegexOptions.Compiled),resultState: StateType.Default),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[^\n]+", RegexOptions.Compiled))
                 } }
              }
         )

@@ -36,11 +36,13 @@ namespace NSL.Tokenization.General
 
                     state.PushToken(token);
 
-                    if (resultState != null)
-                    {
-                        state.state = (S)resultState!;
-                    }
                 }
+
+                if (resultState != null)
+                {
+                    state.state = (S)resultState!;
+                }
+
                 return true;
             }
             else
