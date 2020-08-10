@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace NSLCSharpConsole
+namespace CSCommon
 {
     public class Timer
     {

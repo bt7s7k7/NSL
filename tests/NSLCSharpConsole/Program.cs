@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using CSCommon;
 using NSL;
 using NSL.Parsing;
 using NSL.Tokenization;
@@ -12,7 +13,7 @@ namespace NSLCSharpConsole
 {
     class Program
     {
-        private const string FILE_PATH = "../Examples/test1.nsl";
+        private const string FILE_PATH = "../Examples/echo.nsl";
 
         protected Timer tokenizerNewTime = new Timer();
         protected Timer tokenizationTime = new Timer();
@@ -146,81 +147,6 @@ namespace NSLCSharpConsole
             Console.WriteLine($"  newT : {tokenizerNewTime}");
             Console.WriteLine($"  T()  : {tokenizationTime}");
             Console.WriteLine($"  P()  : {parsingTime}");
-        }
-    }
-
-    class ConsoleLogger : Logger
-    {
-        public override Logger End()
-        {
-            Console.Write("\n");
-            SetColor();
-            return this;
-        }
-
-        public override Logger Message(string source)
-        {
-            SetColor();
-            Console.Write(source + " ");
-            SetColor();
-            return this;
-        }
-
-        public override Logger Name(string source)
-        {
-            SetColor(ConsoleColor.Green);
-            Console.Write(source + " ");
-            SetColor();
-            return this;
-        }
-
-        public override Logger Pos(Position pos)
-        {
-            SetColor(ConsoleColor.DarkGray);
-            Console.Write("at " + pos.ToString() + " " + "\n");
-            Console.Write(pos.GetDebugLineArrow(3));
-            SetColor();
-            return this;
-        }
-
-        public override Logger Source(string source)
-        {
-            SetColor();
-            Console.Write("[");
-            SetColor(ConsoleColor.Blue);
-            Console.Write(source);
-            SetColor();
-            Console.Write("] ");
-            SetColor();
-
-            return this;
-        }
-
-        public override Logger Error()
-        {
-            SetColor();
-            Console.Write("[");
-            SetColor(ConsoleColor.Red);
-            Console.Write("ERR!");
-            SetColor();
-            Console.Write("] ");
-            SetColor();
-
-            return this;
-        }
-
-        public override Logger Object(object? text)
-        {
-            SetColor(ConsoleColor.DarkYellow);
-            Console.Write(JsonSerializer.Serialize(text) + " ");
-            SetColor();
-
-            return this;
-        }
-
-        protected void SetColor(ConsoleColor color = ConsoleColor.White)
-        {
-            Console.ForegroundColor = color;
         }
     }
 }

@@ -11,7 +11,7 @@ namespace NSL.Types
             return name;
         }
 
-        protected TypeSymbol(string name)
+        public TypeSymbol(string name)
         {
             this.name = name;
         }
@@ -19,6 +19,6 @@ namespace NSL.Types
         public ArrayTypeSymbol ToArray() => new ArrayTypeSymbol(this);
         public OptionalTypeSymbol ToOptional() => new OptionalTypeSymbol(this);
 
-        public NSLValue Instantiate(object value) => new NSLValue(value, this);
+        public NSLValue Instantiate(object? value) => new NSLValue(value, this);
     }
 }
