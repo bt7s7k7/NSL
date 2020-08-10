@@ -2,7 +2,7 @@
 
 echo "Hello world!"
 
-getEntities "door" |> filter !{ getProp "open" } | setProp "open" false
+getEntities "door" | filter !{ getProp "open" } |> setProp "open" false
 
 instEntity (makeDoor |{
 	setPos 12 15.28 9

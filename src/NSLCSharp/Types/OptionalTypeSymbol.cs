@@ -9,5 +9,6 @@ namespace NSL.Types
             this.item = item;
         }
 
+        public TypeSymbol GetItemType() => item;
     }
 }
