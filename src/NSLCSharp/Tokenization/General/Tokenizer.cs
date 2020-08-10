@@ -86,6 +86,20 @@ namespace NSL.Tokenization.General
                 }
             }
 
+            public bool MatchString(string pattern)
+            {
+                for (int i = 0, len = pattern.Length; i < len; i++)
+                {
+                    if (code[position.index + i] != pattern[i])
+                    {
+                        return false;
+                    }
+                }
+
+                for (int i = 0, len = pattern.Length; i < len; i++) Next();
+                return true;
+            }
+
             public void PushToken(Token<T> token)
             {
                 tokens.Add(token);

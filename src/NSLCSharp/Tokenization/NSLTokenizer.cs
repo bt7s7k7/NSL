@@ -35,24 +35,25 @@ namespace NSL.Tokenization
         public NSLTokenizer() : base(
             new Dictionary<StateType, List<TokenDefinition<TokenType, StateType>>> {
                 { StateType.Default, new List<TokenDefinition<TokenType, StateType>>{
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\n", RegexOptions.Compiled),type: TokenType.StatementEnd),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^true", RegexOptions.Compiled),type: TokenType.Literal, processor: (token, state) => token.value = true),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^false", RegexOptions.Compiled),type: TokenType.Literal, processor: (token, state) => token.value = false),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^var", RegexOptions.Compiled),type: TokenType.VariableDecl),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = true),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = false),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "|>",type: TokenType.PipeForEach),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "|",type: TokenType.Pipe),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "!{",type: TokenType.ActionStart),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "}",type: TokenType.BlockEnd),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "#",resultState: StateType.Comment),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "(",type: TokenType.InlineStart),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: ")",type: TokenType.InlineEnd),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: ";",type: TokenType.StatementEnd),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\"",resultState: StateType.String, type: TokenType.Literal),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword, verifier: (c) => 'a' <= c && 'z' >= c),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|>{", RegexOptions.Compiled),type: TokenType.PipeForEachStart),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|{", RegexOptions.Compiled),type: TokenType.PipeStart),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|>", RegexOptions.Compiled),type: TokenType.PipeForEach),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\|", RegexOptions.Compiled),type: TokenType.Pipe),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^!{", RegexOptions.Compiled),type: TokenType.ActionStart),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^}", RegexOptions.Compiled),type: TokenType.BlockEnd),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^#", RegexOptions.Compiled),resultState: StateType.Comment),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\(", RegexOptions.Compiled),type: TokenType.InlineStart),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\)", RegexOptions.Compiled),type: TokenType.InlineEnd),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^;", RegexOptions.Compiled),type: TokenType.StatementEnd),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, processor: (token, state) => {
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c), processor: (token, state) => {
                         try {
                             var parsed = Double.Parse(token.content, NumberStyles.Float);
                             token.value = parsed;
@@ -61,7 +62,6 @@ namespace NSL.Tokenization
                             Logger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
                         }
                     }),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex("^\"", RegexOptions.Compiled),resultState: StateType.String, type: TokenType.Literal)
                 } },
                 { StateType.String, new List<TokenDefinition<TokenType, StateType>>{
                     new SimpleTokenDefinition<TokenType, StateType>((state) => {
@@ -108,8 +108,8 @@ namespace NSL.Tokenization
                     })
                 } },
                 { StateType.Comment, new List<TokenDefinition<TokenType, StateType>> {
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\n", RegexOptions.Compiled),resultState: StateType.Default),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[^\n]+", RegexOptions.Compiled))
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",resultState: StateType.Default),
+                    new RegexTokenDefinition<TokenType, StateType>()
                 } }
              }
         )

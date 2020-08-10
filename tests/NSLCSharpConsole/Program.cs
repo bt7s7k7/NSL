@@ -22,11 +22,23 @@ namespace NSLCSharpConsole
         static void Main(string[] args)
         {
             var runConfig = args.Length > 0 ? args[0] : null;
+
+            if (runConfig != null && runConfig[0] == '+')
+            {
+                runConfig = runConfig.Substring(1);
+                if (runConfig.Length == 0) runConfig = null;
+                Console.ReadLine();
+            }
+
             var program = new Program();
 
             if (runConfig == null)
             {
                 program.RunSimple();
+            }
+            else if (runConfig == "token")
+            {
+                program.RunTokens();
             }
             else if (runConfig == "time")
             {
@@ -81,6 +93,12 @@ namespace NSLCSharpConsole
             {
                 Environment.ExitCode = 1;
             }
+        }
+
+        public void RunTokens()
+        {
+            Run(true, true);
+            WriteTimes();
         }
 
         public void RunSimple()

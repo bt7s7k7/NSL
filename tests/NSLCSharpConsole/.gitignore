@@ -2,3 +2,5 @@
 /obj
 /NSLCSharp
 /.vscode
+/trace.nettrace
+/trace.speedscope.json
