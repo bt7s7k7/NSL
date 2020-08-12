@@ -31,7 +31,7 @@ namespace NSL.Parsing.Nodes
                 {
                     var id = pushedVariableId++;
 
-                    var varName = "$_" + id;
+                    var varName = "$__" + id;
                     var variableNode = new VariableNode(start, end);
                     variableNode.varName = varName;
 

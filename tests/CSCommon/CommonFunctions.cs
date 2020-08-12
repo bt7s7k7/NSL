@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using NSL;
@@ -9,8 +10,9 @@ namespace CSCommon
     {
         public static void RegisterCommonFunctions(FunctionRegistry registry)
         {
-            registry.Add(NSLFunction.MakeSimple("echo", new List<TypeSymbol> { PrimitiveTypes.stringType }, PrimitiveTypes.voidType, args =>
+            registry.Add(NSLFunction.MakeSimple("print", new List<TypeSymbol> { PrimitiveTypes.stringType }, PrimitiveTypes.voidType, argsEnum =>
             {
+                var args = argsEnum.ToArray();
                 if (args[0].GetValue() is string message)
                 {
                     Console.WriteLine(message);

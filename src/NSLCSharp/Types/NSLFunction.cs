@@ -4,33 +4,37 @@ namespace NSL.Types
 {
     public class NSLFunction
     {
-        protected Func<List<TypeSymbol>, Signature> signatureGenerator;
-        protected Func<List<NSLValue>, NSLValue> impl;
+        protected Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator;
+        protected Func<IEnumerable<NSLValue>, NSLValue> impl;
         protected string name;
 
         public struct Signature
         {
-            public List<TypeSymbol> arguments;
+            public IEnumerable<TypeSymbol> arguments;
             public TypeSymbol result;
+            public string name;
+
+            public override string ToString() => $"{name} {String.Join(' ', arguments)} : {result}";
         }
 
-        public Signature GetSignature(List<TypeSymbol> providedArguments) => signatureGenerator(providedArguments);
+        public Signature GetSignature(IEnumerable<TypeSymbol?> providedArguments) => signatureGenerator(providedArguments);
 
-        public NSLValue Invoke(List<NSLValue> arguments) => impl(arguments);
+        public NSLValue Invoke(IEnumerable<NSLValue> arguments) => impl(arguments);
 
-        public NSLFunction(string name, Func<List<TypeSymbol>, Signature> signatureGenerator, Func<List<NSLValue>, NSLValue> impl)
+        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<NSLValue>, NSLValue> impl)
         {
             this.signatureGenerator = signatureGenerator;
             this.impl = impl;
             this.name = name;
         }
 
-        public static NSLFunction MakeSimple(string name, List<TypeSymbol> arguments, TypeSymbol result, Func<List<NSLValue>, NSLValue> impl) => new NSLFunction(
+        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, NSLValue> impl) => new NSLFunction(
             name,
             _ => new Signature
             {
                 arguments = arguments,
-                result = result
+                result = result,
+                name = name
             },
             impl
         );

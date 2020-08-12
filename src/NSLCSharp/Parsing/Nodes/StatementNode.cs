@@ -134,7 +134,7 @@ namespace NSL.Parsing.Nodes
                 distNode.AddChild(this);
                 distNode.AddChild(distBlock);
 
-                distBlock.pushedArgument = new StatementNode("$_f", next.start, next.end);
+                distBlock.pushedArgument = new StatementNode("$_a", next.start, next.end);
             }
             else if (next.type == terminator)
             {

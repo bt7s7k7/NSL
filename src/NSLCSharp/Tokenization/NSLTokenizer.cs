@@ -1,4 +1,5 @@
 using NSL.Tokenization.General;
+using NSL.Types;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -37,8 +38,8 @@ namespace NSL.Tokenization
                 { StateType.Default, new List<TokenDefinition<TokenType, StateType>>{
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = true),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = false),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(false)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),
@@ -56,7 +57,7 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c), processor: (token, state) => {
                         try {
                             var parsed = Double.Parse(token.content, NumberStyles.Float);
-                            token.value = parsed;
+                            token.value = PrimitiveTypes.numberType.Instantiate(parsed);
                         } catch (FormatException err) {
                             state.diagnostics.Add(new Diagnostic($"Invalid number format: {err.Message}", token.start, token.end));
                             Logger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
@@ -96,7 +97,7 @@ namespace NSL.Tokenization
                             if (next()) return true;
                         }
 
-                        token.value = builder.ToString();
+                        token.value = PrimitiveTypes.stringType.Instantiate(builder.ToString());
                         token.end = state.position;
 
                         state.state = StateType.Default;
