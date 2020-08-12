@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Security.AccessControl;
 using System;
 using System.Linq;
@@ -156,6 +157,10 @@ namespace NSL.Executable
                         lastEmission = visitStatement(statementNode, innerContext);
                         lastEmission.EmitTo(result);
                     }
+                    else if (node is ForEachNode forEachNode)
+                    {
+                        visitForEachStatement(forEachNode, innerContext).EmitTo(result);
+                    }
                     else
                     {
                         throw new InternalNSLExcpetion($"Unexpected {node.GetType()} in statement root node children");
@@ -187,6 +192,7 @@ namespace NSL.Executable
                     var emission = new Emission(makeVarName(), node);
                     emission.type = PrimitiveTypes.voidType;
                     emission.Add(new DefInstruction(node.start, node.end, emission.varName, PrimitiveTypes.voidType, null));
+                    state!.diagnostics.Add(new Diagnostic($"Function '{node.name}' not found", node.start, node.end));
                     return emission;
                 }
                 else
@@ -208,14 +214,34 @@ namespace NSL.Executable
                         }
                         else if (child is StatementNode statement)
                         {
-                            var statementEmission = visitStatement(statement, innerContext);
-                            if (statementEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
-                            var wrapperEmission = new Emission(statementEmission.varName, statementEmission.node);
-                            wrapperEmission.Add(new DefInstruction(statementEmission.node.start, statementEmission.node.end, statementEmission.varName, statementEmission.type, null));
-                            wrapperEmission.type = statementEmission.type;
+                            if (statement.name[0] != '$')
+                            {
+                                var statementEmission = visitStatement(statement, innerContext);
+                                if (statementEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
+                                var wrapperEmission = new Emission(statementEmission.varName, statementEmission.node);
+                                wrapperEmission.Add(new DefInstruction(statementEmission.node.start, statementEmission.node.end, statementEmission.varName, statementEmission.type, null));
+                                wrapperEmission.type = statementEmission.type;
 
-                            statementEmission.EmitTo(wrapperEmission);
-                            arguments.Add(wrapperEmission);
+                                statementEmission.EmitTo(wrapperEmission);
+                                arguments.Add(wrapperEmission);
+                            }
+                            else
+                            {
+                                var varType = context.scope.Get(statement.name);
+                                var statementEmission = new Emission(statement.name, statement);
+
+                                if (varType != null)
+                                {
+                                    statementEmission.type = varType;
+                                }
+                                else
+                                {
+                                    state!.diagnostics.Add(new Diagnostic($"Failed to find variable {statement.name}", statement.start, statement.end));
+                                    statementEmission.type = PrimitiveTypes.voidType;
+                                }
+
+                                arguments.Add(statementEmission);
+                            }
                         }
                         else if (child is StatementRootNode rootNode)
                         {
@@ -238,7 +264,7 @@ namespace NSL.Executable
 
                     if (providedArgs.Length < wantedArgs.Length)
                     {
-                        state.diagnostics.Add(new Diagnostic($"Wrong argument count for '{signature}', expected: '{wantedArgs.Length}', got: '{providedArgs.Length}'", node.start, node.end));
+                        state!.diagnostics.Add(new Diagnostic($"Wrong argument count for '{signature}', expected: '{wantedArgs.Length}', got: '{providedArgs.Length}'", node.start, node.end));
                     }
                     else
                     {
@@ -254,7 +280,7 @@ namespace NSL.Executable
                             }
                             else
                             {
-                                state.diagnostics.Add(new Diagnostic($"Wrong argument type for '{signature}', expected: '{wanted}', got: '{provided}'", argumentEmission.node.start, argumentEmission.node.end));
+                                state!.diagnostics.Add(new Diagnostic($"Wrong argument type for '{signature}', expected: '{wanted}', got: '{provided}'", argumentEmission.node.start, argumentEmission.node.end));
                             }
                         }
                     }
@@ -267,6 +293,63 @@ namespace NSL.Executable
 
                     return emission;
                 }
+            }
+
+            (Emission, Emission) makeAction(StatementRootNode blockNode, Context context)
+            {
+                var result = new Emission(makeVarName(), blockNode);
+
+                result.Add(new ActionInstruction(parsingResult.rootNode.start, parsingResult.rootNode.end, result.varName));
+
+                var blockEmission = visitBlock(blockNode, context);
+
+                blockEmission.EmitTo(result);
+
+                result.Add(new EndInstruction(parsingResult.rootNode.end, parsingResult.rootNode.end));
+
+                return (result, blockEmission);
+            }
+
+            Emission visitForEachStatement(ForEachNode node, Context context)
+            {
+                var innerContext = context.UpdateScope(globalScopeId++);
+                var sourceNode = node.children[0] as StatementNode;
+                var targetNode = node.children[1];
+
+                var sourceEmission = visitStatement(sourceNode!, innerContext);
+                if (sourceEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
+                if (sourceEmission.type is ArrayTypeSymbol arrayType)
+                {
+                    var result = new Emission(sourceEmission.varName, sourceEmission.node);
+                    result.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId));
+
+                    result.Add(new DefInstruction(sourceEmission.node.start, sourceEmission.node.end, sourceEmission.varName, sourceEmission.type, null));
+                    TypeSymbol itemType = arrayType.GetItemType();
+                    result.Add(new DefInstruction(sourceEmission.node.start, sourceEmission.node.end, "$_a", itemType, null));
+                    innerContext.scope.Add("$_a", itemType);
+                    sourceEmission.EmitTo(result);
+
+                    if (targetNode is StatementNode statementTargetNode)
+                    {
+                        var block = new StatementBlockNode(false, statementTargetNode.start, statementTargetNode.end);
+                        block.AddChild(statementTargetNode);
+
+                        var (actionEmission, _) = makeAction(block, innerContext);
+
+                        actionEmission.EmitTo(result);
+
+                        result.Add(new ForEachInvokeInstruction(node.start, node.end, sourceEmission.varName, "$_a", actionEmission.varName));
+                    }
+                    else
+                    {
+                        throw new InternalNSLExcpetion($"Unexpected {targetNode.GetType()} in target slot (1) in for each node");
+                    }
+
+                    result.Add(new PopInstruction(node.end, node.end));
+
+                    return result;
+                }
+                else throw new InternalNSLExcpetion("Source emission type in for each node is not an array");
             }
 
             state.Add(new ActionInstruction(parsingResult.rootNode.start, parsingResult.rootNode.end, makeVarName()));

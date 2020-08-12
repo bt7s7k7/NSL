@@ -1,1 +1,1 @@
-print (concat "Value = " (toString 14))
+getNumbers |> toString | print

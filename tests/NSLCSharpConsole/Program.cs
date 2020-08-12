@@ -94,7 +94,8 @@ namespace NSLCSharpConsole
             }
 
             Console.WriteLine("");
-            // Console.WriteLine(parsingResult.rootNode.ToString());
+            Console.WriteLine(parsingResult.rootNode.ToString());
+            Console.WriteLine("");
             var indent = 0;
             foreach (var inst in emittingResult.instructions)
             {

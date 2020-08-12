@@ -19,6 +19,13 @@ namespace CSCommon
                 }
                 return PrimitiveTypes.voidType.Instantiate(null);
             }));
+
+            registry.Add(NSLFunction.MakeSimple(
+                "getNumbers",
+                new List<TypeSymbol> { },
+                PrimitiveTypes.numberType.ToArray(),
+                argsEnum => PrimitiveTypes.numberType.ToArray().Instantiate(new double[] { 5, 20, 8, 14, 5 })
+            ));
         }
     }
 }

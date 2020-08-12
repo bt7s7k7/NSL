@@ -80,6 +80,8 @@ namespace NSL.Parsing.Nodes
                         var statementNode = new StatementNode(next.content, next.start, next.end);
                         state.Push(statementNode);
                         forEachNode.AddChild(statementNode);
+
+                        statementNode.AddChild(new StatementNode("$_a", next.start, next.end));
                     }
                     else
                     {

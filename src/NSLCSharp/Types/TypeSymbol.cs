@@ -1,3 +1,5 @@
+using System;
+
 namespace NSL.Types
 {
     public class TypeSymbol
@@ -20,5 +22,15 @@ namespace NSL.Types
         public OptionalTypeSymbol ToOptional() => new OptionalTypeSymbol(this);
 
         public NSLValue Instantiate(object? value) => new NSLValue(value, this);
+
+        override public bool Equals(object? obj)
+        {
+            return obj != null && obj is TypeSymbol symbol && symbol.ToString() == this.ToString();
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(name);
+        }
     }
 }
