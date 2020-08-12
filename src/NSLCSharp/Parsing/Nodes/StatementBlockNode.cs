@@ -24,6 +24,12 @@ namespace NSL.Parsing.Nodes
             if (child is StatementNode statement)
             {
                 statement.terminator = GetTerminationTokenType();
+
+                if (pushedVarName != null && statement.children.Count == 0)
+                {
+                    var varDeref = new StatementNode(pushedVarName, child.start, child.end);
+                    child.children.Insert(0, varDeref);
+                }
             }
             base.AddChild(child);
         }
@@ -32,15 +38,6 @@ namespace NSL.Parsing.Nodes
         {
             if (next.type == GetTerminationTokenType())
             {
-                if (pushedVarName != null)
-                {
-                    foreach (var child in children)
-                    {
-                        var varDeref = new StatementNode(pushedVarName, child.start, child.end);
-                        child.children.Insert(0, varDeref);
-                    }
-                }
-
                 state.Pop();
             }
             else

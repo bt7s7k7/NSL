@@ -344,6 +344,14 @@ namespace NSL.Executable
 
                         result.Add(new ForEachInvokeInstruction(node.start, node.end, sourceEmission.varName, "$_a", actionEmission.varName));
                     }
+                    else if (targetNode is StatementBlockNode statementBlockTargetNode)
+                    {
+                        var (actionEmission, _) = makeAction(statementBlockTargetNode, innerContext);
+
+                        actionEmission.EmitTo(result);
+
+                        result.Add(new ForEachInvokeInstruction(node.start, node.end, sourceEmission.varName, "$_a", actionEmission.varName));
+                    }
                     else
                     {
                         throw new InternalNSLExcpetion($"Unexpected {targetNode.GetType()} in target slot (1) in for each node");

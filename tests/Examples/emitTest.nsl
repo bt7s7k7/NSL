@@ -1,5 +1,3 @@
-echo "hi" |{
-    print
-    print 
-    print
+getNumbers |>{
+    toString | print
 }
