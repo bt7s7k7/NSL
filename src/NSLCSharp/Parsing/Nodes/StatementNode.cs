@@ -103,13 +103,13 @@ namespace NSL.Parsing.Nodes
                 var actionNode = new ActionNode(next.start, next.end);
                 AddChild(actionNode);
 
-                var actionBlock = new StatementBlockNode(false, next.start, next.end);
+                var actionBlock = new StatementBlockNode(false, false, next.start, next.end);
                 state.Push(actionBlock);
                 actionNode.AddChild(actionBlock);
             }
             else if (next.type == TokenType.InlineStart)
             {
-                var block = new StatementBlockNode(true, next.start, next.end);
+                var block = new StatementBlockNode(true, false, next.start, next.end);
                 state.Push(block);
                 AddChild(block);
             }
@@ -118,11 +118,14 @@ namespace NSL.Parsing.Nodes
                 var prevParent = parent;
                 prevParent.RemoveChild(this);
 
-                var distBlock = new StatementBlockNode(false, next.start, next.end);
-                state.Push(distBlock);
-                prevParent.AddChild(distBlock);
+                var blockNode = new StatementBlockNode(false, true, next.start, next.end);
+                state.Push(blockNode);
 
-                distBlock.pushedArgument = this;
+                var distNode = new DistributionNode(next.start, next.end);
+                distNode.AddChild(this);
+                distNode.AddChild(blockNode);
+
+                prevParent.AddChild(distNode);
             }
             else if (next.type == TokenType.PipeForEachStart)
             {
@@ -131,12 +134,11 @@ namespace NSL.Parsing.Nodes
                 prevParent.RemoveChild(this);
                 prevParent.AddChild(distNode);
 
-                var distBlock = new StatementBlockNode(false, next.start, next.end);
+                var distBlock = new StatementBlockNode(false, false, next.start, next.end);
+                distBlock.pushedVarName = "$_a";
                 state.Push(distBlock);
                 distNode.AddChild(this);
                 distNode.AddChild(distBlock);
-
-                distBlock.pushedArgument = new StatementNode("$_a", next.start, next.end);
             }
             else if (next.type == terminator)
             {

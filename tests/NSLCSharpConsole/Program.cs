@@ -75,10 +75,13 @@ namespace NSLCSharpConsole
             parsingTime.End();
 
             Console.WriteLine("");
+            Console.WriteLine(parsingResult.rootNode.ToString());
+            Console.WriteLine("");
 
             if (emittingLogger) Logger.instance = new ConsoleLogger();
             var funcs = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(funcs);
+
 
             emittingTime.Start();
             var emittingResult = Emitter.Emit(parsingResult, funcs);
@@ -93,8 +96,6 @@ namespace NSLCSharpConsole
                 diagnostic.Log();
             }
 
-            Console.WriteLine("");
-            Console.WriteLine(parsingResult.rootNode.ToString());
             Console.WriteLine("");
             var indent = 0;
             foreach (var inst in emittingResult.instructions)

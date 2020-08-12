@@ -11,7 +11,7 @@ namespace NSL.Executable.Instructions
         protected IEnumerable<string> arguments;
 
         override public int GetIndentDiff() => 0;
-        override public string ToString() => $"invoke {retVarName} {funcName} [{String.Join(',', arguments)}]";
+        override public string ToString() => $"invoke {retVarName} = {funcName} [{String.Join(',', arguments)}]";
 
         public InvokeInstruction(Position start, Position end, string? retVarName, string funcName, IEnumerable<string> arguments) : base(start, end)
         {
