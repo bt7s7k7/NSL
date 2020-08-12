@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.Security.AccessControl;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -149,6 +147,7 @@ namespace NSL.Executable
                 var innerContext = context.UpdateScope(globalScopeId++);
                 result.Add(new PushInstruction(rootNode.start, rootNode.start, (int)innerContext.scopeId!, context.scopeId));
                 Emission? lastEmission = null;
+                bool lastEmissionDefined = false;
 
                 foreach (var node in rootNode.children)
                 {
@@ -156,14 +155,19 @@ namespace NSL.Executable
                     {
                         lastEmission = visitStatement(statementNode, innerContext);
                         lastEmission.EmitTo(result);
+                        lastEmissionDefined = false;
                     }
                     else if (node is ForEachNode forEachNode)
                     {
-                        visitForEachStatement(forEachNode, innerContext).EmitTo(result);
+                        lastEmission = visitForEachStatement(forEachNode, innerContext);
+                        lastEmission.EmitTo(result);
+                        lastEmissionDefined = true;
                     }
                     else if (node is DistributionNode distributionNode)
                     {
-                        visitDistributionNode(distributionNode, innerContext).EmitTo(result);
+                        lastEmission = visitDistributionNode(distributionNode, innerContext);
+                        lastEmission.EmitTo(result);
+                        lastEmissionDefined = true;
                     }
                     else
                     {
@@ -173,8 +177,17 @@ namespace NSL.Executable
 
                 if (lastEmission != null)
                 {
-                    result.varName = lastEmission.varName;
-                    result.type = lastEmission.type;
+                    if (lastEmissionDefined)
+                    {
+                        result.varName = makeVarName();
+                        result.type = lastEmission.type;
+                        result.Add(new InvokeInstruction(rootNode.start, rootNode.end, result.varName, lastEmission.varName, new string[] { }));
+                    }
+                    else
+                    {
+                        result.varName = lastEmission.varName;
+                        result.type = lastEmission.type;
+                    }
                 }
                 else
                 {
@@ -325,6 +338,7 @@ namespace NSL.Executable
                 if (sourceEmission.type is ArrayTypeSymbol arrayType)
                 {
                     var result = new Emission(sourceEmission.varName, sourceEmission.node);
+                    result.type = sourceEmission.type;
                     result.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId));
 
                     result.Add(new DefInstruction(sourceEmission.node.start, sourceEmission.node.end, sourceEmission.varName, sourceEmission.type, null));
@@ -366,6 +380,7 @@ namespace NSL.Executable
                     state!.diagnostics.Add(new Diagnostic("Foreach source type is not an array", node.start, node.end));
                     var emission = new Emission(makeVarName(), node);
                     emission.type = PrimitiveTypes.voidType;
+                    emission.Add(new DefInstruction(node.start, node.end, emission.varName, emission.type, null));
                     return emission;
                 }
             }
@@ -380,6 +395,7 @@ namespace NSL.Executable
                 if (sourceEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
 
                 var result = new Emission(sourceEmission.varName, sourceEmission.node);
+                result.type = sourceEmission.type;
                 result.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId));
 
                 result.Add(new DefInstruction(node.start, node.end, sourceEmission.varName, sourceEmission.type, null));
