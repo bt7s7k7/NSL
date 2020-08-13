@@ -1,3 +1,4 @@
-toString (echo 5 |{
-    toString | print
-})
+var $a "Hello"
+var $b "world"
+
+echo (concat $a " " $b)

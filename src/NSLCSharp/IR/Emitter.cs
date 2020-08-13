@@ -151,7 +151,22 @@ namespace NSL.Executable
 
                 foreach (var node in rootNode.children)
                 {
-                    if (node is StatementNode statementNode)
+                    if (node is VariableNode variableNode)
+                    {
+                        var varName = variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null");
+                        var wrapperEmission = new Emission(varName, variableNode);
+
+                        lastEmission = visitStatement(variableNode, innerContext);
+
+                        wrapperEmission.Add(new DefInstruction(variableNode.start, variableNode.end, varName, lastEmission.type!, null));
+                        innerContext.scope.Add(varName, lastEmission.type!);
+                        lastEmission.EmitTo(wrapperEmission);
+
+                        lastEmission = wrapperEmission;
+                        lastEmission.EmitTo(result);
+                        lastEmissionDefined = true;
+                    }
+                    else if (node is StatementNode statementNode)
                     {
                         lastEmission = visitStatement(statementNode, innerContext);
                         lastEmission.EmitTo(result);
@@ -202,7 +217,15 @@ namespace NSL.Executable
 
             Emission visitStatement(StatementNode node, Context context)
             {
-                var function = functions.Find(node.name);
+                var variableNode = node as VariableNode;
+                var function = variableNode != null
+                    ? FunctionRegistry.MakeVariableDefinitionFunction(variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null"))
+                    : functions.Find(node.name);
+
+                if (variableNode != null)
+                {
+                    node = (StatementNode)variableNode.children[0];
+                }
 
                 if (function == null)
                 {
@@ -215,7 +238,7 @@ namespace NSL.Executable
                 else
                 {
                     var arguments = new List<Emission>();
-                    var emission = new Emission(makeVarName(), node);
+                    var emission = new Emission(variableNode != null ? function.GetName() : makeVarName(), node);
 
                     var innerContext = context.UpdateScope(globalScopeId++);
                     emission.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId));
@@ -271,7 +294,7 @@ namespace NSL.Executable
                             rootEmission.EmitTo(wrapperEmission);
                             arguments.Add(wrapperEmission);
                         }
-                        else throw new InternalNSLExcpetion($"Unexpected {node.GetType()} in statement node children");
+                        else throw new InternalNSLExcpetion($"Unexpected {child.GetType()} in statement node children");
                     }
 
                     var providedArgs = arguments.Select(v => v.type).ToArray();

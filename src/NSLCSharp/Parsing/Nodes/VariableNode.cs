@@ -28,5 +28,7 @@ namespace NSL.Parsing.Nodes
             }
         }
 
+        override public string GetAdditionalInfo() => varName ?? "[null]";
+
     }
 }

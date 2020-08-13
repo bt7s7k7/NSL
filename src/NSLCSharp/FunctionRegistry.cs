@@ -48,5 +48,22 @@ namespace NSL
 
             return registry;
         }
+
+        public static NSLFunction MakeVariableDefinitionFunction(string varName)
+        {
+            return new NSLFunction(varName, argsEnum =>
+            {
+                var type = argsEnum.First() ?? PrimitiveTypes.voidType;
+                return new NSLFunction.Signature
+                {
+                    name = varName,
+                    arguments = new TypeSymbol[] { type },
+                    result = type
+                };
+            }, argsEnum =>
+            {
+                return argsEnum.First();
+            });
+        }
     }
 }
