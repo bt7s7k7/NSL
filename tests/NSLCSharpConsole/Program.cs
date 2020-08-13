@@ -1,22 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
+using CSCommon;
 using NSL;
+using NSL.Executable;
 using NSL.Parsing;
 using NSL.Tokenization;
-using NSL.Tokenization.General;
 
 namespace NSLCSharpConsole
 {
     class Program
     {
-        private const string FILE_PATH = "../Examples/test1.nsl";
+        private const string FILE_PATH = "../Examples/emitTest.nsl";
 
         protected Timer tokenizerNewTime = new Timer();
         protected Timer tokenizationTime = new Timer();
         protected Timer parsingTime = new Timer();
+        protected Timer emittingTime = new Timer();
         protected string code;
 
         static void Main(string[] args)
@@ -54,7 +53,7 @@ namespace NSLCSharpConsole
             }
         }
 
-        protected void Run(bool tokenizationLogger, bool parsingLogger)
+        protected void Run(bool tokenizationLogger, bool parsingLogger, bool emittingLogger)
         {
             Logger.instance = null;
             if (tokenizationLogger) Logger.instance = new ConsoleLogger();
@@ -75,18 +74,37 @@ namespace NSLCSharpConsole
             var parsingResult = Parser.Parse(tokenizationResult);
             parsingTime.End();
 
+            Console.WriteLine("");
+            Console.WriteLine(parsingResult.rootNode.ToString());
+            Console.WriteLine("");
+
+            if (emittingLogger) Logger.instance = new ConsoleLogger();
+            var funcs = FunctionRegistry.GetStandardFunctionRegistry();
+            CommonFunctions.RegisterCommonFunctions(funcs);
+
+
+            emittingTime.Start();
+            var emittingResult = Emitter.Emit(parsingResult, funcs);
+            emittingTime.End();
 
             Console.WriteLine("");
 
             Logger.instance = new ConsoleLogger();
 
-            foreach (var diagnostic in parsingResult.diagnostics)
+            foreach (var diagnostic in emittingResult.diagnostics)
             {
                 diagnostic.Log();
             }
 
             Console.WriteLine("");
-            Console.WriteLine(parsingResult.rootNode.ToString());
+            var indent = 0;
+            foreach (var inst in emittingResult.instructions)
+            {
+                var indentDelta = inst.GetIndentDiff();
+                if (indentDelta < 0) indent += indentDelta;
+                Logger.instance?.Message(new String(' ', indent * 2)).Message(inst.ToString() ?? inst.GetType().Name).Pos(inst.start).End();
+                if (indentDelta > 0) indent += indentDelta;
+            }
             Console.WriteLine("");
 
             if (parsingResult.diagnostics.Count > 0)
@@ -97,13 +115,13 @@ namespace NSLCSharpConsole
 
         public void RunTokens()
         {
-            Run(true, true);
+            Run(true, true, true);
             WriteTimes();
         }
 
         public void RunSimple()
         {
-            Run(false, true);
+            Run(false, false, true);
             WriteTimes();
         }
 
@@ -112,7 +130,7 @@ namespace NSLCSharpConsole
             for (var i = 0; i < 20; i++)
             {
                 Console.Write($"${i} / 20\r");
-                Run(false, false);
+                Run(false, false, false);
             }
             WriteTimes();
         }
@@ -122,7 +140,7 @@ namespace NSLCSharpConsole
             for (var i = 0; i < 20; i++)
             {
                 Console.Write($"${i} / 20\r");
-                Run(true, true);
+                Run(true, true, true);
             }
             WriteTimes();
         }
@@ -146,81 +164,7 @@ namespace NSLCSharpConsole
             Console.WriteLine($"  newT : {tokenizerNewTime}");
             Console.WriteLine($"  T()  : {tokenizationTime}");
             Console.WriteLine($"  P()  : {parsingTime}");
-        }
-    }
-
-    class ConsoleLogger : Logger
-    {
-        public override Logger End()
-        {
-            Console.Write("\n");
-            SetColor();
-            return this;
-        }
-
-        public override Logger Message(string source)
-        {
-            SetColor();
-            Console.Write(source + " ");
-            SetColor();
-            return this;
-        }
-
-        public override Logger Name(string source)
-        {
-            SetColor(ConsoleColor.Green);
-            Console.Write(source + " ");
-            SetColor();
-            return this;
-        }
-
-        public override Logger Pos(Position pos)
-        {
-            SetColor(ConsoleColor.DarkGray);
-            Console.Write("at " + pos.ToString() + " " + "\n");
-            Console.Write(pos.GetDebugLineArrow(3));
-            SetColor();
-            return this;
-        }
-
-        public override Logger Source(string source)
-        {
-            SetColor();
-            Console.Write("[");
-            SetColor(ConsoleColor.Blue);
-            Console.Write(source);
-            SetColor();
-            Console.Write("] ");
-            SetColor();
-
-            return this;
-        }
-
-        public override Logger Error()
-        {
-            SetColor();
-            Console.Write("[");
-            SetColor(ConsoleColor.Red);
-            Console.Write("ERR!");
-            SetColor();
-            Console.Write("] ");
-            SetColor();
-
-            return this;
-        }
-
-        public override Logger Object(object? text)
-        {
-            SetColor(ConsoleColor.DarkYellow);
-            Console.Write(JsonSerializer.Serialize(text) + " ");
-            SetColor();
-
-            return this;
-        }
-
-        protected void SetColor(ConsoleColor color = ConsoleColor.White)
-        {
-            Console.ForegroundColor = color;
+            Console.WriteLine($"  E()  : {emittingTime}");
         }
     }
 }

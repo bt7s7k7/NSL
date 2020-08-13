@@ -1,4 +1,5 @@
 using System;
+using NSL.Types;
 
 namespace NSL.Tokenization.General
 {
@@ -7,11 +8,11 @@ namespace NSL.Tokenization.General
     {
         public T type;
         public string content;
-        public object? value;
+        public NSLValue? value;
         public Position start;
         public Position end;
 
-        public Token(T type, string content, object? value, Position start, Position end)
+        public Token(T type, string content, NSLValue? value, Position start, Position end)
         {
             this.type = type;
             this.content = content;

@@ -6,19 +6,30 @@ namespace NSL.Parsing.Nodes
     public class StatementBlockNode : StatementRootNode
     {
         public bool isInline;
-        public ASTNode? pushedArgument = null;
-        public StatementBlockNode(bool isInline, Position start, Position end) : base(start, end)
+        public string? pushedVarName;
+
+        public static int nextVarId = 0;
+
+        public StatementBlockNode(bool isInline, bool doPushVariable, Position start, Position end) : base(start, end)
         {
             this.isInline = isInline;
+            if (doPushVariable)
+            {
+                pushedVarName = "$_s" + nextVarId++;
+            }
         }
-
-        public static int pushedVariableId = 0;
 
         public override void AddChild(ASTNode child)
         {
             if (child is StatementNode statement)
             {
                 statement.terminator = GetTerminationTokenType();
+
+                if (pushedVarName != null && statement.children.Count == 0)
+                {
+                    var varDeref = new StatementNode(pushedVarName, child.start, child.end);
+                    child.children.Insert(0, varDeref);
+                }
             }
             base.AddChild(child);
         }
@@ -27,28 +38,6 @@ namespace NSL.Parsing.Nodes
         {
             if (next.type == GetTerminationTokenType())
             {
-                if (pushedArgument != null)
-                {
-                    var id = pushedVariableId++;
-
-                    var varName = "$_" + id;
-                    var variableNode = new VariableNode(start, end);
-                    variableNode.varName = varName;
-
-                    var varAssignment = new StatementNode(varName, start, end);
-                    varAssignment.AddChild(pushedArgument);
-                    variableNode.AddChild(varAssignment);
-
-                    children.Insert(0, variableNode);
-
-
-                    foreach (var child in children)
-                    {
-                        var varDeref = new StatementNode(varName, child.start, child.end);
-                        child.children.Insert(0, varDeref);
-                    }
-                }
-
                 state.Pop();
             }
             else

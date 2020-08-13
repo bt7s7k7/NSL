@@ -1,0 +1,16 @@
+# This is a comment!
+
+print "Hello world!"
+
+getEntities "door" | filter !{ getProp "open" } |> setProp "open" false
+
+instEntity (makeDoor |{
+	setPos 12 15.28 9
+	setProp "open" false
+})
+
+var $x 52
+
+range 0 $x |>{
+    print (concat "  " $x ": " (add $x 1))
+}

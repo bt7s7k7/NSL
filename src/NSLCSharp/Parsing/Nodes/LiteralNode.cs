@@ -1,13 +1,14 @@
 using System.Text.Json;
 using NSL.Tokenization.General;
+using NSL.Types;
 
 namespace NSL.Parsing.Nodes
 {
     public class LiteralNode : ASTNode
     {
-        public object value;
+        public NSLValue value;
 
-        public LiteralNode(object value, Position start, Position end) : base(start, end)
+        public LiteralNode(NSLValue value, Position start, Position end) : base(start, end)
         {
             this.value = value;
         }

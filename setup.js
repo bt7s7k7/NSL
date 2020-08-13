@@ -35,6 +35,7 @@ const projects = {
         name: "C# Console Test",
         callback: () => {
             link("./src/NSLCSharp", "./tests/NSLCSharpConsole/NSLCSharp")
+            link("./tests/CSCommon", "./tests/NSLCSharpConsole/CSCommon")
         }
     }
 }
