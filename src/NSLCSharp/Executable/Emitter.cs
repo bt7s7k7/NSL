@@ -12,12 +12,13 @@ namespace NSL.Executable
     {
         public class Result
         {
-            public List<ExeInstruction> instructions = new List<ExeInstruction>();
             public List<Diagnostic> diagnostics;
+            public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics)
+            public Result(List<Diagnostic> diagnostics, List<ExeInstruction> instructions)
             {
                 this.diagnostics = diagnostics;
+                this.program = new NSLProgram(instructions);
             }
         }
 
@@ -26,9 +27,15 @@ namespace NSL.Executable
             public void Add(ExeInstruction instruction);
         }
 
-        public class State : Result, IInstructionContainer
+        public class State : IInstructionContainer
         {
-            public State(List<Diagnostic> diagnostics) : base(diagnostics) { }
+            public List<ExeInstruction> instructions = new List<ExeInstruction>();
+            public List<Diagnostic> diagnostics;
+
+            public State(List<Diagnostic> diagnostics)
+            {
+                this.diagnostics = diagnostics;
+            }
 
             public void Add(ExeInstruction instruction)
             {
@@ -128,7 +135,7 @@ namespace NSL.Executable
 
             if (parsingResult.diagnostics.Count > 0)
             {
-                return state;
+                return new Result(state.diagnostics, state.instructions);
             }
 
             var globalScopeId = 0;
@@ -445,7 +452,7 @@ namespace NSL.Executable
 
             state.Add(new EndInstruction(parsingResult.rootNode.end, parsingResult.rootNode.end));
 
-            return state;
+            return new Result(state.diagnostics, state.instructions);
         }
     }
 }

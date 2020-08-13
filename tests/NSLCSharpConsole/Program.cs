@@ -97,14 +97,7 @@ namespace NSLCSharpConsole
             }
 
             Console.WriteLine("");
-            var indent = 0;
-            foreach (var inst in emittingResult.instructions)
-            {
-                var indentDelta = inst.GetIndentDiff();
-                if (indentDelta < 0) indent += indentDelta;
-                Logger.instance?.Message(new String(' ', indent * 2)).Message(inst.ToString() ?? inst.GetType().Name).Pos(inst.start).End();
-                if (indentDelta > 0) indent += indentDelta;
-            }
+            emittingResult.program.Log();
             Console.WriteLine("");
 
             if (parsingResult.diagnostics.Count > 0)
