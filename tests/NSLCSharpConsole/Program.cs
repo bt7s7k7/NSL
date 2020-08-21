@@ -16,6 +16,7 @@ namespace NSLCSharpConsole
             Tokenization,
             Parsing,
             Emitting,
+            Running,
             None
         }
 
@@ -25,6 +26,7 @@ namespace NSLCSharpConsole
         protected Timer tokenizationTime = new Timer();
         protected Timer parsingTime = new Timer();
         protected Timer emittingTime = new Timer();
+        protected Timer runningTime = new Timer();
         protected string code;
 
         static void Main(string[] args)
@@ -104,6 +106,12 @@ namespace NSLCSharpConsole
             Console.WriteLine(returnVariable == null ? ": _" : $": {returnVariable.varName} = {returnVariable.type}");
             Console.WriteLine("");
 
+            // Running
+            if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
+            runningTime.Start();
+            runningTime.End();
+
+
             // Finish
             ILogger.instance = new ConsoleLogger();
             foreach (var diagnostic in emittingResult.diagnostics)
@@ -126,7 +134,7 @@ namespace NSLCSharpConsole
 
         public void RunSimple()
         {
-            Run(LoggerStartLocation.Emitting);
+            Run(LoggerStartLocation.Running);
             WriteTimes();
         }
 
@@ -170,6 +178,7 @@ namespace NSLCSharpConsole
             Console.WriteLine($"  T()  : {tokenizationTime}");
             Console.WriteLine($"  P()  : {parsingTime}");
             Console.WriteLine($"  E()  : {emittingTime}");
+            Console.WriteLine($"  R()  : {runningTime}");
         }
     }
 }
