@@ -115,7 +115,7 @@ namespace NSL.Executable
 
             public void Add(EmittedInstruction instruction)
             {
-                ILogger.instance?.Source("EMT").Message("Added").Name(instruction.GetType().Name).Object(instruction.ToString()).Pos(instruction.instruction.Start).End();
+                ILogger.instance?.Source("EMT").Message("Added").Name(instruction.GetType().Name).Object(instruction.instruction.ToString()).Pos(instruction.instruction.Start).End();
                 instructions.Add(instruction);
             }
 
