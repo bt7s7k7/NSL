@@ -277,9 +277,9 @@ namespace NSL.Executable
                 if (function == null)
                 {
                     var emission = new Emission(makeVarName(), node);
-                    emission.type = PrimitiveTypes.voidType;
-                    emission.Add(new DefInstruction(node.Start, node.End, emission.varName, PrimitiveTypes.voidType, null), context);
-                    context.scope.Add(emission.varName, PrimitiveTypes.voidType);
+                    emission.type = PrimitiveTypes.neverType;
+                    emission.Add(new DefInstruction(node.Start, node.End, emission.varName, PrimitiveTypes.neverType, null), context);
+                    context.scope.Add(emission.varName, PrimitiveTypes.neverType);
                     state!.diagnostics.Add(new Diagnostic($"Function '{node.name}' not found", node.Start, node.End));
                     return emission;
                 }
@@ -327,7 +327,7 @@ namespace NSL.Executable
                                 else
                                 {
                                     state!.diagnostics.Add(new Diagnostic($"Failed to find variable {statement.name}", statement.Start, statement.End));
-                                    statementEmission.type = PrimitiveTypes.voidType;
+                                    statementEmission.type = PrimitiveTypes.neverType;
                                 }
 
                                 arguments.Add(statementEmission);
@@ -365,7 +365,7 @@ namespace NSL.Executable
                             var wanted = wantedArgs[i];
                             var argumentEmission = arguments[i];
 
-                            if (provided == wanted)
+                            if (provided == wanted || provided == PrimitiveTypes.neverType)
                             {
                                 argumentEmission.EmitTo(emission, innerContext);
                             }
@@ -453,7 +453,7 @@ namespace NSL.Executable
                 {
                     state!.diagnostics.Add(new Diagnostic("Foreach source type is not an array", node.Start, node.End));
                     var emission = new Emission(makeVarName(), node);
-                    emission.type = PrimitiveTypes.voidType;
+                    emission.type = PrimitiveTypes.neverType;
                     emission.Add(new DefInstruction(node.Start, node.End, emission.varName, emission.type, null), innerContext);
                     return emission;
                 }
