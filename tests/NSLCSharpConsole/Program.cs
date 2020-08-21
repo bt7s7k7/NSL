@@ -11,6 +11,14 @@ namespace NSLCSharpConsole
 {
     class Program
     {
+        protected enum LoggerStartLocation
+        {
+            Tokenization,
+            Parsing,
+            Emitting,
+            None
+        }
+
         private const string FILE_PATH = "../Examples/emitTest.nsl";
 
         protected Timer tokenizerNewTime = new Timer();
@@ -54,10 +62,10 @@ namespace NSLCSharpConsole
             }
         }
 
-        protected void Run(bool tokenizationLogger, bool parsingLogger, bool emittingLogger)
+        protected void Run(LoggerStartLocation loggerLocation)
         {
             ILogger.instance = null;
-            if (tokenizationLogger) ILogger.instance = new ConsoleLogger();
+            if (loggerLocation == LoggerStartLocation.Tokenization) ILogger.instance = new ConsoleLogger();
 
             tokenizerNewTime.Start();
             var tokenizer = new NSLTokenizer();
@@ -69,7 +77,7 @@ namespace NSLCSharpConsole
 
             Console.WriteLine("");
 
-            if (parsingLogger) ILogger.instance = new ConsoleLogger();
+            if (loggerLocation == LoggerStartLocation.Parsing) ILogger.instance = new ConsoleLogger();
 
             parsingTime.Start();
             var parsingResult = Parser.Parse(tokenizationResult);
@@ -79,7 +87,7 @@ namespace NSLCSharpConsole
             Console.WriteLine(parsingResult.rootNode.ToString());
             Console.WriteLine("");
 
-            if (emittingLogger) ILogger.instance = new ConsoleLogger();
+            if (loggerLocation == LoggerStartLocation.Emitting) ILogger.instance = new ConsoleLogger();
             var funcs = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(funcs);
 
@@ -98,7 +106,7 @@ namespace NSLCSharpConsole
             }
 
             Console.WriteLine("");
-            if (emittingLogger)
+            if (loggerLocation == LoggerStartLocation.Emitting)
             {
                 emittingResult.program.Log();
                 var returnVariable = emittingResult.program.GetReturnVariable();
@@ -114,13 +122,13 @@ namespace NSLCSharpConsole
 
         public void RunTokens()
         {
-            Run(true, true, true);
+            Run(LoggerStartLocation.Tokenization);
             WriteTimes();
         }
 
         public void RunSimple()
         {
-            Run(false, false, true);
+            Run(LoggerStartLocation.Emitting);
             WriteTimes();
         }
 
@@ -129,7 +137,7 @@ namespace NSLCSharpConsole
             for (var i = 0; i < 20; i++)
             {
                 Console.Write($"${i} / 20\r");
-                Run(false, false, false);
+                Run(LoggerStartLocation.None);
             }
             WriteTimes();
         }
@@ -139,7 +147,7 @@ namespace NSLCSharpConsole
             for (var i = 0; i < 20; i++)
             {
                 Console.Write($"${i} / 20\r");
-                Run(true, true, true);
+                Run(LoggerStartLocation.Tokenization);
             }
             WriteTimes();
         }
