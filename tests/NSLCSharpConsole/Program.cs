@@ -65,8 +65,9 @@ namespace NSLCSharpConsole
         protected void Run(LoggerStartLocation loggerLocation)
         {
             ILogger.instance = null;
-            if (loggerLocation == LoggerStartLocation.Tokenization) ILogger.instance = new ConsoleLogger();
 
+            // Tokenization
+            if (loggerLocation == LoggerStartLocation.Tokenization) ILogger.instance = new ConsoleLogger();
             tokenizerNewTime.Start();
             var tokenizer = new NSLTokenizer();
             tokenizerNewTime.End();
@@ -74,9 +75,9 @@ namespace NSLCSharpConsole
             tokenizationTime.Start();
             var tokenizationResult = tokenizer.Tokenize(code, Path.GetFullPath(FILE_PATH));
             tokenizationTime.End();
-
             Console.WriteLine("");
 
+            // Parsing
             if (loggerLocation == LoggerStartLocation.Parsing) ILogger.instance = new ConsoleLogger();
 
             parsingTime.Start();
@@ -87,10 +88,10 @@ namespace NSLCSharpConsole
             Console.WriteLine(parsingResult.rootNode.ToString());
             Console.WriteLine("");
 
+            // Emitting
             if (loggerLocation == LoggerStartLocation.Emitting) ILogger.instance = new ConsoleLogger();
             var funcs = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(funcs);
-
 
             emittingTime.Start();
             var emittingResult = Emitter.Emit(parsingResult, funcs);
@@ -98,21 +99,18 @@ namespace NSLCSharpConsole
 
             Console.WriteLine("");
 
-            ILogger.instance = new ConsoleLogger();
+            emittingResult.program.Log();
+            var returnVariable = emittingResult.program.GetReturnVariable();
+            Console.WriteLine(returnVariable == null ? ": _" : $": {returnVariable.varName} = {returnVariable.type}");
+            Console.WriteLine("");
 
+            // Finish
+            ILogger.instance = new ConsoleLogger();
             foreach (var diagnostic in emittingResult.diagnostics)
             {
                 diagnostic.Log();
             }
-
             Console.WriteLine("");
-            if (loggerLocation == LoggerStartLocation.Emitting)
-            {
-                emittingResult.program.Log();
-                var returnVariable = emittingResult.program.GetReturnVariable();
-                Console.WriteLine(returnVariable == null ? ": _" : $": {returnVariable.varName} = {returnVariable.type}");
-                Console.WriteLine("");
-            }
 
             if (emittingResult.diagnostics.Count() > 0)
             {
