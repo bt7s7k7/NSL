@@ -15,10 +15,10 @@ namespace NSL.Executable
             public List<Diagnostic> diagnostics;
             public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics, List<ExeInstruction> instructions)
+            public Result(List<Diagnostic> diagnostics, List<ExeInstruction> instructions, NSLProgram.ReturnVariable? returnVariable)
             {
                 this.diagnostics = diagnostics;
-                this.program = new NSLProgram(instructions);
+                this.program = new NSLProgram(instructions, returnVariable);
             }
         }
 
@@ -135,7 +135,7 @@ namespace NSL.Executable
 
             if (parsingResult.diagnostics.Count > 0)
             {
-                return new Result(state.diagnostics, state.instructions);
+                return new Result(state.diagnostics, state.instructions, null);
             }
 
             var globalScopeId = 0;
@@ -452,7 +452,13 @@ namespace NSL.Executable
 
             state.Add(new EndInstruction(parsingResult.rootNode.end, parsingResult.rootNode.end));
 
-            return new Result(state.diagnostics, state.instructions);
+            NSLProgram.ReturnVariable? returnVariable = null;
+            if (result.type != PrimitiveTypes.voidType)
+            {
+                returnVariable = new NSLProgram.ReturnVariable(result.type!, result.varName!);
+            }
+
+            return new Result(state.diagnostics, state.instructions, returnVariable);
         }
     }
 }

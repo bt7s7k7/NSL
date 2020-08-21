@@ -97,8 +97,13 @@ namespace NSLCSharpConsole
             }
 
             Console.WriteLine("");
-            emittingResult.program.Log();
-            Console.WriteLine("");
+            if (emittingLogger)
+            {
+                emittingResult.program.Log();
+                var returnVariable = emittingResult.program.GetReturnVariable();
+                Console.WriteLine(returnVariable == null ? ": _" : $": {returnVariable.varName} = {returnVariable.type}");
+                Console.WriteLine("");
+            }
 
             if (parsingResult.diagnostics.Count > 0)
             {

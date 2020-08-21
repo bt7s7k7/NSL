@@ -1,12 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NSL.Types;
 
 namespace NSL.Executable
 {
     public class NSLProgram
     {
+        public class ReturnVariable
+        {
+            public TypeSymbol type;
+            public string varName;
+
+            public ReturnVariable(TypeSymbol type, string varName)
+            {
+                this.type = type;
+                this.varName = varName;
+            }
+        }
+
         protected List<ExeInstruction> instructions;
+        protected ReturnVariable? returnVariable = null;
 
         override public string ToString()
         {
@@ -40,9 +54,12 @@ namespace NSL.Executable
             }
         }
 
-        public NSLProgram(List<ExeInstruction> instructions)
+        public ReturnVariable? GetReturnVariable() => returnVariable;
+
+        public NSLProgram(List<ExeInstruction> instructions, ReturnVariable? returnVariable)
         {
             this.instructions = instructions;
+            this.returnVariable = returnVariable;
         }
     }
 }
