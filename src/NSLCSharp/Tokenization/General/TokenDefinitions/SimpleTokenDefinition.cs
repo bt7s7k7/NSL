@@ -2,7 +2,7 @@ using System;
 
 namespace NSL.Tokenization.General
 {
-    public class SimpleTokenDefinition<T, S> : TokenDefinition<T, S>
+    public class SimpleTokenDefinition<T, S> : ITokenDefinition<T, S>
         where T : struct, IComparable
         where S : struct, IComparable
     {
@@ -13,7 +13,7 @@ namespace NSL.Tokenization.General
             this.executor = executor;
         }
 
-        public override bool Execute(Tokenizer<T, S>.TokenizationState state)
+        public bool Execute(Tokenizer<T, S>.TokenizationState state)
         {
             return executor(state);
         }

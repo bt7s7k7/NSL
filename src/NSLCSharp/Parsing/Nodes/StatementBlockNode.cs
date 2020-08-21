@@ -19,16 +19,16 @@ namespace NSL.Parsing.Nodes
             }
         }
 
-        public override void AddChild(ASTNode child)
+        public override void AddChild(IASTNode child)
         {
             if (child is StatementNode statement)
             {
                 statement.terminator = GetTerminationTokenType();
 
-                if (pushedVarName != null && statement.children.Count == 0)
+                if (pushedVarName != null && statement.Children.Count == 0)
                 {
-                    var varDeref = new StatementNode(pushedVarName, child.start, child.end);
-                    child.children.Insert(0, varDeref);
+                    var varDeref = new StatementNode(pushedVarName, child.Start, child.End);
+                    child.Children.Insert(0, varDeref);
                 }
             }
             base.AddChild(child);
@@ -53,9 +53,9 @@ namespace NSL.Parsing.Nodes
 
         override public void Unbalanced(Parser.ParsingState state)
         {
-            state.diagnostics.Add(new Diagnostic($"Unbalanced block, expected {(isInline ? ")" : "}")}, {start} →", state.rootNode.end, state.rootNode.end));
-            Logger.instance?.Source("PAR").Error().Message("Unbalanced block, expected").Object(isInline ? ")" : "}").Pos(state.rootNode.end).End()
-                .Message("      Started at").Pos(start).End();
+            state.diagnostics.Add(new Diagnostic($"Unbalanced block, expected {(isInline ? ")" : "}")}, {Start} →", state.rootNode.End, state.rootNode.End));
+            ILogger.instance?.Source("PAR").Error().Message("Unbalanced block, expected").Object(isInline ? ")" : "}").Pos(state.rootNode.End).End()
+                .Message("      Started at").Pos(Start).End();
             ;
         }
     }

@@ -4,7 +4,7 @@ using static NSL.Tokenization.NSLTokenizer;
 
 namespace NSL.Parsing.Nodes
 {
-    public class StatementRootNode : ASTNode
+    public class StatementRootNode : ASTNodeBase
     {
         public StatementRootNode(Position start, Position end) : base(start, end)
         {

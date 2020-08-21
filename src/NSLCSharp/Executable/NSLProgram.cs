@@ -19,7 +19,7 @@ namespace NSL.Executable
             }
         }
 
-        protected IEnumerable<ExeInstruction> instructions;
+        protected IEnumerable<IInstruction> instructions;
         protected ReturnVariable? returnVariable = null;
 
         override public string ToString()
@@ -34,7 +34,7 @@ namespace NSL.Executable
                 builder.Append(new String(' ', indent * 2))
                     .Append(inst.ToString() ?? inst.GetType().Name)
                     .Append(" at ")
-                    .Append(inst.start.ToString())
+                    .Append(inst.Start.ToString())
                     .Append("\n");
                 if (indentDelta > 0) indent += indentDelta;
             }
@@ -49,14 +49,14 @@ namespace NSL.Executable
             {
                 var indentDelta = inst.GetIndentDiff();
                 if (indentDelta < 0) indent += indentDelta;
-                Logger.instance?.Message(new String(' ', indent * 2)).Message(inst.ToString() ?? inst.GetType().Name).Pos(inst.start).End();
+                ILogger.instance?.Message(new String(' ', indent * 2)).Message(inst.ToString() ?? inst.GetType().Name).Pos(inst.Start).End();
                 if (indentDelta > 0) indent += indentDelta;
             }
         }
 
         public ReturnVariable? GetReturnVariable() => returnVariable;
 
-        public NSLProgram(IEnumerable<ExeInstruction> instructions, ReturnVariable? returnVariable)
+        public NSLProgram(IEnumerable<IInstruction> instructions, ReturnVariable? returnVariable)
         {
             this.instructions = instructions;
             this.returnVariable = returnVariable;

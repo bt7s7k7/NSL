@@ -56,8 +56,8 @@ namespace NSLCSharpConsole
 
         protected void Run(bool tokenizationLogger, bool parsingLogger, bool emittingLogger)
         {
-            Logger.instance = null;
-            if (tokenizationLogger) Logger.instance = new ConsoleLogger();
+            ILogger.instance = null;
+            if (tokenizationLogger) ILogger.instance = new ConsoleLogger();
 
             tokenizerNewTime.Start();
             var tokenizer = new NSLTokenizer();
@@ -69,7 +69,7 @@ namespace NSLCSharpConsole
 
             Console.WriteLine("");
 
-            if (parsingLogger) Logger.instance = new ConsoleLogger();
+            if (parsingLogger) ILogger.instance = new ConsoleLogger();
 
             parsingTime.Start();
             var parsingResult = Parser.Parse(tokenizationResult);
@@ -79,7 +79,7 @@ namespace NSLCSharpConsole
             Console.WriteLine(parsingResult.rootNode.ToString());
             Console.WriteLine("");
 
-            if (emittingLogger) Logger.instance = new ConsoleLogger();
+            if (emittingLogger) ILogger.instance = new ConsoleLogger();
             var funcs = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(funcs);
 
@@ -90,7 +90,7 @@ namespace NSLCSharpConsole
 
             Console.WriteLine("");
 
-            Logger.instance = new ConsoleLogger();
+            ILogger.instance = new ConsoleLogger();
 
             foreach (var diagnostic in emittingResult.diagnostics)
             {

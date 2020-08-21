@@ -5,16 +5,16 @@ using NSL.Tokenization.General;
 
 namespace CSCommon
 {
-    class ConsoleLogger : Logger
+    class ConsoleLogger : ILogger
     {
-        public override Logger End()
+        public ILogger End()
         {
             Console.Write("\n");
             SetColor();
             return this;
         }
 
-        public override Logger Message(string source)
+        public ILogger Message(string source)
         {
             SetColor();
             Console.Write(source + " ");
@@ -22,7 +22,7 @@ namespace CSCommon
             return this;
         }
 
-        public override Logger Name(string source)
+        public ILogger Name(string source)
         {
             SetColor(ConsoleColor.Green);
             Console.Write(source + " ");
@@ -30,7 +30,7 @@ namespace CSCommon
             return this;
         }
 
-        public override Logger Pos(Position pos)
+        public ILogger Pos(Position pos)
         {
             SetColor(ConsoleColor.DarkGray);
             Console.Write("at " + pos.ToString() + " " + "\n");
@@ -39,7 +39,7 @@ namespace CSCommon
             return this;
         }
 
-        public override Logger Source(string source)
+        public ILogger Source(string source)
         {
             SetColor();
             Console.Write("[");
@@ -52,7 +52,7 @@ namespace CSCommon
             return this;
         }
 
-        public override Logger Error()
+        public ILogger Error()
         {
             SetColor();
             Console.Write("[");
@@ -65,7 +65,7 @@ namespace CSCommon
             return this;
         }
 
-        public override Logger Object(object? text)
+        public ILogger Object(object? text)
         {
             SetColor(ConsoleColor.DarkYellow);
             Console.Write(JsonSerializer.Serialize(text) + " ");

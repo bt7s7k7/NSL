@@ -4,7 +4,7 @@ using NSL.Types;
 
 namespace NSL.Executable.Instructions
 {
-    public class DefInstruction : ExeInstruction
+    public class DefInstruction : InstructionBase
     {
         protected string varName;
         protected TypeSymbol type;

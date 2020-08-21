@@ -103,7 +103,7 @@ namespace NSL.Tokenization.General
             public void PushToken(Token<T> token)
             {
                 tokens.Add(token);
-                Logger.instance?
+                ILogger.instance?
                     .Source("TOK")
                     .Message("Found token")
                     .Name(token.type.ToString()!)
@@ -115,16 +115,16 @@ namespace NSL.Tokenization.General
             }
         }
 
-        protected Dictionary<S, List<TokenDefinition<T, S>>> grammar;
+        protected Dictionary<S, List<ITokenDefinition<T, S>>> grammar;
 
-        public Tokenizer(Dictionary<S, List<TokenDefinition<T, S>>> grammar)
+        public Tokenizer(Dictionary<S, List<ITokenDefinition<T, S>>> grammar)
         {
             this.grammar = grammar;
         }
 
         public TokenizationResult Tokenize(string code, string file = "anon")
         {
-            Logger.instance?.Source("TOK").Message($"Starting tokenization in '{file}'").End();
+            ILogger.instance?.Source("TOK").Message($"Starting tokenization in '{file}'").End();
 
             code = code + "\n";
 
@@ -132,10 +132,10 @@ namespace NSL.Tokenization.General
 
             while (!state.isEnd)
             {
-                if (grammar.TryGetValue(state.state, out List<TokenDefinition<T, S>>? defsInState))
+                if (grammar.TryGetValue(state.state, out List<ITokenDefinition<T, S>>? defsInState))
                 {
                     if (defsInState == null) throw new TokenDefinitionExcpetion("Token list in state {state.state} is null");
-                    TokenDefinition<T, S>? found = null;
+                    ITokenDefinition<T, S>? found = null;
                     Position lastPosition = state.position;
 
                     foreach (var def in defsInState)
@@ -150,7 +150,7 @@ namespace NSL.Tokenization.General
                     if (found == null)
                     {
                         state.diagnostics.Add(new Diagnostic($"Failed to trigger any token definition in {state.state}", lastPosition, state.position));
-                        Logger.instance?.Source("TOK").Error().Message("Failed to trigger any token definition in").Name(state.state.ToString()!).Pos(state.position).End();
+                        ILogger.instance?.Source("TOK").Error().Message("Failed to trigger any token definition in").Name(state.state.ToString()!).Pos(state.position).End();
                         state.Next();
                     }
                     else if (!state.isEnd && state.position.Equals(lastPosition)) throw new TokenDefinitionExcpetion($"Token definition {found} failed to increment position at {state.position}");

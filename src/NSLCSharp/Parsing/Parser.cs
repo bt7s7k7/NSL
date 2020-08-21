@@ -18,14 +18,14 @@ namespace NSL.Parsing
                 this.rootNode = rootNode;
             }
 
-            public List<ASTNode> statements = new List<ASTNode>();
+            public List<IASTNode> statements = new List<IASTNode>();
 
             public StatementRootNode rootNode;
         }
 
         public class ParsingState : ParsingResult
         {
-            public Stack<ASTNode> stack = new Stack<ASTNode>();
+            public Stack<IASTNode> stack = new Stack<IASTNode>();
             protected List<Token<NSLTokenizer.TokenType>> tokens;
 
             public ParsingState(List<Token<NSLTokenizer.TokenType>> tokens, List<Diagnostic> diagnostics) : base(diagnostics, new StatementRootNode(tokens[0].start, tokens[tokens.Count - 1].end))
@@ -55,19 +55,19 @@ namespace NSL.Parsing
                 return token;
             }
 
-            public void Push(ASTNode node)
+            public void Push(IASTNode node)
             {
-                Logger.instance?.Source("PAR").Message("Pushed node").Name(node.GetType().Name).Pos(node.start).End();
+                ILogger.instance?.Source("PAR").Message("Pushed node").Name(node.GetType().Name).Pos(node.Start).End();
                 stack.Push(node);
             }
 
             public void Pop()
             {
                 var node = stack.Pop();
-                Logger.instance?.Source("PAR").Message("Popped node").Name(node.GetType().Name).Object(node.GetAdditionalInfo()).Pos(node.start).End();
+                ILogger.instance?.Source("PAR").Message("Popped node").Name(node.GetType().Name).Object(node.GetAdditionalInfo()).Pos(node.Start).End();
             }
 
-            public ASTNode Top()
+            public IASTNode Top()
             {
                 return stack.Peek();
             }

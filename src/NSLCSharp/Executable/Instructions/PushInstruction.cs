@@ -2,7 +2,7 @@ using NSL.Tokenization.General;
 
 namespace NSL.Executable.Instructions
 {
-    public class PushInstruction : ExeInstruction
+    public class PushInstruction : InstructionBase
     {
         protected int id;
         protected int? parentId;

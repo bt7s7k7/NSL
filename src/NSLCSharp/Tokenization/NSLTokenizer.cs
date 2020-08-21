@@ -34,8 +34,8 @@ namespace NSL.Tokenization
         }
 
         public NSLTokenizer() : base(
-            new Dictionary<StateType, List<TokenDefinition<TokenType, StateType>>> {
-                { StateType.Default, new List<TokenDefinition<TokenType, StateType>>{
+            new Dictionary<StateType, List<ITokenDefinition<TokenType, StateType>>> {
+                { StateType.Default, new List<ITokenDefinition<TokenType, StateType>>{
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
@@ -60,11 +60,11 @@ namespace NSL.Tokenization
                             token.value = PrimitiveTypes.numberType.Instantiate(parsed);
                         } catch (FormatException err) {
                             state.diagnostics.Add(new Diagnostic($"Invalid number format: {err.Message}", token.start, token.end));
-                            Logger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
+                            ILogger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
                         }
                     }),
                 } },
-                { StateType.String, new List<TokenDefinition<TokenType, StateType>>{
+                { StateType.String, new List<ITokenDefinition<TokenType, StateType>>{
                     new SimpleTokenDefinition<TokenType, StateType>((state) => {
                         var token = state.tokens[state.tokens.Count - 1];
                         var builder = new StringBuilder();
@@ -103,12 +103,12 @@ namespace NSL.Tokenization
                         state.state = StateType.Default;
                         state.Next();
 
-                        Logger.instance?.Message("      → ").Object(token.value).End();
+                        ILogger.instance?.Message("      → ").Object(token.value).End();
 
                         return true;
                     })
                 } },
-                { StateType.Comment, new List<TokenDefinition<TokenType, StateType>> {
+                { StateType.Comment, new List<ITokenDefinition<TokenType, StateType>> {
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",resultState: StateType.Default),
                     new RegexTokenDefinition<TokenType, StateType>()
                 } }

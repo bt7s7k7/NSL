@@ -2,7 +2,7 @@ using NSL.Tokenization.General;
 
 namespace NSL.Executable.Instructions
 {
-    public class ForEachInvokeInstruction : ExeInstruction
+    public class ForEachInvokeInstruction : InstructionBase
     {
         protected string argVarName;
         protected string actionVarName;

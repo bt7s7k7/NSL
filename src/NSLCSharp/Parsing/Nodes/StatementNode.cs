@@ -3,7 +3,7 @@ using static NSL.Tokenization.NSLTokenizer;
 
 namespace NSL.Parsing.Nodes
 {
-    public class StatementNode : ASTNode
+    public class StatementNode : ASTNodeBase
     {
         public string name;
         public TokenType? terminator = null;
@@ -14,7 +14,7 @@ namespace NSL.Parsing.Nodes
 
         override protected void OnToken(Tokenization.General.Token<Tokenization.NSLTokenizer.TokenType> next, Parser.ParsingState state)
         {
-            if (parent == null) throw new InternalNSLExcpetion("StatementNode cannot be root");
+            if (Parent == null) throw new InternalNSLExcpetion("StatementNode cannot be root");
 
             if (next.type == TokenType.Literal)
             {
@@ -35,8 +35,8 @@ namespace NSL.Parsing.Nodes
             else if (next.type == TokenType.Pipe)
             {
                 state.Pop();
-                var prevParent = parent;
-                parent.RemoveChild(this);
+                var prevParent = Parent;
+                Parent.RemoveChild(this);
 
                 var afterPipe = state.Next();
                 if (afterPipe != null)
@@ -57,14 +57,14 @@ namespace NSL.Parsing.Nodes
                 else
                 {
                     state.diagnostics.Add(new Diagnostic($"Unexpected EOF after pipe", next.start, next.end));
-                    Logger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
+                    ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
                 }
             }
             else if (next.type == TokenType.PipeForEach)
             {
                 state.Pop();
-                var prevParent = parent;
-                parent.RemoveChild(this);
+                var prevParent = Parent;
+                Parent.RemoveChild(this);
 
                 var pipe = next;
                 var afterPipe = state.Next();
@@ -91,7 +91,7 @@ namespace NSL.Parsing.Nodes
                 else
                 {
                     state.diagnostics.Add(new Diagnostic($"Unexpected EOF after pipe", next.start, next.end));
-                    Logger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
+                    ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
                 }
             }
             else if (next.type == TokenType.StatementEnd)
@@ -115,7 +115,7 @@ namespace NSL.Parsing.Nodes
             }
             else if (next.type == TokenType.PipeStart)
             {
-                var prevParent = parent;
+                var prevParent = Parent;
                 prevParent.RemoveChild(this);
 
                 var blockNode = new StatementBlockNode(false, true, next.start, next.end);
@@ -130,7 +130,7 @@ namespace NSL.Parsing.Nodes
             else if (next.type == TokenType.PipeForEachStart)
             {
                 var distNode = new ForEachNode(next.start, next.end);
-                var prevParent = parent;
+                var prevParent = Parent;
                 prevParent.RemoveChild(this);
                 prevParent.AddChild(distNode);
 

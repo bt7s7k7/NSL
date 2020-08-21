@@ -4,7 +4,7 @@ using NSL.Tokenization.General;
 
 namespace NSL.Executable.Instructions
 {
-    public class InvokeInstruction : ExeInstruction
+    public class InvokeInstruction : InstructionBase
     {
         protected string? retVarName;
         protected string funcName;

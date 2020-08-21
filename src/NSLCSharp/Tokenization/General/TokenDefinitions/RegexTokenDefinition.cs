@@ -3,7 +3,7 @@ using System;
 
 namespace NSL.Tokenization.General
 {
-    public class RegexTokenDefinition<T, S> : TokenDefinition<T, S>
+    public class RegexTokenDefinition<T, S> : ITokenDefinition<T, S>
         where T : struct, IComparable
         where S : struct, IComparable
     {
@@ -32,7 +32,7 @@ namespace NSL.Tokenization.General
             this.verifier = verifier;
         }
 
-        public override bool Execute(Tokenizer<T, S>.TokenizationState state)
+        public bool Execute(Tokenizer<T, S>.TokenizationState state)
         {
             var start = state.position;
             var match = false;

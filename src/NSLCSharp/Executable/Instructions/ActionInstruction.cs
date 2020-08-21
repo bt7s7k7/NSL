@@ -3,7 +3,7 @@ using NSL.Tokenization.General;
 
 namespace NSL.Executable.Instructions
 {
-    public class ActionInstruction : ExeInstruction
+    public class ActionInstruction : InstructionBase
     {
         protected string name;
 

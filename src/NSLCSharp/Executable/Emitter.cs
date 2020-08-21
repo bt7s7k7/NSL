@@ -15,7 +15,7 @@ namespace NSL.Executable
             public IEnumerable<Diagnostic> diagnostics;
             public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics, IEnumerable<ExeInstruction> instructions, NSLProgram.ReturnVariable? returnVariable)
+            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, NSLProgram.ReturnVariable? returnVariable)
             {
                 this.diagnostics = diagnostics;
                 this.program = new NSLProgram(instructions, returnVariable);
@@ -29,10 +29,10 @@ namespace NSL.Executable
 
         protected class EmittedInstruction
         {
-            public ExeInstruction instruction;
+            public IInstruction instruction;
             public Context context;
 
-            public EmittedInstruction(ExeInstruction instruction, Context context)
+            public EmittedInstruction(IInstruction instruction, Context context)
             {
                 this.instruction = instruction;
                 this.context = context;
@@ -54,12 +54,12 @@ namespace NSL.Executable
                 instructions.Add(instruction);
             }
 
-            public void Add(ExeInstruction instruction, Context context)
+            public void Add(IInstruction instruction, Context context)
             {
                 Add(new EmittedInstruction(instruction, context));
             }
 
-            public IEnumerable<ExeInstruction> FinishInstructions() => instructions.Select(inst =>
+            public IEnumerable<IInstruction> FinishInstructions() => instructions.Select(inst =>
             {
                 if (inst.instruction is InvokeInstruction invoke)
                 {
@@ -104,22 +104,22 @@ namespace NSL.Executable
             public List<EmittedInstruction> instructions = new List<EmittedInstruction>();
             public string varName;
 
-            public Emission(string varName, ASTNode node)
+            public Emission(string varName, IASTNode node)
             {
                 this.varName = varName;
                 this.node = node;
             }
 
             public Action<IInstructionContainer, Emission>? emit;
-            public ASTNode node;
+            public IASTNode node;
 
             public void Add(EmittedInstruction instruction)
             {
-                Logger.instance?.Source("EMT").Message("Added").Name(instruction.GetType().Name).Object(instruction.ToString()).Pos(instruction.instruction.start).End();
+                ILogger.instance?.Source("EMT").Message("Added").Name(instruction.GetType().Name).Object(instruction.ToString()).Pos(instruction.instruction.Start).End();
                 instructions.Add(instruction);
             }
 
-            public void Add(ExeInstruction instruction, Context context)
+            public void Add(IInstruction instruction, Context context)
             {
                 Add(new EmittedInstruction(instruction, context));
             }
@@ -188,15 +188,15 @@ namespace NSL.Executable
 
             Emission visitBlock(StatementRootNode rootNode, Context context)
             {
-                Logger.instance?.Source("EMT").Message("Visiting block").Pos(rootNode.start).End();
+                ILogger.instance?.Source("EMT").Message("Visiting block").Pos(rootNode.Start).End();
                 var result = new Emission("", rootNode);
 
                 var innerContext = context.UpdateScope(globalScopeId++);
-                result.Add(new PushInstruction(rootNode.start, rootNode.start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+                result.Add(new PushInstruction(rootNode.Start, rootNode.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
                 Emission? lastEmission = null;
                 bool lastEmissionDefined = false;
 
-                foreach (var node in rootNode.children)
+                foreach (var node in rootNode.Children)
                 {
                     if (node is VariableNode variableNode)
                     {
@@ -205,7 +205,7 @@ namespace NSL.Executable
 
                         lastEmission = visitStatement(variableNode, innerContext);
 
-                        wrapperEmission.Add(new DefInstruction(variableNode.start, variableNode.end, varName, lastEmission.type!, null), innerContext);
+                        wrapperEmission.Add(new DefInstruction(variableNode.Start, variableNode.End, varName, lastEmission.type!, null), innerContext);
                         innerContext.scope.Add(varName, lastEmission.type!);
                         lastEmission.EmitTo(wrapperEmission, innerContext);
 
@@ -243,7 +243,7 @@ namespace NSL.Executable
                     {
                         result.varName = makeVarName();
                         result.type = lastEmission.type;
-                        result.Add(new InvokeInstruction(rootNode.start, rootNode.end, result.varName, lastEmission.varName, new string[] { }), innerContext);
+                        result.Add(new InvokeInstruction(rootNode.Start, rootNode.End, result.varName, lastEmission.varName, new string[] { }), innerContext);
                     }
                     else
                     {
@@ -257,7 +257,7 @@ namespace NSL.Executable
                     result.type = PrimitiveTypes.voidType;
                 }
 
-                result.Add(new PopInstruction(rootNode.end, rootNode.end), innerContext);
+                result.Add(new PopInstruction(rootNode.End, rootNode.End), innerContext);
 
                 return result;
             }
@@ -271,16 +271,16 @@ namespace NSL.Executable
 
                 if (variableNode != null)
                 {
-                    node = (StatementNode)variableNode.children[0];
+                    node = (StatementNode)variableNode.Children[0];
                 }
 
                 if (function == null)
                 {
                     var emission = new Emission(makeVarName(), node);
                     emission.type = PrimitiveTypes.voidType;
-                    emission.Add(new DefInstruction(node.start, node.end, emission.varName, PrimitiveTypes.voidType, null), context);
+                    emission.Add(new DefInstruction(node.Start, node.End, emission.varName, PrimitiveTypes.voidType, null), context);
                     context.scope.Add(emission.varName, PrimitiveTypes.voidType);
-                    state!.diagnostics.Add(new Diagnostic($"Function '{node.name}' not found", node.start, node.end));
+                    state!.diagnostics.Add(new Diagnostic($"Function '{node.name}' not found", node.Start, node.End));
                     return emission;
                 }
                 else
@@ -289,15 +289,15 @@ namespace NSL.Executable
                     var emission = new Emission(variableNode != null ? function.GetName() : makeVarName(), node);
 
                     var innerContext = context.UpdateScope(globalScopeId++);
-                    emission.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+                    emission.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
-                    foreach (var child in node.children)
+                    foreach (var child in node.Children)
                     {
                         if (child is LiteralNode literal)
                         {
                             var litEmission = new Emission(makeVarName(), literal);
                             arguments.Add(litEmission);
-                            litEmission.Add(new DefInstruction(literal.start, literal.end, litEmission.varName, literal.value.GetTypeSymbol(), literal.value.GetValue()), innerContext);
+                            litEmission.Add(new DefInstruction(literal.Start, literal.End, litEmission.varName, literal.value.GetTypeSymbol(), literal.value.GetValue()), innerContext);
                             context.scope.Add(litEmission.varName, literal.value.GetTypeSymbol());
                             litEmission.type = literal.value.GetTypeSymbol();
                         }
@@ -308,7 +308,7 @@ namespace NSL.Executable
                                 var statementEmission = visitStatement(statement, innerContext);
                                 if (statementEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
                                 var wrapperEmission = new Emission(statementEmission.varName, statementEmission.node);
-                                wrapperEmission.Add(new DefInstruction(statementEmission.node.start, statementEmission.node.end, statementEmission.varName, statementEmission.type, null), innerContext);
+                                wrapperEmission.Add(new DefInstruction(statementEmission.node.Start, statementEmission.node.End, statementEmission.varName, statementEmission.type, null), innerContext);
                                 innerContext.scope.Add(statementEmission.varName, statementEmission.type);
                                 wrapperEmission.type = statementEmission.type;
 
@@ -326,7 +326,7 @@ namespace NSL.Executable
                                 }
                                 else
                                 {
-                                    state!.diagnostics.Add(new Diagnostic($"Failed to find variable {statement.name}", statement.start, statement.end));
+                                    state!.diagnostics.Add(new Diagnostic($"Failed to find variable {statement.name}", statement.Start, statement.End));
                                     statementEmission.type = PrimitiveTypes.voidType;
                                 }
 
@@ -338,7 +338,7 @@ namespace NSL.Executable
                             var rootEmission = visitBlock(rootNode, innerContext);
                             if (rootEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitBlock' has .type == null");
                             var wrapperEmission = new Emission(rootEmission.varName, rootEmission.node);
-                            wrapperEmission.Add(new DefInstruction(rootEmission.node.start, rootEmission.node.end, rootEmission.varName, rootEmission.type, null), innerContext);
+                            wrapperEmission.Add(new DefInstruction(rootEmission.node.Start, rootEmission.node.End, rootEmission.varName, rootEmission.type, null), innerContext);
                             innerContext.scope.Add(rootEmission.varName, rootEmission.type);
                             wrapperEmission.type = rootEmission.type;
 
@@ -355,7 +355,7 @@ namespace NSL.Executable
 
                     if (providedArgs.Length < wantedArgs.Length)
                     {
-                        state!.diagnostics.Add(new Diagnostic($"Wrong argument count for '{signature}', expected: '{wantedArgs.Length}', got: '{providedArgs.Length}'", node.start, node.end));
+                        state!.diagnostics.Add(new Diagnostic($"Wrong argument count for '{signature}', expected: '{wantedArgs.Length}', got: '{providedArgs.Length}'", node.Start, node.End));
                     }
                     else
                     {
@@ -371,16 +371,16 @@ namespace NSL.Executable
                             }
                             else
                             {
-                                state!.diagnostics.Add(new Diagnostic($"Wrong argument type for '{signature}', expected: '{wanted}', got: '{provided}'", argumentEmission.node.start, argumentEmission.node.end));
+                                state!.diagnostics.Add(new Diagnostic($"Wrong argument type for '{signature}', expected: '{wanted}', got: '{provided}'", argumentEmission.node.Start, argumentEmission.node.End));
                             }
                         }
                     }
 
                     emission.type = signature.result;
 
-                    emission.Add(new InvokeInstruction(node.start, node.end, emission.varName, signature.name, arguments.Select(v => v.varName)), innerContext);
+                    emission.Add(new InvokeInstruction(node.Start, node.End, emission.varName, signature.name, arguments.Select(v => v.varName)), innerContext);
 
-                    emission.Add(new PopInstruction(node.end, node.end), innerContext);
+                    emission.Add(new PopInstruction(node.End, node.End), innerContext);
 
                     return emission;
                 }
@@ -390,13 +390,13 @@ namespace NSL.Executable
             {
                 var result = new Emission(makeVarName(), blockNode);
 
-                result.Add(new ActionInstruction(parsingResult.rootNode.start, parsingResult.rootNode.end, result.varName), context);
+                result.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName), context);
 
                 var blockEmission = visitBlock(blockNode, context);
 
                 blockEmission.EmitTo(result, context);
 
-                result.Add(new EndInstruction(parsingResult.rootNode.end, parsingResult.rootNode.end), context);
+                result.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
 
                 return (result, blockEmission);
             }
@@ -404,8 +404,8 @@ namespace NSL.Executable
             Emission visitForEachStatement(ForEachNode node, Context context)
             {
                 var innerContext = context.UpdateScope(globalScopeId++);
-                var sourceNode = node.children[0] as StatementNode;
-                var targetNode = node.children[1];
+                var sourceNode = node.Children[0] as StatementNode;
+                var targetNode = node.Children[1];
 
                 var sourceEmission = visitStatement(sourceNode!, innerContext);
                 if (sourceEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
@@ -413,24 +413,24 @@ namespace NSL.Executable
                 {
                     var result = new Emission(sourceEmission.varName, sourceEmission.node);
                     result.type = sourceEmission.type;
-                    result.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+                    result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
-                    result.Add(new DefInstruction(sourceEmission.node.start, sourceEmission.node.end, sourceEmission.varName, sourceEmission.type, null), innerContext);
+                    result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, sourceEmission.varName, sourceEmission.type, null), innerContext);
                     TypeSymbol itemType = arrayType.GetItemType();
-                    result.Add(new DefInstruction(sourceEmission.node.start, sourceEmission.node.end, "$_a", itemType, null), innerContext);
+                    result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, "$_a", itemType, null), innerContext);
                     innerContext.scope.Add("$_a", itemType);
                     sourceEmission.EmitTo(result, innerContext);
 
                     if (targetNode is StatementNode statementTargetNode)
                     {
-                        var block = new StatementBlockNode(false, false, statementTargetNode.start, statementTargetNode.end);
+                        var block = new StatementBlockNode(false, false, statementTargetNode.Start, statementTargetNode.End);
                         block.AddChild(statementTargetNode);
 
                         var (actionEmission, _) = makeAction(block, innerContext);
 
                         actionEmission.EmitTo(result, innerContext);
 
-                        result.Add(new ForEachInvokeInstruction(node.start, node.end, sourceEmission.varName, "$_a", actionEmission.varName), innerContext);
+                        result.Add(new ForEachInvokeInstruction(node.Start, node.End, sourceEmission.varName, "$_a", actionEmission.varName), innerContext);
                     }
                     else if (targetNode is StatementBlockNode statementBlockTargetNode)
                     {
@@ -438,23 +438,23 @@ namespace NSL.Executable
 
                         actionEmission.EmitTo(result, innerContext);
 
-                        result.Add(new ForEachInvokeInstruction(node.start, node.end, sourceEmission.varName, "$_a", actionEmission.varName), innerContext);
+                        result.Add(new ForEachInvokeInstruction(node.Start, node.End, sourceEmission.varName, "$_a", actionEmission.varName), innerContext);
                     }
                     else
                     {
                         throw new InternalNSLExcpetion($"Unexpected {targetNode.GetType()} in target slot (1) in for each node");
                     }
 
-                    result.Add(new PopInstruction(node.end, node.end), innerContext);
+                    result.Add(new PopInstruction(node.End, node.End), innerContext);
 
                     return result;
                 }
                 else
                 {
-                    state!.diagnostics.Add(new Diagnostic("Foreach source type is not an array", node.start, node.end));
+                    state!.diagnostics.Add(new Diagnostic("Foreach source type is not an array", node.Start, node.End));
                     var emission = new Emission(makeVarName(), node);
                     emission.type = PrimitiveTypes.voidType;
-                    emission.Add(new DefInstruction(node.start, node.end, emission.varName, emission.type, null), innerContext);
+                    emission.Add(new DefInstruction(node.Start, node.End, emission.varName, emission.type, null), innerContext);
                     return emission;
                 }
             }
@@ -462,40 +462,40 @@ namespace NSL.Executable
             Emission visitDistributionNode(DistributionNode node, Context context)
             {
                 var innerContext = context.UpdateScope(globalScopeId++);
-                var sourceNode = node.children[0] as StatementNode;
-                var targetNode = node.children[1] as StatementBlockNode;
+                var sourceNode = node.Children[0] as StatementNode;
+                var targetNode = node.Children[1] as StatementBlockNode;
 
                 var sourceEmission = visitStatement(sourceNode!, innerContext);
                 if (sourceEmission.type == null) throw new InternalNSLExcpetion("The result of 'visitStatement' has .type == null");
 
                 var result = new Emission(sourceEmission.varName, sourceEmission.node);
                 result.type = sourceEmission.type;
-                result.Add(new PushInstruction(node.start, node.start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+                result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
-                result.Add(new DefInstruction(node.start, node.end, sourceEmission.varName, sourceEmission.type, null), innerContext);
+                result.Add(new DefInstruction(node.Start, node.End, sourceEmission.varName, sourceEmission.type, null), innerContext);
                 var pushedVarName = targetNode!.pushedVarName!;
-                result.Add(new DefInstruction(node.start, node.end, pushedVarName, sourceEmission.type, null), innerContext);
+                result.Add(new DefInstruction(node.Start, node.End, pushedVarName, sourceEmission.type, null), innerContext);
                 context.scope.Add(pushedVarName, sourceEmission.type);
                 sourceEmission.EmitTo(result, innerContext);
-                result.Add(new InvokeInstruction(node.start, node.end, pushedVarName, sourceEmission.varName, new string[] { }), innerContext);
+                result.Add(new InvokeInstruction(node.Start, node.End, pushedVarName, sourceEmission.varName, new string[] { }), innerContext);
 
                 visitBlock(targetNode!, innerContext).EmitTo(result, innerContext);
 
-                result.Add(new PopInstruction(node.end, node.end), innerContext);
+                result.Add(new PopInstruction(node.End, node.End), innerContext);
 
                 return result;
             }
 
             Context context = new Context(scope: null);
 
-            state.Add(new ActionInstruction(parsingResult.rootNode.start, parsingResult.rootNode.end, makeVarName()), context);
+            state.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, makeVarName()), context);
 
             var result = visitBlock(parsingResult.rootNode, context);
 
             NSLProgram.ReturnVariable? returnVariable = null;
             if (result.type != PrimitiveTypes.voidType)
             {
-                state.Add(new DefInstruction(parsingResult.rootNode.start, parsingResult.rootNode.end, result.varName, result.type!, null), context);
+                state.Add(new DefInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, result.type!, null), context);
                 context.scope.Add(result.varName, result.type!);
                 result.EmitTo(state, context);
                 returnVariable = new NSLProgram.ReturnVariable(result.type!, result.varName);
@@ -506,7 +506,7 @@ namespace NSL.Executable
             }
 
 
-            state.Add(new EndInstruction(parsingResult.rootNode.end, parsingResult.rootNode.end), context);
+            state.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
 
 
             return new Result(state.diagnostics, state.FinishInstructions(), returnVariable);

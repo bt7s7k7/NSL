@@ -22,7 +22,7 @@ namespace NSL
 
         public void Log()
         {
-            Logger.instance?.Source("/\\/").Message(text).Pos(start).End();
+            ILogger.instance?.Source("/\\/").Message(text).Pos(start).End();
         }
     }
 }

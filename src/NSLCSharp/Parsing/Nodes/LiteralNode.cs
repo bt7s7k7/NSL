@@ -4,7 +4,7 @@ using NSL.Types;
 
 namespace NSL.Parsing.Nodes
 {
-    public class LiteralNode : ASTNode
+    public class LiteralNode : ASTNodeBase
     {
         public NSLValue value;
 

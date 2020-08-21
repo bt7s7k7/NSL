@@ -2,7 +2,7 @@ using NSL.Tokenization.General;
 
 namespace NSL.Parsing.Nodes
 {
-    public class ForEachNode : ASTNode
+    public class ForEachNode : ASTNodeBase
     {
         public ForEachNode(Position start, Position end) : base(start, end) { }
 

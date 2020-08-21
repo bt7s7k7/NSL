@@ -2,7 +2,7 @@ using NSL.Tokenization.General;
 
 namespace NSL.Executable.Instructions
 {
-    public class EndInstruction : ExeInstruction
+    public class EndInstruction : InstructionBase
     {
         override public int GetIndentDiff() => -1;
         override public string ToString() => $"end";
