@@ -13,5 +13,6 @@ namespace NSL.Types
 
         public TypeSymbol GetTypeSymbol() => type;
         public object? GetValue() => value;
+        public void SetValue(object? newValue) => value = newValue;
     }
 }

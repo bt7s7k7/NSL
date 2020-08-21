@@ -488,8 +488,6 @@ namespace NSL.Executable
 
             Context context = new Context(scope: null);
 
-            state.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, makeVarName()), context);
-
             var result = visitBlock(parsingResult.rootNode, context);
 
             NSLProgram.ReturnVariable? returnVariable = null;
@@ -504,10 +502,6 @@ namespace NSL.Executable
             {
                 result.EmitTo(state, context);
             }
-
-
-            state.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
-
 
             return new Result(state.diagnostics, state.FinishInstructions(), returnVariable);
         }

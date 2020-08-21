@@ -1,11 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using NSL.Types;
 
 namespace NSL.Executable
 {
-    public class NSLProgram
+    public class NSLProgram : IEnumerable<IInstruction>
     {
         public class ReturnVariable
         {
@@ -55,6 +56,16 @@ namespace NSL.Executable
         }
 
         public ReturnVariable? GetReturnVariable() => returnVariable;
+
+        public IEnumerator<IInstruction> GetEnumerator()
+        {
+            return instructions.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)instructions).GetEnumerator();
+        }
 
         public NSLProgram(IEnumerable<IInstruction> instructions, ReturnVariable? returnVariable)
         {

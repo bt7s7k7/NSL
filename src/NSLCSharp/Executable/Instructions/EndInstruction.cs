@@ -1,3 +1,4 @@
+using NSL.Runtime;
 using NSL.Tokenization.General;
 
 namespace NSL.Executable.Instructions
@@ -6,6 +7,10 @@ namespace NSL.Executable.Instructions
     {
         override public int GetIndentDiff() => -1;
         override public string ToString() => $"end";
+        public override void Execute(Runner.State state)
+        {
+            throw new System.NotImplementedException();
+        }
 
         public EndInstruction(Position start, Position end) : base(start, end) { }
     }

@@ -5,6 +5,7 @@ using CSCommon;
 using NSL;
 using NSL.Executable;
 using NSL.Parsing;
+using NSL.Runtime;
 using NSL.Tokenization;
 
 namespace NSLCSharpConsole
@@ -20,7 +21,7 @@ namespace NSLCSharpConsole
             None
         }
 
-        private const string FILE_PATH = "../Examples/emitTest.nsl";
+        private const string FILE_PATH = "../Examples/runtimeTest.nsl";
 
         protected Timer tokenizerNewTime = new Timer();
         protected Timer tokenizationTime = new Timer();
@@ -109,6 +110,8 @@ namespace NSLCSharpConsole
             // Running
             if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
             runningTime.Start();
+            var runner = new Runner(funcs);
+            runner.Run(emittingResult.program);
             runningTime.End();
 
 
@@ -144,6 +147,14 @@ namespace NSLCSharpConsole
             {
                 Console.Write($"${i} / 20\r");
                 Run(LoggerStartLocation.None);
+                if (i == 0)
+                {
+                    tokenizerNewTime.Reset();
+                    tokenizationTime.Reset();
+                    parsingTime.Reset();
+                    emittingTime.Reset();
+                    runningTime.Reset();
+                }
             }
             WriteTimes();
         }
@@ -179,6 +190,7 @@ namespace NSLCSharpConsole
             Console.WriteLine($"  P()  : {parsingTime}");
             Console.WriteLine($"  E()  : {emittingTime}");
             Console.WriteLine($"  R()  : {runningTime}");
+            Console.WriteLine($"  SUM  : {Timer.GetTotal(new Timer[] { tokenizerNewTime, tokenizationTime, parsingTime, emittingTime, runningTime })}");
         }
     }
 }
