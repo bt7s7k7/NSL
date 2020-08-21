@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using CSCommon;
 using NSL;
 using NSL.Executable;
@@ -105,7 +106,7 @@ namespace NSLCSharpConsole
                 Console.WriteLine("");
             }
 
-            if (parsingResult.diagnostics.Count > 0)
+            if (emittingResult.diagnostics.Count() > 0)
             {
                 Environment.ExitCode = 1;
             }
