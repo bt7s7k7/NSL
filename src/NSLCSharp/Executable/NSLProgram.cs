@@ -19,7 +19,7 @@ namespace NSL.Executable
             }
         }
 
-        protected List<ExeInstruction> instructions;
+        protected IEnumerable<ExeInstruction> instructions;
         protected ReturnVariable? returnVariable = null;
 
         override public string ToString()
@@ -56,7 +56,7 @@ namespace NSL.Executable
 
         public ReturnVariable? GetReturnVariable() => returnVariable;
 
-        public NSLProgram(List<ExeInstruction> instructions, ReturnVariable? returnVariable)
+        public NSLProgram(IEnumerable<ExeInstruction> instructions, ReturnVariable? returnVariable)
         {
             this.instructions = instructions;
             this.returnVariable = returnVariable;
