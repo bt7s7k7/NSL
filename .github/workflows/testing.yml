@@ -3,7 +3,7 @@ name: C# Version
 on: [push]
 
 jobs:
-  test:
+  cs-con:
     runs-on: ubuntu-latest
     name: Build and run C# console test
 
@@ -15,4 +15,17 @@ jobs:
       run: node ./setup cs_con
     - name: Run the code
       run: dotnet run
+      working-directory: ${{env.PROJECT_FOLDER}}
+  cs-repl:
+    runs-on: ubuntu-latest
+    name: Build and run C# console test
+
+    env:
+      PROJECT_FOLDER: ./tests/NSLCSharpRepl
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup project
+      run: node ./setup cs_repl
+    - name: Run the code
+      run: dotnet run -- "print \"Hello world\"; exit"
       working-directory: ${{env.PROJECT_FOLDER}}

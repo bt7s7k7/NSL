@@ -13,15 +13,13 @@ namespace NSLCSharpRepl
     {
         static void Main(string[] args)
         {
-            var tokenizer = new NSLTokenizer();
-            var functions = FunctionRegistry.GetStandardFunctionRegistry();
+            NSLTokenizer tokenizer = new NSLTokenizer();
+            FunctionRegistry functions = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(functions);
-            var runner = new Runner(functions);
+            Runner runner = new Runner(functions);
 
-            while (true)
+            void run(string text)
             {
-                Console.Write("> ");
-                var text = Console.ReadLine();
                 var result = Emitter.Emit(Parser.Parse(tokenizer.Tokenize(text)), functions, runnerRootScope: runner.GetRootScope());
 
                 ILogger.instance = new ConsoleLogger();
@@ -32,6 +30,19 @@ namespace NSLCSharpRepl
 
                 if (result.diagnostics.Count() == 0) ILogger.instance?.Name(runner.Run(result.program).ToString()).End();
                 ILogger.instance = null;
+            }
+
+            foreach (var arg in args)
+            {
+                run(arg);
+            }
+
+            while (true)
+            {
+                Console.Write("> ");
+                var text = Console.ReadLine();
+
+                run(text);
             }
         }
     }
