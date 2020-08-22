@@ -37,6 +37,13 @@ const projects = {
             link("./src/NSLCSharp", "./tests/NSLCSharpConsole/NSLCSharp")
             link("./tests/CSCommon", "./tests/NSLCSharpConsole/CSCommon")
         }
+    },
+    cs_repl: {
+        name: "C# REPL",
+        callback: () => {
+            link("./src/NSLCSharp", "./tests/NSLCSharpRepl/NSLCSharp")
+            link("./tests/CSCommon", "./tests/NSLCSharpRepl/CSCommon")
+        }
     }
 }
 

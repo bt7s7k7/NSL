@@ -87,9 +87,9 @@ namespace NSLCSharpConsole
             var parsingResult = Parser.Parse(tokenizationResult);
             parsingTime.End();
 
-            Console.WriteLine("");
-            Console.WriteLine(parsingResult.rootNode.ToString());
-            Console.WriteLine("");
+            ILogger.instance?.End()
+                .Message(parsingResult.rootNode.ToString()).End()
+                .End();
 
             // Emitting
             if (loggerLocation == LoggerStartLocation.Emitting) ILogger.instance = new ConsoleLogger();
@@ -104,14 +104,14 @@ namespace NSLCSharpConsole
 
             emittingResult.program.Log();
             var returnVariable = emittingResult.program.GetReturnVariable();
-            Console.WriteLine(returnVariable == null ? ": _" : $": {returnVariable.varName} = {returnVariable.type}");
-            Console.WriteLine("");
+            ILogger.instance?.Message(returnVariable == null ? ": _" : $": {returnVariable.type}").End().End();
 
             // Running
             if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
             runningTime.Start();
             var runner = new Runner(funcs);
-            runner.Run(emittingResult.program);
+            var runResult = runner.Run(emittingResult.program);
+            ILogger.instance?.Message(runResult.ToString());
             runningTime.End();
 
 

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using NSL.Executable;
+using NSL.Executable.Instructions;
 using NSL.Types;
 
 namespace NSL.Runtime
@@ -29,6 +31,8 @@ namespace NSL.Runtime
                 else return null;
             }
 
+            public IEnumerable<(string key, NSLValue value)> GetAllVariables() => variables.Select(v => (v.Key, v.Value));
+
             public Scope(Scope? parent)
             {
                 this.parent = parent;
@@ -45,7 +49,7 @@ namespace NSL.Runtime
 
             public void PushScope(string name, string? parentName)
             {
-                if (scopes.ContainsKey(name)) throw new InternalNSLExcpetion($"Duplicate scope named '{name}'");
+                if (name != "-1" && scopes.ContainsKey(name)) throw new InternalNSLExcpetion($"Duplicate scope named '{name}'");
                 Scope? parent = null;
                 if (parentName != null)
                 {
@@ -54,9 +58,9 @@ namespace NSL.Runtime
                         throw new InternalNSLExcpetion($"Failed to find scope name '{parentName}' for parent of '{name}'");
                     }
                 }
-                var newScope = new Scope(parent);
+                var newScope = scopes.ContainsKey(name) ? scopes[name] : new Scope(parent);
                 scopeStack.Push(newScope);
-                scopes.Add(name, newScope);
+                scopes[name] = newScope;
             }
 
             public void PopScope()
@@ -73,22 +77,47 @@ namespace NSL.Runtime
         }
 
         protected FunctionRegistry functions;
+        protected State state;
 
-        public NSLValue? Run(NSLProgram program)
+        public NSLValue Run(NSLProgram program)
         {
-            var state = new State(functions);
+            NSLValue? result = null;
+
+            var returnVariable = program.GetReturnVariable();
+            if (returnVariable != null)
+            {
+                state.PushScope("-1", null);
+                state.GetTopScope().Set(returnVariable.varName, returnVariable.type.Instantiate(null));
+                state.PopScope();
+            }
 
             foreach (var inst in program)
             {
                 inst.Execute(state);
             }
 
-            return null;
+            if (returnVariable != null)
+            {
+                state.PushScope("-1", null);
+                result = state.GetTopScope().Get(returnVariable.varName);
+                state.PopScope();
+            }
+
+            return result ?? PrimitiveTypes.voidType.Instantiate(null);
+        }
+
+        public Scope GetRootScope()
+        {
+            state.PushScope("-1", null);
+            var ret = state.GetTopScope();
+            state.PopScope();
+            return ret;
         }
 
         public Runner(FunctionRegistry functions)
         {
             this.functions = functions;
+            this.state = new State(functions);
         }
     }
 }
