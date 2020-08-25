@@ -10,13 +10,17 @@ namespace CSCommon
     {
         public static void RegisterCommonFunctions(FunctionRegistry registry)
         {
-            registry.Add(NSLFunction.MakeSimple("print", new List<TypeSymbol> { PrimitiveTypes.stringType }, PrimitiveTypes.voidType, argsEnum =>
+            registry.Add(new NSLFunction("print", (argsEnum) =>
             {
-                var args = argsEnum.ToArray();
-                if (args[0].GetValue() is string message)
+                return new NSLFunction.Signature
                 {
-                    Console.WriteLine(message);
-                }
+                    name = "print",
+                    arguments = argsEnum.Select(v => v ?? PrimitiveTypes.voidType),
+                    result = PrimitiveTypes.voidType
+                };
+            }, argsEnum =>
+            {
+                Console.WriteLine(String.Join(' ', argsEnum.Select(v => v.GetValue()?.ToString() ?? "null")));
                 return PrimitiveTypes.voidType.Instantiate(null);
             }));
 
