@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NSL.Executable;
@@ -11,10 +12,10 @@ namespace NSL.Runtime
         protected FunctionRegistry functions;
         public Scope RootScope { get; protected set; } = new Scope("-1", null);
 
-        public NSLValue Run(NSLProgram program)
+        public NSLValue Run(IProgram program) => Run(program, new State(functions, RootScope, this));
+        public NSLValue Run(IProgram program, State state)
         {
             NSLValue? result = null;
-            var state = new State(functions, RootScope);
 
             var returnVariable = program.GetReturnVariable();
             if (returnVariable != null)
@@ -24,9 +25,42 @@ namespace NSL.Runtime
                 state.PopScope();
             }
 
+            ActionBuilder? buildingAction = null;
+
             foreach (var inst in program)
             {
-                inst.Execute(state);
+                if (buildingAction == null)
+                {
+                    if (inst is ActionInstruction action)
+                    {
+                        buildingAction = new ActionBuilder(state.GetTopScope(), action.ReturnVariable, action.ArgumentVariable, action.Name, state.GetTopScope());
+                    }
+                    else
+                    {
+                        inst.Execute(state);
+                    }
+                }
+                else
+                {
+                    if (inst is ActionInstruction)
+                    {
+                        buildingAction.Depth++;
+                    }
+                    else if (inst is EndInstruction)
+                    {
+                        buildingAction.Depth--;
+                    }
+
+                    if (buildingAction.Depth == 0)
+                    {
+                        state.GetTopScope().Set(buildingAction.ActionVarName, buildingAction.Build());
+                        buildingAction = null;
+                    }
+                    else
+                    {
+                        buildingAction.Add(inst);
+                    }
+                }
             }
 
             if (returnVariable != null)
@@ -37,6 +71,13 @@ namespace NSL.Runtime
             }
 
             return result ?? PrimitiveTypes.voidType.Instantiate(null);
+        }
+
+        public NSLValue RunAction(NSLAction action)
+        {
+            var state = new State(functions, RootScope, this);
+            state.PushScope(action.Scope);
+            return Run(action, state);
         }
 
         public Runner(FunctionRegistry functions)

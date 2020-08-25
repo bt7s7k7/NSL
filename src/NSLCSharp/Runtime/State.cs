@@ -9,6 +9,7 @@ namespace NSL.Runtime
             protected Stack<Scope> scopeStack = new Stack<Scope>();
             protected Scope rootScope;
             public FunctionRegistry FunctionRegistry { get; }
+            public Runner Runner { get; protected set; }
 
             public void PushScope(string name, string? parentName)
             {
@@ -37,6 +38,11 @@ namespace NSL.Runtime
                 scopeStack.Push(newScope);
             }
 
+            public void PushScope(Scope scope)
+            {
+                scopeStack.Push(scope);
+            }
+
             public void PopScope()
             {
                 scopeStack.Pop();
@@ -44,10 +50,11 @@ namespace NSL.Runtime
 
             public Scope GetTopScope() => scopeStack.Peek();
 
-            public State(FunctionRegistry functionRegistry, Scope rootScope)
+            public State(FunctionRegistry functionRegistry, Scope rootScope, Runner runner)
             {
                 FunctionRegistry = functionRegistry;
                 this.rootScope = rootScope;
+                Runner = runner;
             }
         }
     }

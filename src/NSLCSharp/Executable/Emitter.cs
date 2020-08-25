@@ -16,7 +16,7 @@ namespace NSL.Executable
             public IEnumerable<Diagnostic> diagnostics;
             public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, NSLProgram.ReturnVariable? returnVariable)
+            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, IProgram.ReturnVariable? returnVariable)
             {
                 this.diagnostics = diagnostics;
                 this.program = new NSLProgram(instructions, returnVariable);
@@ -388,14 +388,22 @@ namespace NSL.Executable
                 }
             }
 
-            (Emission, Emission) makeAction(StatementRootNode blockNode, Context context)
+            (Emission, Emission) makeAction(StatementRootNode blockNode, Context context, string argVarName)
             {
                 var result = new Emission(makeVarName(), blockNode);
 
-                result.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName), context);
-
                 var blockEmission = visitBlock(blockNode, context);
 
+                IProgram.ReturnVariable returnVariable = new IProgram.ReturnVariable(blockEmission.type!, blockEmission.varName);
+                IProgram.ReturnVariable argumentVariable = new IProgram.ReturnVariable(
+                    context.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
+                    argVarName);
+                result.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), context);
+
+                if (blockEmission.type != PrimitiveTypes.voidType)
+                {
+                    context.scope.Add(blockEmission.varName, blockEmission.type!);
+                }
                 blockEmission.EmitTo(result, context);
 
                 result.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
@@ -415,12 +423,16 @@ namespace NSL.Executable
                 {
                     var result = new Emission(sourceEmission.varName, sourceEmission.node);
                     result.type = sourceEmission.type;
-                    result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
                     result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, sourceEmission.varName, sourceEmission.type, null), innerContext);
+                    innerContext.scope.Add(sourceEmission.varName, sourceEmission.type);
+
+                    result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+
                     TypeSymbol itemType = arrayType.GetItemType();
                     result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, "$_a", itemType, null), innerContext);
                     innerContext.scope.Add("$_a", itemType);
+
                     sourceEmission.EmitTo(result, innerContext);
 
                     if (targetNode is StatementNode statementTargetNode)
@@ -428,7 +440,7 @@ namespace NSL.Executable
                         var block = new StatementBlockNode(false, false, statementTargetNode.Start, statementTargetNode.End);
                         block.AddChild(statementTargetNode);
 
-                        var (actionEmission, _) = makeAction(block, innerContext);
+                        var (actionEmission, _) = makeAction(block, innerContext, "$_a");
 
                         actionEmission.EmitTo(result, innerContext);
 
@@ -436,7 +448,7 @@ namespace NSL.Executable
                     }
                     else if (targetNode is StatementBlockNode statementBlockTargetNode)
                     {
-                        var (actionEmission, _) = makeAction(statementBlockTargetNode, innerContext);
+                        var (actionEmission, _) = makeAction(statementBlockTargetNode, innerContext, "$_a");
 
                         actionEmission.EmitTo(result, innerContext);
 
@@ -472,13 +484,19 @@ namespace NSL.Executable
 
                 var result = new Emission(sourceEmission.varName, sourceEmission.node);
                 result.type = sourceEmission.type;
-                result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
                 result.Add(new DefInstruction(node.Start, node.End, sourceEmission.varName, sourceEmission.type, null), innerContext);
+                innerContext.scope.Add(sourceEmission.varName, sourceEmission.type);
+
+                result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+
                 var pushedVarName = targetNode!.pushedVarName!;
+
                 result.Add(new DefInstruction(node.Start, node.End, pushedVarName, sourceEmission.type, null), innerContext);
-                context.scope.Add(pushedVarName, sourceEmission.type);
+                innerContext.scope.Add(pushedVarName, sourceEmission.type);
+
                 sourceEmission.EmitTo(result, innerContext);
+
                 result.Add(new InvokeInstruction(node.Start, node.End, pushedVarName, sourceEmission.varName, new string[] { }), innerContext);
 
                 visitBlock(targetNode!, innerContext).EmitTo(result, innerContext);
@@ -497,12 +515,12 @@ namespace NSL.Executable
 
             var result = visitBlock(parsingResult.rootNode, context, overrideScopeId: -1);
 
-            NSLProgram.ReturnVariable? returnVariable = null;
+            IProgram.ReturnVariable? returnVariable = null;
             if (result.type != PrimitiveTypes.voidType)
             {
                 context.scope.Add(result.varName, result.type!);
                 result.EmitTo(state, context);
-                returnVariable = new NSLProgram.ReturnVariable(result.type!, result.varName);
+                returnVariable = new IProgram.ReturnVariable(result.type!, result.varName);
             }
             else
             {

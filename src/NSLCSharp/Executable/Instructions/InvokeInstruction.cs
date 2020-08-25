@@ -9,11 +9,12 @@ namespace NSL.Executable.Instructions
     public class InvokeInstruction : InstructionBase
     {
         protected string? retVarName;
+        protected string? oldRetVarName = null;
         protected string funcName;
         protected IEnumerable<string> arguments;
 
         override public int GetIndentDiff() => 0;
-        override public string ToString() => $"invoke {retVarName ?? "_"} = {funcName} [{String.Join(',', arguments)}]";
+        override public string ToString() => $"invoke {retVarName ?? "_"}{(oldRetVarName != null ? $" ({oldRetVarName})" : "")} = {funcName} [{String.Join(',', arguments)}]";
         public override void Execute(Runner.State state)
         {
             if (funcName[0] == '$')
@@ -52,7 +53,14 @@ namespace NSL.Executable.Instructions
             }
         }
 
-        public void RemoveRetVarName() => retVarName = null;
+        public void RemoveRetVarName()
+        {
+            if (retVarName != null)
+            {
+                oldRetVarName = retVarName;
+                retVarName = null;
+            }
+        }
         public string? GetRetVarName() => retVarName;
 
         public InvokeInstruction(Position start, Position end, string? retVarName, string funcName, IEnumerable<string> arguments) : base(start, end)

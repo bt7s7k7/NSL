@@ -16,6 +16,6 @@ namespace NSL.Types
         public TypeSymbol GetTypeSymbol() => type;
         public object? GetValue() => value;
         public void SetValue(object? newValue) => value = newValue;
-        override public string ToString() => $"{(JsonSerializer.Serialize(value) ?? "null")} : {type}";
+        override public string ToString() => $"{ToStringUtil.ToString(value)} : {type}";
     }
 }
