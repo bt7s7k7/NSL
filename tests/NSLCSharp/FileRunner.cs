@@ -47,6 +47,12 @@ namespace NSLCSharp
             tokenizationTime.End();
             ILogger.instance?.End();
 
+            foreach (var token in tokenizationResult.tokens)
+            {
+                ILogger.instance?.Name(token.type.ToString()).Object(token.content).Pos(token.start).End();
+            }
+            ILogger.instance?.End();
+
             // Parsing
             if (loggerLocation == LoggerStartLocation.Parsing) ILogger.instance = new ConsoleLogger();
 

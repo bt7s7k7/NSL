@@ -33,6 +33,25 @@ namespace NSL.Tokenization
             Comment
         }
 
+        private class StringState
+        {
+            public char stringCloseChar;
+            public bool stringTemplate;
+            public bool isFirst = true;
+
+            public StringState(char stringCloseChar, bool stringTemplate)
+            {
+                this.stringCloseChar = stringCloseChar;
+                this.stringTemplate = stringTemplate;
+            }
+        }
+
+        private static Stack<StringState> stringStack = new Stack<StringState>();
+        private static void PushString(char stringCloseChar, bool stringTemplate)
+        {
+            stringStack.Push(new StringState(stringCloseChar, stringTemplate));
+        }
+
         public NSLTokenizer() : base(
             new Dictionary<StateType, List<ITokenDefinition<TokenType, StateType>>> {
                 { StateType.Default, new List<ITokenDefinition<TokenType, StateType>>{
@@ -41,6 +60,7 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(false)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: ">", resultState: StateType.String, type: TokenType.Literal),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>",type: TokenType.PipeForEach),
@@ -51,7 +71,20 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "(",type: TokenType.InlineStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: ")",type: TokenType.InlineEnd),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: ";",type: TokenType.StatementEnd),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\"",resultState: StateType.String, type: TokenType.Literal),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\"",resultState: StateType.String, type: TokenType.Literal, processor: (token, state) => PushString('"', false)),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "`",resultState: StateType.String, type: TokenType.Literal, processor: (token, state) => PushString('`', false)),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "$\"",resultState: StateType.String, custom: (state) => {
+                        PushString('"', true);
+                        state.tokens.Add(new Token<TokenType>(TokenType.InlineStart, "(", null, state.position, state.position));
+                        state.tokens.Add(new Token<TokenType>(TokenType.Keyword, "concat", null, state.position, state.position));
+                        state.tokens.Add(new Token<TokenType>(TokenType.Literal, "", null, state.position, state.position));
+                    }),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "$`",resultState: StateType.String, custom: (state) => {
+                        PushString('`', true);
+                        state.tokens.Add(new Token<TokenType>(TokenType.InlineStart, "(", null, state.position, state.position));
+                        state.tokens.Add(new Token<TokenType>(TokenType.Keyword, "concat", null, state.position, state.position));
+                        state.tokens.Add(new Token<TokenType>(TokenType.Literal, "", null, state.position, state.position));
+                    }),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword, verifier: (c) => 'a' <= c && 'z' >= c),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c), processor: (token, state) => {
@@ -66,8 +99,21 @@ namespace NSL.Tokenization
                 } },
                 { StateType.String, new List<ITokenDefinition<TokenType, StateType>>{
                     new SimpleTokenDefinition<TokenType, StateType>((state) => {
-                        var token = state.tokens[state.tokens.Count - 1];
-                        var builder = new StringBuilder();
+                        var stringToken = state.tokens[state.tokens.Count - 1];
+                        if (stringStack.Count == 0) {
+                            state.diagnostics.Add(new Diagnostic("Unexpected end of a template string embed, not in a template string", state.position, state.position));
+                            stringToken.value = PrimitiveTypes.stringType.Instantiate("");
+                            stringToken.end = state.position;
+                            state.state = StateType.Default;
+                            return true;
+                        }
+                        var stringBuilder = new StringBuilder();
+                        var breakForTemplate = false;
+                        var stringState = stringStack.Peek();
+                        if (!stringState.isFirst) {
+                            state.tokens.Insert(state.tokens.Count - 1, new Token<TokenType>(TokenType.InlineEnd, ")", null, state.position, state.position));
+                        }
+                        stringState.isFirst = false;
 
                         bool next() {
                             if (state.Next()) {
@@ -81,29 +127,49 @@ namespace NSL.Tokenization
                             if (curr == '\\') {
                                 if (next()) return true;
                                 curr = state.code[state.position.index];
-                                if (curr == 'n') builder.Append('\n');
-                                else if (curr == 't') builder.Append('\t');
-                                else if (curr == '"') builder.Append('"');
-                                else if (curr == '\\') builder.Append('\\');
+                                if (curr == 'n') stringBuilder.Append('\n');
+                                else if (curr == 't') stringBuilder.Append('\t');
+                                else if (curr == '"') stringBuilder.Append('"');
+                                else if (curr == '`') stringBuilder.Append('`');
+                                else if (curr == '\\') stringBuilder.Append('\\');
                                 else {
                                     state.diagnostics.Add(new Diagnostic("Unknown escape sequence", state.position, state.position));
                                 }
-                            } else if (curr == '"') {
+                            } else if (curr == '$' && stringState.stringTemplate) {
+                                if (next()) return true;
+                                curr = state.code[state.position.index];
+                                if (curr != '<') {
+                                    continue;
+                                } else {
+                                    breakForTemplate = true;
+                                    break;
+                                }
+                            } else if (curr == stringState.stringCloseChar) {
+                                breakForTemplate = false;
                                 break;
                             } else {
-                                builder.Append(curr);
+                                stringBuilder.Append(curr);
                             }
 
                             if (next()) return true;
                         }
 
-                        token.value = PrimitiveTypes.stringType.Instantiate(builder.ToString());
-                        token.end = state.position;
+                        stringToken.value = PrimitiveTypes.stringType.Instantiate(stringBuilder.ToString());
+                        stringToken.end = state.position;
 
                         state.state = StateType.Default;
                         state.Next();
 
-                        ILogger.instance?.Message("      → ").Object(token.value).End();
+                        ILogger.instance?.Message("      → ").Object(stringToken.value).End();
+
+                        if (!breakForTemplate) {
+                            stringStack.Pop();
+                            if (stringState.stringTemplate) {
+                                state.tokens.Add(new Token<TokenType>(TokenType.InlineEnd, ")", null, state.position, state.position));
+                            }
+                        } else {
+                            state.tokens.Add(new Token<TokenType>(TokenType.InlineStart, "(", null, state.position, state.position));
+                        }
 
                         return true;
                     })

@@ -13,6 +13,7 @@ namespace NSL.Tokenization.General
         public S? resultState;
         public Action<Token<T>, Tokenizer<T, S>.TokenizationState>? processor;
         public Func<char, bool>? verifier;
+        public Action<Tokenizer<T, S>.TokenizationState>? custom;
 
         public RegexTokenDefinition(
             Regex? expr = null,
@@ -21,7 +22,8 @@ namespace NSL.Tokenization.General
             S? resultState = null,
             Action<Token<T>,
             Tokenizer<T, S>.TokenizationState>? processor = null,
-            Func<char, bool>? verifier = null
+            Func<char, bool>? verifier = null,
+            Action<Tokenizer<T, S>.TokenizationState>? custom = null
         )
         {
             this.expr = expr;
@@ -30,6 +32,7 @@ namespace NSL.Tokenization.General
             this.processor = processor;
             this.pattern = pattern;
             this.verifier = verifier;
+            this.custom = custom;
         }
 
         public bool Execute(Tokenizer<T, S>.TokenizationState state)
@@ -81,6 +84,8 @@ namespace NSL.Tokenization.General
                 {
                     state.state = (S)resultState!;
                 }
+
+                if (custom != null) custom(state);
 
                 return true;
             }

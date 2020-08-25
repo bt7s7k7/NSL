@@ -45,9 +45,15 @@ namespace NSL.Tokenization.General
         {
             var builder = new StringBuilder();
             var lineNum = (line + 1) + ":";
+            var currIndex = index;
 
-            var lineStart = code.code.LastIndexOf('\n', index);
-            var lineEnd = code.code.IndexOf('\n', index);
+            if (code.code[index] == '\n')
+            {
+                currIndex--;
+            }
+
+            var lineStart = code.code.LastIndexOf('\n', currIndex);
+            var lineEnd = code.code.IndexOf('\n', currIndex);
 
             if (lineStart == -1) lineStart = 0;
             if (lineEnd == -1) lineEnd = code.code.Length - 1;
