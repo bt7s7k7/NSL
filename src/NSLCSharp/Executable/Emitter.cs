@@ -5,6 +5,7 @@ using NSL.Executable.Instructions;
 using NSL.Parsing;
 using NSL.Parsing.Nodes;
 using NSL.Types;
+using NSL.Runtime;
 
 namespace NSL.Executable
 {
@@ -15,7 +16,7 @@ namespace NSL.Executable
             public IEnumerable<Diagnostic> diagnostics;
             public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, NSLProgram.ReturnVariable? returnVariable)
+            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, IProgram.ReturnVariable? returnVariable)
             {
                 this.diagnostics = diagnostics;
                 this.program = new NSLProgram(instructions, returnVariable);
@@ -169,7 +170,10 @@ namespace NSL.Executable
             }
         }
 
-        public static Result Emit(Parser.ParsingResult parsingResult, FunctionRegistry functions)
+        private static int globalScopeId = 0;
+        private static int globalVariableId = 0;
+
+        public static Result Emit(Parser.ParsingResult parsingResult, FunctionRegistry functions, Runner.Scope? runnerRootScope = null)
         {
             var state = new State(parsingResult.diagnostics);
 
@@ -178,20 +182,17 @@ namespace NSL.Executable
                 return new Result(state.diagnostics, state.FinishInstructions(), null);
             }
 
-            var globalScopeId = 0;
-            var globalVariableId = 0;
-
             string makeVarName()
             {
                 return "$_" + globalVariableId++;
             }
 
-            Emission visitBlock(StatementRootNode rootNode, Context context)
+            Emission visitBlock(StatementRootNode rootNode, Context context, int? overrideScopeId = null)
             {
                 ILogger.instance?.Source("EMT").Message("Visiting block").Pos(rootNode.Start).End();
                 var result = new Emission("", rootNode);
 
-                var innerContext = context.UpdateScope(globalScopeId++);
+                var innerContext = context.UpdateScope(overrideScopeId ?? globalScopeId++);
                 result.Add(new PushInstruction(rootNode.Start, rootNode.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
                 Emission? lastEmission = null;
                 bool lastEmissionDefined = false;
@@ -206,6 +207,7 @@ namespace NSL.Executable
                         lastEmission = visitStatement(variableNode, innerContext);
 
                         wrapperEmission.Add(new DefInstruction(variableNode.Start, variableNode.End, varName, lastEmission.type!, null), innerContext);
+                        wrapperEmission.type = lastEmission.type!;
                         innerContext.scope.Add(varName, lastEmission.type!);
                         lastEmission.EmitTo(wrapperEmission, innerContext);
 
@@ -386,14 +388,22 @@ namespace NSL.Executable
                 }
             }
 
-            (Emission, Emission) makeAction(StatementRootNode blockNode, Context context)
+            (Emission, Emission) makeAction(StatementRootNode blockNode, Context context, string argVarName)
             {
                 var result = new Emission(makeVarName(), blockNode);
 
-                result.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName), context);
-
                 var blockEmission = visitBlock(blockNode, context);
 
+                IProgram.ReturnVariable returnVariable = new IProgram.ReturnVariable(blockEmission.type!, blockEmission.varName);
+                IProgram.ReturnVariable argumentVariable = new IProgram.ReturnVariable(
+                    context.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
+                    argVarName);
+                result.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), context);
+
+                if (blockEmission.type != PrimitiveTypes.voidType)
+                {
+                    context.scope.Add(blockEmission.varName, blockEmission.type!);
+                }
                 blockEmission.EmitTo(result, context);
 
                 result.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
@@ -413,12 +423,16 @@ namespace NSL.Executable
                 {
                     var result = new Emission(sourceEmission.varName, sourceEmission.node);
                     result.type = sourceEmission.type;
-                    result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
                     result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, sourceEmission.varName, sourceEmission.type, null), innerContext);
+                    innerContext.scope.Add(sourceEmission.varName, sourceEmission.type);
+
+                    result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+
                     TypeSymbol itemType = arrayType.GetItemType();
                     result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, "$_a", itemType, null), innerContext);
                     innerContext.scope.Add("$_a", itemType);
+
                     sourceEmission.EmitTo(result, innerContext);
 
                     if (targetNode is StatementNode statementTargetNode)
@@ -426,7 +440,7 @@ namespace NSL.Executable
                         var block = new StatementBlockNode(false, false, statementTargetNode.Start, statementTargetNode.End);
                         block.AddChild(statementTargetNode);
 
-                        var (actionEmission, _) = makeAction(block, innerContext);
+                        var (actionEmission, _) = makeAction(block, innerContext, "$_a");
 
                         actionEmission.EmitTo(result, innerContext);
 
@@ -434,7 +448,7 @@ namespace NSL.Executable
                     }
                     else if (targetNode is StatementBlockNode statementBlockTargetNode)
                     {
-                        var (actionEmission, _) = makeAction(statementBlockTargetNode, innerContext);
+                        var (actionEmission, _) = makeAction(statementBlockTargetNode, innerContext, "$_a");
 
                         actionEmission.EmitTo(result, innerContext);
 
@@ -470,13 +484,19 @@ namespace NSL.Executable
 
                 var result = new Emission(sourceEmission.varName, sourceEmission.node);
                 result.type = sourceEmission.type;
-                result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
                 result.Add(new DefInstruction(node.Start, node.End, sourceEmission.varName, sourceEmission.type, null), innerContext);
+                innerContext.scope.Add(sourceEmission.varName, sourceEmission.type);
+
+                result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
+
                 var pushedVarName = targetNode!.pushedVarName!;
+
                 result.Add(new DefInstruction(node.Start, node.End, pushedVarName, sourceEmission.type, null), innerContext);
-                context.scope.Add(pushedVarName, sourceEmission.type);
+                innerContext.scope.Add(pushedVarName, sourceEmission.type);
+
                 sourceEmission.EmitTo(result, innerContext);
+
                 result.Add(new InvokeInstruction(node.Start, node.End, pushedVarName, sourceEmission.varName, new string[] { }), innerContext);
 
                 visitBlock(targetNode!, innerContext).EmitTo(result, innerContext);
@@ -488,26 +508,24 @@ namespace NSL.Executable
 
             Context context = new Context(scope: null);
 
-            state.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, makeVarName()), context);
+            if (runnerRootScope != null) foreach (var (key, value) in runnerRootScope.GetAllVariables())
+                {
+                    context.scope.Add(key, value.GetTypeSymbol());
+                }
 
-            var result = visitBlock(parsingResult.rootNode, context);
+            var result = visitBlock(parsingResult.rootNode, context, overrideScopeId: -1);
 
-            NSLProgram.ReturnVariable? returnVariable = null;
+            IProgram.ReturnVariable? returnVariable = null;
             if (result.type != PrimitiveTypes.voidType)
             {
-                state.Add(new DefInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, result.type!, null), context);
                 context.scope.Add(result.varName, result.type!);
                 result.EmitTo(state, context);
-                returnVariable = new NSLProgram.ReturnVariable(result.type!, result.varName);
+                returnVariable = new IProgram.ReturnVariable(result.type!, result.varName);
             }
             else
             {
                 result.EmitTo(state, context);
             }
-
-
-            state.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
-
 
             return new Result(state.diagnostics, state.FinishInstructions(), returnVariable);
         }

@@ -1,3 +1,4 @@
+using NSL.Runtime;
 using NSL.Tokenization.General;
 
 namespace NSL.Executable
@@ -8,13 +9,16 @@ namespace NSL.Executable
         public Position End { get; }
 
         int GetIndentDiff();
+        void Execute(Runner.State state);
     }
 
     public abstract class InstructionBase : IInstruction
     {
         public Position Start { get; protected set; }
         public Position End { get; protected set; }
+
         public virtual int GetIndentDiff() => 0;
+        public abstract void Execute(Runner.State state);
 
         protected InstructionBase(Position start, Position end)
         {

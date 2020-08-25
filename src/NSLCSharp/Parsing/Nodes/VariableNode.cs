@@ -11,20 +11,21 @@ namespace NSL.Parsing.Nodes
 
         override protected void OnToken(Token<Tokenization.NSLTokenizer.TokenType> next, Parser.ParsingState state)
         {
-            if (varName == null)
+            if (varName == null && next.type == TokenType.Keyword)
             {
                 if (next.type == TokenType.Keyword)
                 {
                     varName = next.content;
                     var statementNode = new StatementNode(next.content, next.start, next.end);
+                    statementNode.terminator = terminator;
                     AddChild(statementNode);
                     state.Pop();
                     state.Push(statementNode);
                 }
-                else
-                {
-                    base.OnToken(next, state);
-                }
+            }
+            else
+            {
+                throw new InternalNSLExcpetion($"Variable node shouldn't be called after init with {next.type}");
             }
         }
 

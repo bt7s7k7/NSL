@@ -39,7 +39,7 @@ namespace NSL
                 var args = argsEnum.ToArray();
                 var arg = (args.Length < 1 ? PrimitiveTypes.neverType : args[0]) ?? PrimitiveTypes.neverType;
                 return new NSLFunction.Signature { name = "toString", arguments = new TypeSymbol[] { arg }, result = PrimitiveTypes.stringType };
-            }, argsEnum => PrimitiveTypes.stringType.Instantiate(argsEnum.First()?.GetValue()?.ToString() ?? "null")));
+            }, argsEnum => PrimitiveTypes.stringType.Instantiate(ToStringUtil.ToString(argsEnum.First()?.GetValue()))));
 
             registry.Add(new NSLFunction("concat", argsEnum =>
             {
