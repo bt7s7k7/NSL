@@ -20,7 +20,7 @@ namespace NSLCSharp
 
             void run(string text)
             {
-                var result = Emitter.Emit(Parser.Parse(tokenizer.Tokenize(text)), functions, runnerRootScope: runner.GetRootScope());
+                var result = Emitter.Emit(Parser.Parse(tokenizer.Tokenize(text)), functions, runnerRootScope: runner.RootScope);
 
                 ILogger.instance = new ConsoleLogger();
                 foreach (var diagnostic in result.diagnostics)

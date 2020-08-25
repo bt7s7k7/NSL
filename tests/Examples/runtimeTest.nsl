@@ -1,1 +1,1 @@
-echo (var $x 5)
+print (var $x 5)
