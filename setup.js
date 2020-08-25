@@ -31,18 +31,11 @@ function link(source, target) {
  * @type {Record<string, {name : string, callback: () => void}}
  */
 const projects = {
-    cs_con: {
-        name: "C# Console Test",
+    cs: {
+        name: "C# Generic",
         callback: () => {
-            link("./src/NSLCSharp", "./tests/NSLCSharpConsole/NSLCSharp")
-            link("./tests/CSCommon", "./tests/NSLCSharpConsole/CSCommon")
-        }
-    },
-    cs_repl: {
-        name: "C# REPL",
-        callback: () => {
-            link("./src/NSLCSharp", "./tests/NSLCSharpRepl/NSLCSharp")
-            link("./tests/CSCommon", "./tests/NSLCSharpRepl/CSCommon")
+            link("./src/NSLCSharp", "./tests/NSLCSharp/NSLCSharp")
+            link("./tests/CSCommon", "./tests/NSLCSharp/CSCommon")
         }
     }
 }
@@ -54,6 +47,10 @@ if (process.argv[2] != null) {
         reader.close()
     } else {
         console.error("Invalid project name")
+        Object.entries(projects).forEach(([key, value]) => {
+            console.log(`  (${key}): ${value.name}`)
+        })
+        process.exit(1)
     }
 } else {
     console.log("Which project do you want to setup?")

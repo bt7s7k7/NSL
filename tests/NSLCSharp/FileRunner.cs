@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using CSCommon;
@@ -8,9 +8,9 @@ using NSL.Parsing;
 using NSL.Runtime;
 using NSL.Tokenization;
 
-namespace NSLCSharpConsole
+namespace NSLCSharp
 {
-    class Program
+    class FileRunner
     {
         protected enum LoggerStartLocation
         {
@@ -21,51 +21,18 @@ namespace NSLCSharpConsole
             None
         }
 
-        private const string FILE_PATH = "../Examples/runtimeTest.nsl";
-
         protected Timer tokenizerNewTime = new Timer();
         protected Timer tokenizationTime = new Timer();
         protected Timer parsingTime = new Timer();
         protected Timer emittingTime = new Timer();
         protected Timer runningTime = new Timer();
         protected string code;
+        protected LoggerStartLocation loggerLocation;
+        protected bool doTime;
+        protected int repeats;
+        protected FileInfo filePath;
 
-        static void Main(string[] args)
-        {
-            var runConfig = args.Length > 0 ? args[0] : null;
-
-            if (runConfig != null && runConfig[0] == '+')
-            {
-                runConfig = runConfig.Substring(1);
-                if (runConfig.Length == 0) runConfig = null;
-                Console.ReadLine();
-            }
-
-            var program = new Program();
-
-            if (runConfig == null)
-            {
-                program.RunSimple();
-            }
-            else if (runConfig == "token")
-            {
-                program.RunTokens();
-            }
-            else if (runConfig == "time")
-            {
-                program.RunTime();
-            }
-            else if (runConfig == "timeLog")
-            {
-                program.RunTimeLogger();
-            }
-            else
-            {
-                Console.WriteLine("Invalid run configuration");
-            }
-        }
-
-        protected void Run(LoggerStartLocation loggerLocation)
+        protected void Run()
         {
             ILogger.instance = null;
 
@@ -76,9 +43,9 @@ namespace NSLCSharpConsole
             tokenizerNewTime.End();
 
             tokenizationTime.Start();
-            var tokenizationResult = tokenizer.Tokenize(code, Path.GetFullPath(FILE_PATH));
+            var tokenizationResult = tokenizer.Tokenize(code, filePath.FullName);
             tokenizationTime.End();
-            Console.WriteLine("");
+            ILogger.instance?.End();
 
             // Parsing
             if (loggerLocation == LoggerStartLocation.Parsing) ILogger.instance = new ConsoleLogger();
@@ -100,7 +67,7 @@ namespace NSLCSharpConsole
             var emittingResult = Emitter.Emit(parsingResult, funcs);
             emittingTime.End();
 
-            Console.WriteLine("");
+            ILogger.instance?.End();
 
             emittingResult.program.Log();
             var returnVariable = emittingResult.program.GetReturnVariable();
@@ -111,9 +78,8 @@ namespace NSLCSharpConsole
             runningTime.Start();
             var runner = new Runner(funcs);
             var runResult = runner.Run(emittingResult.program);
-            ILogger.instance?.Message(runResult.ToString());
+            ILogger.instance?.Message(runResult.ToString()).End();
             runningTime.End();
-
 
             // Finish
             ILogger.instance = new ConsoleLogger();
@@ -121,7 +87,7 @@ namespace NSLCSharpConsole
             {
                 diagnostic.Log();
             }
-            Console.WriteLine("");
+            if (emittingResult.diagnostics.Count() > 0) ILogger.instance?.End();
 
             if (emittingResult.diagnostics.Count() > 0)
             {
@@ -129,25 +95,13 @@ namespace NSLCSharpConsole
             }
         }
 
-        public void RunTokens()
+        public void Invoke()
         {
-            Run(LoggerStartLocation.Tokenization);
-            WriteTimes();
-        }
-
-        public void RunSimple()
-        {
-            Run(LoggerStartLocation.Running);
-            WriteTimes();
-        }
-
-        public void RunTime()
-        {
-            for (var i = 0; i < 20; i++)
+            for (var i = 0; i < repeats; i++)
             {
-                Console.Write($"${i} / 20\r");
-                Run(LoggerStartLocation.None);
-                if (i == 0)
+                if (repeats > 1) Console.Write($"{i + 1} / {repeats}\r");
+                Run();
+                if (doTime && repeats != 1 && i == 0)
                 {
                     tokenizerNewTime.Reset();
                     tokenizationTime.Reset();
@@ -156,29 +110,23 @@ namespace NSLCSharpConsole
                     runningTime.Reset();
                 }
             }
-            WriteTimes();
+            if (doTime) WriteTimes();
         }
 
-        public void RunTimeLogger()
-        {
-            for (var i = 0; i < 20; i++)
-            {
-                Console.Write($"${i} / 20\r");
-                Run(LoggerStartLocation.Tokenization);
-            }
-            WriteTimes();
-        }
-
-        public Program()
+        public FileRunner(FileInfo filePath, bool verbose, int repeats, bool doTime)
         {
             string? script = null;
 
-            using (var reader = new StreamReader(FILE_PATH))
+            using (var reader = new StreamReader(filePath.FullName))
             {
                 script = reader.ReadToEnd();
             }
 
             this.code = script;
+            this.repeats = repeats;
+            this.doTime = doTime;
+            this.loggerLocation = verbose ? LoggerStartLocation.Tokenization : LoggerStartLocation.None;
+            this.filePath = filePath;
         }
 
         protected void WriteTimes()

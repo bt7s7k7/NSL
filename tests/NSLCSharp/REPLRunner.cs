@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CSCommon;
 using NSL;
 using NSL.Runtime;
@@ -7,11 +7,11 @@ using NSL.Parsing;
 using NSL.Executable;
 using System.Linq;
 
-namespace NSLCSharpRepl
+namespace NSLCSharp
 {
-    class Program
+    static class REPLRunner
     {
-        static void Main(string[] args)
+        private static void Work(string? evalString, bool printOutputs)
         {
             NSLTokenizer tokenizer = new NSLTokenizer();
             FunctionRegistry functions = FunctionRegistry.GetStandardFunctionRegistry();
@@ -28,22 +28,41 @@ namespace NSLCSharpRepl
                     diagnostic.Log();
                 }
 
-                if (result.diagnostics.Count() == 0) ILogger.instance?.Name(runner.Run(result.program).ToString()).End();
+
+                if (result.diagnostics.Count() == 0)
+                {
+                    var runResult = runner.Run(result.program);
+                    if (printOutputs) ILogger.instance?.Name(runResult.ToString()).End();
+                }
+
                 ILogger.instance = null;
             }
 
-            foreach (var arg in args)
+            if (evalString != null)
             {
-                run(arg);
+                run(evalString);
+                return;
             }
 
             while (true)
             {
                 Console.Write("> ");
-                var text = Console.ReadLine();
+                var text = ReadLine.Read();
 
                 run(text);
             }
+        }
+
+        public static void Start()
+        {
+            Console.WriteLine("NSL :: (C) Branislav Trstenský 2020");
+            Console.WriteLine("Type 'exit' to exit");
+            Work(null, true);
+        }
+
+        public static void Run(string command, bool printResult)
+        {
+            Work(command, printResult);
         }
     }
 }
