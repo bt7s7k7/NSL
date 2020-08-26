@@ -28,6 +28,9 @@ namespace NSL.Types
             return obj != null && obj is TypeSymbol symbol && symbol.ToString() == this.ToString();
         }
 
+        public static bool operator ==(TypeSymbol? a, TypeSymbol? b) => a?.Equals(b) ?? Object.ReferenceEquals(a, null) && Object.ReferenceEquals(b, null);
+        public static bool operator !=(TypeSymbol? a, TypeSymbol? b) => !(a == b);
+
         public override int GetHashCode()
         {
             return HashCode.Combine(name);

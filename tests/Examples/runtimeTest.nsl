@@ -1,5 +1,1 @@
-echo (getNumbers |{
-    print
-}) |>{
-    print
-}
+print 5

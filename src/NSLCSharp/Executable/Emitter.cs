@@ -267,8 +267,8 @@ namespace NSL.Executable
             Emission visitStatement(StatementNode node, Context context)
             {
                 var variableNode = node as VariableNode;
-                var function = variableNode != null
-                    ? FunctionRegistry.MakeVariableDefinitionFunction(variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null"))
+                var foundFunctions = variableNode != null
+                    ? new[] { FunctionRegistry.MakeVariableDefinitionFunction(variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null")) }
                     : functions.Find(node.name);
 
                 if (variableNode != null)
@@ -276,7 +276,7 @@ namespace NSL.Executable
                     node = (StatementNode)variableNode.Children[0];
                 }
 
-                if (function == null)
+                if (foundFunctions.Count() == 0)
                 {
                     var emission = new Emission(makeVarName(), node);
                     emission.type = PrimitiveTypes.neverType;
@@ -288,7 +288,7 @@ namespace NSL.Executable
                 else
                 {
                     var arguments = new List<Emission>();
-                    var emission = new Emission(variableNode != null ? function.GetName() : makeVarName(), node);
+                    var emission = new Emission(variableNode != null ? foundFunctions.First().GetName() : makeVarName(), node);
 
                     var innerContext = context.UpdateScope(globalScopeId++);
                     emission.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
@@ -352,30 +352,27 @@ namespace NSL.Executable
 
                     var providedArgs = arguments.Select(v => v.type).ToArray();
 
-                    var signature = function.GetSignature(providedArgs);
-                    var wantedArgs = signature.arguments.ToArray();
+                    NSLFunction.Signature signature;
 
-                    if (providedArgs.Length < wantedArgs.Length)
+                    try
                     {
-                        state!.diagnostics.Add(new Diagnostic($"Wrong argument count for '{signature}', expected: '{wantedArgs.Length}', got: '{providedArgs.Length}'", node.Start, node.End));
-                    }
-                    else
-                    {
-                        for (int i = 0, len = providedArgs.Count(); i < len; i++)
+                        (_, signature) = NSLFunction.GetMatchingFunction(foundFunctions, providedArgs);
+
+                        for (int i = 0, len = signature.arguments.Count(); i < len; i++)
                         {
-                            var provided = providedArgs[i];
-                            var wanted = wantedArgs[i];
                             var argumentEmission = arguments[i];
-
-                            if (provided == wanted || provided == PrimitiveTypes.neverType)
-                            {
-                                argumentEmission.EmitTo(emission, innerContext);
-                            }
-                            else
-                            {
-                                state!.diagnostics.Add(new Diagnostic($"Wrong argument type for '{signature}', expected: '{wanted}', got: '{provided}'", argumentEmission.node.Start, argumentEmission.node.End));
-                            }
+                            argumentEmission.EmitTo(emission, innerContext);
                         }
+                    }
+                    catch (OverloadNotFoundNSLException err)
+                    {
+                        state!.diagnostics.Add(new Diagnostic(err.Message, node.Start, node.End));
+                        signature = new NSLFunction.Signature
+                        {
+                            arguments = new TypeSymbol[] { },
+                            name = err.FunctionName,
+                            result = err.ReturnType
+                        };
                     }
 
                     emission.type = signature.result;
