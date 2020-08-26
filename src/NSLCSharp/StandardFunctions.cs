@@ -108,6 +108,19 @@ namespace NSL
                 }
             }));
 
+            // Arrays
+
+            registry.Add(new NSLFunction(
+                name: "arr",
+                signatureGenerator: argsEnum => new NSLFunction.Signature
+                {
+                    name = "arr",
+                    arguments = argsEnum.Select(v => argsEnum.First() ?? PrimitiveTypes.neverType),
+                    result = argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType
+                },
+                impl: argsEnum => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()))
+            ));
+
             return registry;
         }
     }
