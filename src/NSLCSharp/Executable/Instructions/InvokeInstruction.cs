@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NSL.Runtime;
 using NSL.Tokenization.General;
 using System.Linq;
+using NSL.Types;
 
 namespace NSL.Executable.Instructions
 {
@@ -35,10 +36,10 @@ namespace NSL.Executable.Instructions
             }
             else
             {
-                var function = state.FunctionRegistry.Find(funcName);
+                var argumentValues = arguments.Select(v => state.GetTopScope().Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
+                var (function, _) = NSLFunction.GetMatchingFunction(state.FunctionRegistry.Find(funcName), argumentValues.Select(v => v.GetTypeSymbol()));
                 if (function != null)
                 {
-                    var argumentValues = arguments.Select(v => state.GetTopScope().Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
                     var returnValue = function.Invoke(argumentValues);
                     if (retVarName != null)
                     {
