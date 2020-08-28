@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using NSL.Executable;
+using System.Text;
 using NSL.Types;
 
 namespace NSL
@@ -27,6 +28,21 @@ namespace NSL
                 signatureGenerator: argsEnum => new NSLFunction.Signature { name = "void", arguments = argsEnum.Select(v => v ?? PrimitiveTypes.neverType), result = PrimitiveTypes.voidType },
                 impl: (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null)
             ));
+
+            registry.Add(NSLFunction.MakeSimple("help", new TypeSymbol[] { }, PrimitiveTypes.stringType, (argsEnum, state) =>
+            {
+                var builder = new StringBuilder();
+
+                foreach (var (name, functions) in state.FunctionRegistry.functions)
+                {
+                    foreach (var function in functions)
+                    {
+                        builder.AppendLine(function.GetSignature(new TypeSymbol[] { }).ToString());
+                    }
+                }
+
+                return PrimitiveTypes.stringType.Instantiate(builder.ToString());
+            }));
 
             // String
             registry.Add(new NSLFunction("toString", argsEnum =>
@@ -146,7 +162,7 @@ namespace NSL
                 {
                     name = "arr",
                     arguments = argsEnum.Select(v => argsEnum.First() ?? PrimitiveTypes.neverType),
-                    result = argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType
+                    result = argsEnum.Count() != 0 ? argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType
                 },
                 impl: (argsEnum, state) => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()).ToArray())
             ));
