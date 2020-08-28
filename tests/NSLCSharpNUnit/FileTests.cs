@@ -48,7 +48,14 @@ namespace NSLCSharpNUnit
                 }
                 else
                 {
-                    Assert.Fail(String.Join('\n', diagnostics));
+                    if (typeString == 'E')
+                    {
+                        Assert.Pass();
+                    }
+                    else
+                    {
+                        Assert.Fail(String.Join('\n', diagnostics));
+                    }
                 }
             }
             catch (UserNSLException err)

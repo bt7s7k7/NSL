@@ -1,0 +1,2 @@
+#E :: Should add a diagnostic, not throw an error
+echo 0x5

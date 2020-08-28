@@ -303,8 +303,6 @@ namespace NSL.Executable
                 {
                     var emission = new Emission(makeVarName(), node);
                     emission.type = PrimitiveTypes.neverType;
-                    emission.Add(new DefInstruction(node.Start, node.End, emission.varName, PrimitiveTypes.neverType, null), context);
-                    context.scope.Add(emission.varName, PrimitiveTypes.neverType);
                     state!.diagnostics.Add(new Diagnostic($"Function '{node.name}' not found", node.Start, node.End));
                     return emission;
                 }
