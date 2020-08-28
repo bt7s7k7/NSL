@@ -44,6 +44,22 @@ namespace NSL
                 return PrimitiveTypes.stringType.Instantiate(builder.ToString());
             }));
 
+            registry.Add(NSLFunction.MakeSimple("help", new[] { PrimitiveTypes.stringType }, PrimitiveTypes.stringType, (argsEnum, state) =>
+           {
+               if (argsEnum.ElementAt(0).GetValue() is string name)
+               {
+                   var builder = new StringBuilder();
+
+                   foreach (var function in state.FunctionRegistry.Find(name))
+                   {
+                       builder.AppendLine(function.GetSignature(new TypeSymbol[] { }).ToString());
+                   }
+
+                   return PrimitiveTypes.stringType.Instantiate(builder.ToString());
+               }
+               else throw new ImplWrongValueNSLException();
+           }));
+
             // String
             registry.Add(new NSLFunction("toString", argsEnum =>
             {
