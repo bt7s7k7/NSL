@@ -20,12 +20,12 @@ namespace NSL
             {
                 var args = argsEnum.ToArray();
                 var arg = (args.Length < 1 ? PrimitiveTypes.neverType : args[0]) ?? PrimitiveTypes.neverType;
-                return new NSLFunction.Signature { name = "echo", arguments = new TypeSymbol[] { arg }, result = arg };
+                return new NSLFunction.Signature { name = "echo", arguments = new TypeSymbol[] { arg }, result = arg, desc = "Echoes the argument" };
             }, (argsEnum, state) => argsEnum.First()));
 
             registry.Add(new NSLFunction(
                 name: "void",
-                signatureGenerator: argsEnum => new NSLFunction.Signature { name = "void", arguments = argsEnum.Select(v => v ?? PrimitiveTypes.neverType), result = PrimitiveTypes.voidType },
+                signatureGenerator: argsEnum => new NSLFunction.Signature { name = "void", arguments = argsEnum.Select(v => v ?? PrimitiveTypes.neverType), result = PrimitiveTypes.voidType, desc = "Returns void" },
                 impl: (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null)
             ));
 
@@ -42,7 +42,7 @@ namespace NSL
                 }
 
                 return PrimitiveTypes.stringType.Instantiate(builder.ToString());
-            }));
+            }, "Prints all functions"));
 
             registry.Add(NSLFunction.MakeSimple("help", new[] { PrimitiveTypes.stringType }, PrimitiveTypes.stringType, (argsEnum, state) =>
            {
@@ -58,7 +58,7 @@ namespace NSL
                    return PrimitiveTypes.stringType.Instantiate(builder.ToString());
                }
                else throw new ImplWrongValueNSLException();
-           }));
+           }, "Prints all overloads for the function"));
 
             // String
             registry.Add(new NSLFunction("toString", argsEnum =>
@@ -74,7 +74,8 @@ namespace NSL
                 {
                     name = "concat",
                     arguments = argsEnum.Select(v => v ?? PrimitiveTypes.voidType),
-                    result = PrimitiveTypes.stringType
+                    result = PrimitiveTypes.stringType,
+                    desc = "Converts all arguments to string and concatenates them"
                 };
             }, (argsEnum, state) =>
             {
@@ -178,7 +179,8 @@ namespace NSL
                 {
                     name = "arr",
                     arguments = argsEnum.Select(v => argsEnum.First() ?? PrimitiveTypes.neverType),
-                    result = argsEnum.Count() != 0 ? argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType
+                    result = argsEnum.Count() != 0 ? argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType,
+                    desc = "Creates a new array with the arguments as elements"
                 },
                 impl: (argsEnum, state) => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()).ToArray())
             ));

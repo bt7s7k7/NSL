@@ -17,8 +17,9 @@ namespace NSL.Types
             public IEnumerable<TypeSymbol> arguments;
             public TypeSymbol result;
             public string name;
+            public string? desc;
 
-            public override string ToString() => $"{name}({String.Join(' ', arguments)}) → {result}";
+            public override string ToString() => $"{name}({String.Join(' ', arguments)}) → {result}" + (desc == null ? "" : " :: " + desc);
         }
 
         public Signature GetSignature(IEnumerable<TypeSymbol?> providedArguments) => signatureGenerator(providedArguments);
@@ -45,13 +46,14 @@ namespace NSL.Types
 
         private static readonly Type enumerableDefinition = typeof(IEnumerable<int>).GetGenericTypeDefinition();
 
-        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl) => new NSLFunction(
+        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl, string? desc = null) => new NSLFunction(
             name,
             _ => new Signature
             {
                 arguments = arguments,
                 result = result,
-                name = name
+                name = name,
+                desc = desc
             },
             impl
         );
@@ -75,8 +77,8 @@ namespace NSL.Types
             }
         }
 
-        public static NSLFunction MakeAuto<T>(string name, T func) => MakeAuto<T>(name, func, new Dictionary<int, TypeSymbol>());
-        public static NSLFunction MakeAuto<T>(string name, T func, Dictionary<int, TypeSymbol> replacements)
+        public static NSLFunction MakeAuto<T>(string name, T func, string? desc = null) => MakeAuto<T>(name, func, new Dictionary<int, TypeSymbol>(), desc);
+        public static NSLFunction MakeAuto<T>(string name, T func, Dictionary<int, TypeSymbol> replacements, string? desc = null)
         {
             if (func == null) throw new AutoFuncNSLException("Provided function is null");
 
@@ -90,7 +92,7 @@ namespace NSL.Types
             {
                 var values = argsEnum.Select(v => v.GetValue());
                 return returnType.Instantiate(invokeMethod.Invoke(func, values.ToArray()));
-            });
+            }, desc);
         }
 
         public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> providedArgs, Func<int, TypeSymbol, TypeSymbol>? expandAction = null)
