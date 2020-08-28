@@ -130,8 +130,8 @@ namespace NSL
                 return PrimitiveTypes.stringType.Instantiate(String.Join("", argsEnum.Select(v => ToStringUtil.ToString(v.GetValue()))));
             }));
 
-            registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("stringContains", (text, substr) => text.Contains(substr)));
-            registry.Add(NSLFunction.MakeAuto<Func<string, string, double>>("stringIndexOf", (text, substr) => text.IndexOf(substr)));
+            registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("contains", (text, substr) => text.Contains(substr)));
+            registry.Add(NSLFunction.MakeAuto<Func<string, string, double>>("indexOf", (text, substr) => text.IndexOf(substr)));
             registry.Add(NSLFunction.MakeAuto<Func<string, double, string>>("substr", (text, index) => text.Substring((int)index)));
             registry.Add(NSLFunction.MakeAuto<Func<string, double, double, string>>("substr", (text, index, length) => text.Substring((int)index, (int)length)));
 
@@ -285,6 +285,57 @@ namespace NSL
                 }
             ));
 
+            registry.Add(new NSLFunction(
+                name: "foreach",
+                signatureGenerator: argsEnum =>
+                {
+                    if (
+                        argsEnum.Count() == 2 &&
+                        argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
+                        array.GetItemType() is TypeSymbol itemType &&
+                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(itemType, PrimitiveTypes.voidType))
+                    )
+                    {
+                        return new NSLFunction.Signature
+                        {
+                            name = "foreach",
+                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(itemType, PrimitiveTypes.voidType) },
+                            result = PrimitiveTypes.voidType
+                        };
+                    }
+                    else
+                    {
+                        return new NSLFunction.Signature
+                        {
+                            name = "foreach",
+                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(PrimitiveTypes.neverType, PrimitiveTypes.neverType) },
+                            result = PrimitiveTypes.voidType
+                        };
+                    }
+                },
+                impl: (argsEnum, state) =>
+                {
+                    var arrayValue = argsEnum.ElementAt(0);
+                    var actionValue = argsEnum.ElementAt(1);
+                    if (
+                        arrayValue.GetValue() is IEnumerable<object> array &&
+                        actionValue.GetValue() is NSLAction action &&
+                        arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType
+                    )
+                    {
+                        var itemType = arrayType.GetItemType();
+
+                        foreach (var item in array)
+                        {
+                            action.Invoke(state.Runner, itemType.Instantiate(item));
+                        }
+
+                        return PrimitiveTypes.voidType.Instantiate(null);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                }
+            ));
+
             registry.Add(new NSLFunction("push", argsEnum =>
             {
                 var desc = "Pushes an element to the end of the array in place";
@@ -332,6 +383,39 @@ namespace NSL
                     }
 
                     return arrayValue;
+                }
+                else throw new ImplWrongValueNSLException();
+            }));
+
+            registry.Add(new NSLFunction("contains", argsEnum =>
+            {
+                var desc = "Tests if the array contains the specified element";
+                if (
+                    argsEnum.Count() == 2 &&
+                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
+                ) return new NSLFunction.Signature
+                {
+                    name = "contains",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { arrayType, arrayType.GetItemType() },
+                    result = PrimitiveTypes.boolType
+                };
+                else return new NSLFunction.Signature
+                {
+                    name = "contains",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.neverType },
+                    result = PrimitiveTypes.boolType
+                };
+            }, (argsEnum, state) =>
+            {
+                var arrayValue = argsEnum.ElementAt(0);
+                if (
+                    arrayValue.GetValue() is IEnumerable<object> array &&
+                    argsEnum.ElementAt(1).GetValue() is object item
+                )
+                {
+                    return PrimitiveTypes.boolType.Instantiate(array.Contains(item));
                 }
                 else throw new ImplWrongValueNSLException();
             }));

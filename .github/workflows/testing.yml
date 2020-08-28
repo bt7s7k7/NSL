@@ -5,7 +5,7 @@ on: [push]
 jobs:
   cs-con:
     runs-on: ubuntu-latest
-    name: Build and run C# console test
+    name: Build and run C# console project
 
     env:
       PROJECT_FOLDER: ./tests/NSLCSharp
@@ -15,4 +15,17 @@ jobs:
       run: node ./setup cs
     - name: Run the code
       run: dotnet run -- "../Examples/runtimeTest.nsl" -v
+      working-directory: ${{env.PROJECT_FOLDER}}
+  cs-unit:
+    runs-on: ubuntu-latest
+    name: Build and run C# NUnit project
+
+    env:
+      PROJECT_FOLDER: ./tests/NSLCSharpNUnit
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup project
+      run: node ./setup cs-unit
+    - name: Run the code
+      run: dotnet test
       working-directory: ${{env.PROJECT_FOLDER}}

@@ -1,0 +1,8 @@
+#T :: Should execute for every item of the array
+
+var $array (arr 1 2 3 4 5)
+var $count 0
+
+$array |> add $count | $count
+
+assert (eq $count 15)

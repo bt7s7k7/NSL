@@ -182,5 +182,7 @@ namespace NSL.Tokenization
         )
         { }
 
+        public static NSLTokenizer Instance { get; } = new NSLTokenizer();
+
     }
 }

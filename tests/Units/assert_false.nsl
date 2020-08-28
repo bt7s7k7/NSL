@@ -1,0 +1,2 @@
+#E :: Should throw an error
+assert false

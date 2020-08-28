@@ -37,6 +37,13 @@ const projects = {
             link("./src/NSLCSharp", "./tests/NSLCSharp/NSLCSharp")
             link("./tests/CSCommon", "./tests/NSLCSharp/CSCommon")
         }
+    },
+    "cs-unit": {
+        name: "C# Generic",
+        callback: () => {
+            link("./src/NSLCSharp", "./tests/NSLCSharpNUnit/NSLCSharp")
+            link("./tests/Units", "./tests/NSLCSharpNUnit/Units")
+        }
     }
 }
 

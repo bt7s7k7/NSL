@@ -1,0 +1,9 @@
+#T :: Should return false when comparing unequal values
+
+eq 5 1 | not | assert
+eq 5 1 | not | assert
+eq false true | not | assert
+eq false true | not | assert
+eq "foo" "boo" | not | assert
+eq "boo" "foo" | not | assert
+

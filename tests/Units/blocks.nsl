@@ -1,0 +1,10 @@
+#T :: Should not overwrite variable from outside of block
+
+var $x 1
+
+void (
+    var $x 2
+    $x 3
+)
+
+assert (eq $x 1)

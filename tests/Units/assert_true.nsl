@@ -1,0 +1,2 @@
+#T :: Should not throw an error
+assert true

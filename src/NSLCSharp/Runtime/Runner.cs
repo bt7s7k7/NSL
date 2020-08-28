@@ -1,8 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NSL.Executable;
 using NSL.Executable.Instructions;
+using NSL.Parsing;
+using NSL.Tokenization;
 using NSL.Types;
 
 namespace NSL.Runtime
@@ -11,6 +12,19 @@ namespace NSL.Runtime
     {
         protected FunctionRegistry functions;
         public Scope RootScope { get; protected set; } = new Scope("-1", null);
+
+        public (NSLValue result, IEnumerable<Diagnostic> diagnostics) RunScript(string script, string path)
+        {
+            var result = Emitter.Emit(Parser.Parse(NSLTokenizer.Instance.Tokenize(script, path)), functions, runnerRootScope: RootScope);
+            if (result.diagnostics.Count() == 0)
+            {
+                return (Run(result.program), new Diagnostic[] { });
+            }
+            else
+            {
+                return (PrimitiveTypes.neverType.Instantiate(null), result.diagnostics);
+            }
+        }
 
         public NSLValue Run(IProgram program) => Run(program, new State(functions, RootScope, this));
         public NSLValue Run(IProgram program, State state)

@@ -1,0 +1,5 @@
+#T :: Should produce the correct output
+
+var $x true
+
+eq "Hello true 5" $"Hello $<$x> $<echo 5>"

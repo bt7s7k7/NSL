@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using NSL.Tokenization.General;
 using NSL.Types;
+using System.Text;
 
 namespace NSL
 {
@@ -55,6 +56,19 @@ namespace NSL
             {
                 ILogger.instance?.Message("     ").Pos(frame).End();
             }
+        }
+
+        public string GetNSLStacktrace()
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine(Message);
+
+            foreach (var frame in stack.Reverse())
+            {
+                builder.AppendLine(frame.ToString());
+            }
+
+            return builder.ToString();
         }
 
         override public string ToString() => Message;

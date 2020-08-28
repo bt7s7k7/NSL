@@ -1,4 +1,0 @@
-var $a "Hello"
-var $b "world"
-
-print (concat $a " " $b)
