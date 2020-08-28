@@ -275,14 +275,16 @@ namespace NSL.Executable
                     if (type != null)
                     {
                         return new[] {
-                            NSLFunction.MakeSimple(name, new [] {type!}, type!, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null))
+                            NSLFunction.MakeSimple(name, new [] {type!}, type!, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null)),
+                            NSLFunction.MakeSimple(name, new TypeSymbol[] {}, type!, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null))
                         };
                     }
                     else
                     {
                         state!.diagnostics.Add(new Diagnostic($"Variable '{node.name}' not found", node.Start, node.End));
                         return new[] {
-                            NSLFunction.MakeSimple(name, new [] {PrimitiveTypes.neverType}, PrimitiveTypes.neverType, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null))
+                            NSLFunction.MakeSimple(name, new [] {PrimitiveTypes.neverType}, PrimitiveTypes.neverType, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null)),
+                            NSLFunction.MakeSimple(name, new TypeSymbol[] {}, PrimitiveTypes.neverType, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null))
                         };
                     }
                 }
