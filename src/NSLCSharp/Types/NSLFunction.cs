@@ -44,8 +44,6 @@ namespace NSL.Types
             { typeof(bool), PrimitiveTypes.boolType }
         };
 
-        private static readonly Type enumerableDefinition = typeof(IEnumerable<int>).GetGenericTypeDefinition();
-
         public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl, string? desc = null) => new NSLFunction(
             name,
             _ => new Signature
@@ -65,11 +63,6 @@ namespace NSL.Types
             if (typeSymbolLookup.TryGetValue(type, out TypeSymbol? foundSymbol))
             {
                 return foundSymbol!;
-            }
-            else if (type.GetGenericTypeDefinition() == enumerableDefinition)
-            {
-                var elementType = type.GetGenericArguments()[0] ?? throw new InternalNSLExcpetion("IEnumerable does not have generic arguments");
-                return LookupSymbol(elementType).ToArray();
             }
             else
             {
