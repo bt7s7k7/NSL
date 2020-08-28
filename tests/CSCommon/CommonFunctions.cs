@@ -24,12 +24,7 @@ namespace CSCommon
                 return PrimitiveTypes.voidType.Instantiate(null);
             }));
 
-            registry.Add(NSLFunction.MakeSimple(
-                "getNumbers",
-                new List<TypeSymbol> { },
-                PrimitiveTypes.numberType.ToArray(),
-                (argsEnum, state) => PrimitiveTypes.numberType.ToArray().Instantiate(new double[] { 5, 20, 8, 14, 5 })
-            ));
+            registry.Add(NSLFunction.MakeAuto<Func<IEnumerable<object>>>("getNumbers", () => new object[] { 5, 20, 8, 14 }, new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.numberType.ToArray() } }));
 
             registry.Add(NSLFunction.MakeSimple(
                 "exit",

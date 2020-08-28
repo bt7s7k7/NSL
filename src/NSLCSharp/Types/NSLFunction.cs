@@ -75,14 +75,16 @@ namespace NSL.Types
             }
         }
 
-        public static NSLFunction MakeAuto<T>(string name, T func)
+        public static NSLFunction MakeAuto<T>(string name, T func) => MakeAuto<T>(name, func, new Dictionary<int, TypeSymbol>());
+        public static NSLFunction MakeAuto<T>(string name, T func, Dictionary<int, TypeSymbol> replacements)
         {
             if (func == null) throw new AutoFuncNSLException("Provided function is null");
 
             var funcType = func.GetType();
             var invokeMethod = funcType.GetMethod("Invoke") ?? throw new AutoFuncNSLException("Provided function is not invokable");
-            var arguments = invokeMethod.GetParameters().Select(v => LookupSymbol(v.ParameterType));
-            var returnType = LookupSymbol(invokeMethod.ReturnType);
+            var arguments = invokeMethod.GetParameters().Select((v, i) => replacements.TryGetValue(i, out TypeSymbol? result) ? result : LookupSymbol(v.ParameterType));
+
+            var returnType = replacements.TryGetValue(-1, out TypeSymbol? ret) ? ret : LookupSymbol(invokeMethod.ReturnType);
 
             return NSLFunction.MakeSimple(name, arguments, returnType, (argsEnum, runnerState) =>
             {
