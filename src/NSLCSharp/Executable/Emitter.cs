@@ -267,8 +267,29 @@ namespace NSL.Executable
             Emission visitStatement(StatementNode node, Context context)
             {
                 var variableNode = node as VariableNode;
+
+                IEnumerable<NSLFunction> makeVariableAssignmentFunction()
+                {
+                    var name = node.name;
+                    var type = context.scope.Get(name);
+                    if (type != null)
+                    {
+                        return new[] {
+                            NSLFunction.MakeSimple(name, new [] {type!}, type!, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null))
+                        };
+                    }
+                    else
+                    {
+                        state!.diagnostics.Add(new Diagnostic($"Variable '{node.name}' not found", node.Start, node.End));
+                        return new[] {
+                            NSLFunction.MakeSimple(name, new [] {PrimitiveTypes.neverType}, PrimitiveTypes.neverType, (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null))
+                        };
+                    }
+                }
+
                 var foundFunctions = variableNode != null
                     ? new[] { FunctionRegistry.MakeVariableDefinitionFunction(variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null")) }
+                    : node.name[0] == '$' ? makeVariableAssignmentFunction()
                     : functions.Find(node.name);
 
                 if (variableNode != null)
