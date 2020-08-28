@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
+using NSL.Tokenization.General;
 using NSL.Types;
 
 namespace NSL
@@ -31,6 +34,36 @@ namespace NSL
         {
             ReturnType = returnType;
             FunctionName = functionName;
+        }
+    }
+
+    public class UserNSLException : NSLException
+    {
+        protected Stack<Position> stack = new Stack<Position>();
+
+        public UserNSLException(string message) : base(message) { }
+
+        public void Add(Position position)
+        {
+            stack.Push(position);
+        }
+
+        public void Log()
+        {
+            ILogger.instance?.Error().Message(Message).End();
+            foreach (var frame in stack.Reverse())
+            {
+                ILogger.instance?.Message("     ").Pos(frame).End();
+            }
+        }
+
+        override public string ToString() => Message;
+
+        public static readonly TypeSymbol typeSymbol = new TypeSymbol("Error");
+
+        static UserNSLException()
+        {
+            NSLFunction.SetTypeLookup(typeof(UserNSLException), typeSymbol);
         }
     }
 }

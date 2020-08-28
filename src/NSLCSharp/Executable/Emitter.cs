@@ -392,7 +392,7 @@ namespace NSL.Executable
                         (_, signature) = NSLFunction.GetMatchingFunction(foundFunctions, providedArgs, (index, argumentType) =>
                         {
                             var actionEmission = arguments[index];
-                            innerContext.scope.Add("$v", argumentType);
+                            actionEmission.instructions[0].context.scope.Add("$v", argumentType);
                             actionEmission.EmitTo(emission, innerContext);
 
                             finalArguments = finalArguments.Where(v => v != actionEmission);
@@ -429,24 +429,27 @@ namespace NSL.Executable
             Emission makeAction(StatementRootNode blockNode, Context context, string argVarName)
             {
                 var result = new Emission(makeVarName(), blockNode);
+                var innerContext = context.UpdateScope(context.scopeId);
+
+                result.Add(new EmittedInstruction(new InvokeInstruction(blockNode.Start, blockNode.End, null, "echo", new[] { "$v" }), innerContext));
 
                 result.emit = (target, emission) =>
                 {
-                    var blockEmission = visitBlock(blockNode, context);
+                    var blockEmission = visitBlock(blockNode, innerContext);
 
                     IProgram.ReturnVariable returnVariable = new IProgram.ReturnVariable(blockEmission.type!, blockEmission.varName);
                     IProgram.ReturnVariable argumentVariable = new IProgram.ReturnVariable(
-                        context.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
+                        innerContext.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
                         argVarName);
-                    target.Add(new EmittedInstruction(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), context));
+                    target.Add(new EmittedInstruction(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), innerContext));
 
                     if (blockEmission.type != PrimitiveTypes.voidType)
                     {
-                        context.scope.Add(blockEmission.varName, blockEmission.type!);
+                        innerContext.scope.Add(blockEmission.varName, blockEmission.type!);
                     }
-                    blockEmission.EmitTo(target, context);
+                    blockEmission.EmitTo(target, innerContext);
 
-                    target.Add(new EmittedInstruction(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context));
+                    target.Add(new EmittedInstruction(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), innerContext));
 
                     emission.type = blockEmission.type;
                 };

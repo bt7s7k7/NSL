@@ -31,8 +31,16 @@ namespace NSLCSharp
 
                 if (result.diagnostics.Count() == 0)
                 {
-                    var runResult = runner.Run(result.program);
-                    if (printOutputs) ILogger.instance?.Name(runResult.ToString()).End();
+                    try
+                    {
+                        var runResult = runner.Run(result.program);
+                        if (printOutputs) ILogger.instance?.Name(runResult.ToString()).End();
+                    }
+                    catch (UserNSLException err)
+                    {
+                        err.Log();
+                        if (!printOutputs) Environment.Exit(1);
+                    }
                 }
 
                 ILogger.instance = null;

@@ -82,12 +82,21 @@ namespace NSLCSharp
             // Running
             if (emittingResult.diagnostics.Count() == 0)
             {
-                if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
-                runningTime.Start();
-                var runner = new Runner(funcs);
-                var runResult = runner.Run(emittingResult.program);
-                ILogger.instance?.Message(runResult.ToString()).End();
-                runningTime.End();
+                try
+                {
+                    if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
+                    runningTime.Start();
+                    var runner = new Runner(funcs);
+                    var runResult = runner.Run(emittingResult.program);
+                    ILogger.instance?.Message(runResult.ToString()).End();
+                    runningTime.End();
+                }
+                catch (UserNSLException err)
+                {
+                    ILogger.instance = new ConsoleLogger();
+                    err.Log();
+                    Environment.ExitCode = 1;
+                }
             }
 
             // Finish

@@ -91,7 +91,14 @@ namespace NSL.Types
             return NSLFunction.MakeSimple(name, arguments, returnType, (argsEnum, runnerState) =>
             {
                 var values = argsEnum.Select(v => v.GetValue());
-                return returnType.Instantiate(invokeMethod.Invoke(func, values.ToArray()));
+                try
+                {
+                    return returnType.Instantiate(invokeMethod.Invoke(func, values.ToArray()));
+                }
+                catch (System.Reflection.TargetInvocationException err)
+                {
+                    throw err.InnerException ?? throw new InternalNSLExcpetion("Caught a reflection error but it doesn't have an inner exception");
+                }
             }, desc);
         }
 

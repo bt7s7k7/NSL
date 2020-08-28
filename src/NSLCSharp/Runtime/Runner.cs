@@ -37,7 +37,15 @@ namespace NSL.Runtime
                     }
                     else
                     {
-                        inst.Execute(state);
+                        try
+                        {
+                            inst.Execute(state);
+                        }
+                        catch (UserNSLException err)
+                        {
+                            err.Add(inst.Start);
+                            throw;
+                        }
                     }
                 }
                 else
