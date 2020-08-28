@@ -150,6 +150,37 @@ namespace NSL
                 impl: argsEnum => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()).ToArray())
             ));
 
+            registry.Add(new NSLFunction(
+                name: "filter",
+                signatureGenerator: argsEnum =>
+                {
+                    if (
+                        argsEnum.Count() == 2 &&
+                        argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
+                        array.GetItemType() is TypeSymbol itemType &&
+                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(itemType, PrimitiveTypes.boolType))
+                    )
+                    {
+                        return new NSLFunction.Signature
+                        {
+                            name = "filter",
+                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(itemType, PrimitiveTypes.boolType) },
+                            result = array
+                        };
+                    }
+                    else
+                    {
+                        return new NSLFunction.Signature
+                        {
+                            name = "filter",
+                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(PrimitiveTypes.neverType, PrimitiveTypes.neverType) },
+                            result = PrimitiveTypes.neverType
+                        };
+                    }
+                },
+                impl: argsEnum => PrimitiveTypes.voidType.Instantiate(null)
+            ));
+
             return registry;
         }
     }

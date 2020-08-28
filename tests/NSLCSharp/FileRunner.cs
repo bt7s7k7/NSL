@@ -80,12 +80,15 @@ namespace NSLCSharp
             ILogger.instance?.Message(returnVariable == null ? ": _" : $": {returnVariable.type}").End().End();
 
             // Running
-            if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
-            runningTime.Start();
-            var runner = new Runner(funcs);
-            var runResult = runner.Run(emittingResult.program);
-            ILogger.instance?.Message(runResult.ToString()).End();
-            runningTime.End();
+            if (emittingResult.diagnostics.Count() == 0)
+            {
+                if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
+                runningTime.Start();
+                var runner = new Runner(funcs);
+                var runResult = runner.Run(emittingResult.program);
+                ILogger.instance?.Message(runResult.ToString()).End();
+                runningTime.End();
+            }
 
             // Finish
             ILogger.instance = new ConsoleLogger();
