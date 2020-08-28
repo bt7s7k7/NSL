@@ -2,13 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NSL.Runtime;
 
 namespace NSL.Types
 {
     public class NSLFunction
     {
         protected Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator;
-        protected Func<IEnumerable<NSLValue>, NSLValue> impl;
+        protected Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl;
         public string Name { get; protected set; }
 
         public struct Signature
@@ -22,13 +23,13 @@ namespace NSL.Types
 
         public Signature GetSignature(IEnumerable<TypeSymbol?> providedArguments) => signatureGenerator(providedArguments);
 
-        public NSLValue Invoke(IEnumerable<NSLValue> arguments) => impl(arguments);
+        public NSLValue Invoke(IEnumerable<NSLValue> arguments, Runner.State state) => impl(arguments, state);
 
         public string GetName() => Name;
 
         public override string ToString() => Name;
 
-        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<NSLValue>, NSLValue> impl)
+        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl)
         {
             this.signatureGenerator = signatureGenerator;
             this.impl = impl;
@@ -44,7 +45,7 @@ namespace NSL.Types
 
         private static readonly Type enumerableDefinition = typeof(IEnumerable<int>).GetGenericTypeDefinition();
 
-        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, NSLValue> impl) => new NSLFunction(
+        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl) => new NSLFunction(
             name,
             _ => new Signature
             {
@@ -83,16 +84,17 @@ namespace NSL.Types
             var arguments = invokeMethod.GetParameters().Select(v => LookupSymbol(v.ParameterType));
             var returnType = LookupSymbol(invokeMethod.ReturnType);
 
-            return NSLFunction.MakeSimple(name, arguments, returnType, argsEnum =>
+            return NSLFunction.MakeSimple(name, arguments, returnType, (argsEnum, runnerState) =>
             {
                 var values = argsEnum.Select(v => v.GetValue());
                 return returnType.Instantiate(invokeMethod.Invoke(func, values.ToArray()));
             });
         }
 
-        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> providedArgs)
+        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> providedArgs, Func<int, TypeSymbol, TypeSymbol>? expandAction = null)
         {
             var failed = new List<Signature>();
+            var failedAction = false;
             foreach (var function in functions)
             {
                 var signature = function.GetSignature(providedArgs);
@@ -111,15 +113,44 @@ namespace NSL.Types
                         var provided = providedArgs.ElementAt(i);
                         var wanted = wantedArgs[i];
 
-                        if (provided == wanted || provided == PrimitiveTypes.neverType)
+                        if (provided == wanted && provided != PrimitiveTypes.neverType)
                         {
                             continue;
+                        }
+                        else if (provided == null && wanted is ActionTypeSymbol action)
+                        {
+                            if (expandAction == null)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                var resultType = expandAction(i, action.Argument);
+                                var actionType = new ActionTypeSymbol(action.Argument, resultType);
+                                if (actionType == wanted)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    success = false;
+                                    failedAction = true;
+                                    break;
+                                }
+                            }
                         }
                         else
                         {
                             success = false;
                             break;
                         }
+                    }
+
+                    if (failedAction)
+                    {
+                        failed.Clear();
+                        failed.Add(signature);
+                        break;
                     }
 
                     if (success)
@@ -135,8 +166,10 @@ namespace NSL.Types
             }
 
             throw new OverloadNotFoundNSLException(
-                $"Failed to find matching overload for '{functions.First().Name}({String.Join(' ', providedArgs)})'\n" +
-                String.Join('\n', failed.Select(v => $"  {v}")) + "\n  ",
+                $"Failed to find matching overload for '{functions.First().Name}({String.Join(' ', providedArgs.Select(v => v?.ToString() ?? "<action>"))})'\n" +
+                String.Join('\n', failed.Select(v => $"  {v}")) +
+                (failedAction ? "\n  -- No other overloads tried because a parameter is an action --\n" : "") +
+                "\n  ",
                 returnType: failed[0].result,
                 functionName: failed[0].name
             );

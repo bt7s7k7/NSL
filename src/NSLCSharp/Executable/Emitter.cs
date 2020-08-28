@@ -347,6 +347,14 @@ namespace NSL.Executable
                             rootEmission.EmitTo(wrapperEmission, innerContext);
                             arguments.Add(wrapperEmission);
                         }
+                        else if (child is ActionNode actionNode)
+                        {
+                            var blockNode = (StatementBlockNode)actionNode.Children[0];
+                            var actionEmission = makeAction(blockNode, innerContext, "$v");
+
+                            arguments.Add(actionEmission);
+
+                        }
                         else throw new InternalNSLExcpetion($"Unexpected {child.GetType()} in statement node children");
                     }
 
@@ -356,12 +364,22 @@ namespace NSL.Executable
 
                     try
                     {
-                        (_, signature) = NSLFunction.GetMatchingFunction(foundFunctions, providedArgs);
+                        IEnumerable<Emission> finalArguments = arguments;
 
-                        for (int i = 0, len = signature.arguments.Count(); i < len; i++)
+                        (_, signature) = NSLFunction.GetMatchingFunction(foundFunctions, providedArgs, (index, argumentType) =>
                         {
-                            var argumentEmission = arguments[i];
-                            argumentEmission.EmitTo(emission, innerContext);
+                            var actionEmission = arguments[index];
+                            innerContext.scope.Add("$v", argumentType);
+                            actionEmission.EmitTo(emission, innerContext);
+
+                            finalArguments = finalArguments.Where(v => v != actionEmission);
+
+                            return actionEmission.type ?? throw new InternalNSLExcpetion("Action emission did not set a type");
+                        });
+
+                        foreach (var argument in finalArguments)
+                        {
+                            argument.EmitTo(emission, innerContext);
                         }
                     }
                     catch (OverloadNotFoundNSLException err)
@@ -385,27 +403,33 @@ namespace NSL.Executable
                 }
             }
 
-            (Emission, Emission) makeAction(StatementRootNode blockNode, Context context, string argVarName)
+            Emission makeAction(StatementRootNode blockNode, Context context, string argVarName)
             {
                 var result = new Emission(makeVarName(), blockNode);
 
-                var blockEmission = visitBlock(blockNode, context);
-
-                IProgram.ReturnVariable returnVariable = new IProgram.ReturnVariable(blockEmission.type!, blockEmission.varName);
-                IProgram.ReturnVariable argumentVariable = new IProgram.ReturnVariable(
-                    context.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
-                    argVarName);
-                result.Add(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), context);
-
-                if (blockEmission.type != PrimitiveTypes.voidType)
+                result.emit = (target, emission) =>
                 {
-                    context.scope.Add(blockEmission.varName, blockEmission.type!);
-                }
-                blockEmission.EmitTo(result, context);
+                    var blockEmission = visitBlock(blockNode, context);
 
-                result.Add(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context);
+                    IProgram.ReturnVariable returnVariable = new IProgram.ReturnVariable(blockEmission.type!, blockEmission.varName);
+                    IProgram.ReturnVariable argumentVariable = new IProgram.ReturnVariable(
+                        context.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
+                        argVarName);
+                    target.Add(new EmittedInstruction(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), context));
 
-                return (result, blockEmission);
+                    if (blockEmission.type != PrimitiveTypes.voidType)
+                    {
+                        context.scope.Add(blockEmission.varName, blockEmission.type!);
+                    }
+                    blockEmission.EmitTo(target, context);
+
+                    target.Add(new EmittedInstruction(new EndInstruction(parsingResult.rootNode.End, parsingResult.rootNode.End), context));
+
+                    emission.type = blockEmission.type;
+                };
+
+
+                return result;
             }
 
             Emission visitForEachStatement(ForEachNode node, Context context)
@@ -437,7 +461,7 @@ namespace NSL.Executable
                         var block = new StatementBlockNode(false, false, statementTargetNode.Start, statementTargetNode.End);
                         block.AddChild(statementTargetNode);
 
-                        var (actionEmission, _) = makeAction(block, innerContext, "$_a");
+                        var actionEmission = makeAction(block, innerContext, "$_a");
 
                         actionEmission.EmitTo(result, innerContext);
 
@@ -445,7 +469,7 @@ namespace NSL.Executable
                     }
                     else if (targetNode is StatementBlockNode statementBlockTargetNode)
                     {
-                        var (actionEmission, _) = makeAction(statementBlockTargetNode, innerContext, "$_a");
+                        var actionEmission = makeAction(statementBlockTargetNode, innerContext, "$_a");
 
                         actionEmission.EmitTo(result, innerContext);
 

@@ -41,7 +41,7 @@ namespace NSL
                     arguments = new TypeSymbol[] { type },
                     result = type
                 };
-            }, argsEnum =>
+            }, (argsEnum, state) =>
             {
                 return argsEnum.First();
             });
