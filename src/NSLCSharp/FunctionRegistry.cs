@@ -34,7 +34,7 @@ namespace NSL
         {
             return new NSLFunction(varName, argsEnum =>
             {
-                var type = argsEnum.First() ?? PrimitiveTypes.neverType;
+                var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
                 return new NSLFunction.Signature
                 {
                     name = varName,
