@@ -237,6 +237,57 @@ namespace NSL
                 }
             ));
 
+            registry.Add(new NSLFunction("push", argsEnum =>
+            {
+                var desc = "Pushes an element to the end of the array in place";
+                if (
+                    argsEnum.Count() == 2 &&
+                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
+                ) return new NSLFunction.Signature
+                {
+                    name = "push",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { arrayType, arrayType.GetItemType() },
+                    result = arrayType
+                };
+                else return new NSLFunction.Signature
+                {
+                    name = "push",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.neverType },
+                    result = PrimitiveTypes.neverType
+                };
+            }, (argsEnum, state) =>
+            {
+                var arrayValue = argsEnum.ElementAt(0);
+                if (
+                    arrayValue.GetValue() is IEnumerable<object> array &&
+                    argsEnum.ElementAt(1).GetValue() is object item
+                )
+                {
+                    if (array is IList<object> list)
+                    {
+                        try
+                        {
+                            list.Add(item);
+                        }
+                        catch (NotSupportedException)
+                        {
+                            var result = array.Concat(new object[] { item }).ToList();
+                            arrayValue.SetValue(result);
+                        }
+                    }
+                    else
+                    {
+                        var result = array.Concat(new object[] { item }).ToList();
+                        arrayValue.SetValue(result);
+                    }
+
+                    return arrayValue;
+                }
+                else throw new ImplWrongValueNSLException();
+            }));
+
             return registry;
         }
     }
