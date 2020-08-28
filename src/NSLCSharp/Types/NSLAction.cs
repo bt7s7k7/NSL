@@ -32,5 +32,11 @@ namespace NSL.Types
             this.ArgumentVariable = argumentVariable;
             Scope = scope;
         }
+
+        public NSLValue Invoke(Runner runner, NSLValue argument)
+        {
+            Scope.Set(ArgumentVariable.varName, argument);
+            return runner.RunAction(this);
+        }
     }
 }

@@ -2,13 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NSL.Runtime;
 
 namespace NSL.Types
 {
     public class NSLFunction
     {
         protected Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator;
-        protected Func<IEnumerable<NSLValue>, NSLValue> impl;
+        protected Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl;
         public string Name { get; protected set; }
 
         public struct Signature
@@ -22,13 +23,13 @@ namespace NSL.Types
 
         public Signature GetSignature(IEnumerable<TypeSymbol?> providedArguments) => signatureGenerator(providedArguments);
 
-        public NSLValue Invoke(IEnumerable<NSLValue> arguments) => impl(arguments);
+        public NSLValue Invoke(IEnumerable<NSLValue> arguments, Runner.State state) => impl(arguments, state);
 
         public string GetName() => Name;
 
         public override string ToString() => Name;
 
-        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<NSLValue>, NSLValue> impl)
+        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl)
         {
             this.signatureGenerator = signatureGenerator;
             this.impl = impl;
@@ -44,7 +45,7 @@ namespace NSL.Types
 
         private static readonly Type enumerableDefinition = typeof(IEnumerable<int>).GetGenericTypeDefinition();
 
-        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, NSLValue> impl) => new NSLFunction(
+        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl) => new NSLFunction(
             name,
             _ => new Signature
             {
@@ -83,7 +84,7 @@ namespace NSL.Types
             var arguments = invokeMethod.GetParameters().Select(v => LookupSymbol(v.ParameterType));
             var returnType = LookupSymbol(invokeMethod.ReturnType);
 
-            return NSLFunction.MakeSimple(name, arguments, returnType, argsEnum =>
+            return NSLFunction.MakeSimple(name, arguments, returnType, (argsEnum, runnerState) =>
             {
                 var values = argsEnum.Select(v => v.GetValue());
                 return returnType.Instantiate(invokeMethod.Invoke(func, values.ToArray()));

@@ -40,7 +40,7 @@ namespace NSL.Executable.Instructions
                 var (function, _) = NSLFunction.GetMatchingFunction(state.FunctionRegistry.Find(funcName), argumentValues.Select(v => v.GetTypeSymbol()));
                 if (function != null)
                 {
-                    var returnValue = function.Invoke(argumentValues);
+                    var returnValue = function.Invoke(argumentValues, state);
                     if (retVarName != null)
                     {
                         var retVariable = state.GetTopScope().Get(retVarName) ?? throw new InternalNSLExcpetion($"Failed to find return variable '{retVarName}'");

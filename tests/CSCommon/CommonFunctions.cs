@@ -18,7 +18,7 @@ namespace CSCommon
                     arguments = argsEnum.Select(v => v ?? PrimitiveTypes.voidType),
                     result = PrimitiveTypes.voidType
                 };
-            }, argsEnum =>
+            }, (argsEnum, state) =>
             {
                 Console.WriteLine(String.Join(' ', argsEnum.Select(v => ToStringUtil.ToString(v.GetValue()))));
                 return PrimitiveTypes.voidType.Instantiate(null);
@@ -28,14 +28,14 @@ namespace CSCommon
                 "getNumbers",
                 new List<TypeSymbol> { },
                 PrimitiveTypes.numberType.ToArray(),
-                argsEnum => PrimitiveTypes.numberType.ToArray().Instantiate(new double[] { 5, 20, 8, 14, 5 })
+                (argsEnum, state) => PrimitiveTypes.numberType.ToArray().Instantiate(new double[] { 5, 20, 8, 14, 5 })
             ));
 
             registry.Add(NSLFunction.MakeSimple(
                 "exit",
                 new List<TypeSymbol> { },
                 PrimitiveTypes.voidType,
-                _ => { Environment.Exit(0); return PrimitiveTypes.voidType.Instantiate(null); }
+                (argsEnum, state) => { Environment.Exit(0); return PrimitiveTypes.voidType.Instantiate(null); }
             ));
         }
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using NSL.Executable;
 using NSL.Types;
 
 namespace NSL
@@ -19,12 +20,12 @@ namespace NSL
                 var args = argsEnum.ToArray();
                 var arg = (args.Length < 1 ? PrimitiveTypes.neverType : args[0]) ?? PrimitiveTypes.neverType;
                 return new NSLFunction.Signature { name = "echo", arguments = new TypeSymbol[] { arg }, result = arg };
-            }, argsEnum => argsEnum.First()));
+            }, (argsEnum, state) => argsEnum.First()));
 
             registry.Add(new NSLFunction(
                 name: "void",
                 signatureGenerator: argsEnum => new NSLFunction.Signature { name = "void", arguments = argsEnum.Select(v => v ?? PrimitiveTypes.neverType), result = PrimitiveTypes.voidType },
-                impl: argsEnum => PrimitiveTypes.voidType.Instantiate(null)
+                impl: (argsEnum, state) => PrimitiveTypes.voidType.Instantiate(null)
             ));
 
             // String
@@ -33,7 +34,7 @@ namespace NSL
                 var args = argsEnum.ToArray();
                 var arg = (args.Length < 1 ? PrimitiveTypes.neverType : args[0]) ?? PrimitiveTypes.neverType;
                 return new NSLFunction.Signature { name = "toString", arguments = new TypeSymbol[] { arg }, result = PrimitiveTypes.stringType };
-            }, argsEnum => PrimitiveTypes.stringType.Instantiate(ToStringUtil.ToString(argsEnum.First()?.GetValue()))));
+            }, (argsEnum, state) => PrimitiveTypes.stringType.Instantiate(ToStringUtil.ToString(argsEnum.First()?.GetValue()))));
 
             registry.Add(new NSLFunction("concat", (argsEnum) =>
             {
@@ -43,7 +44,7 @@ namespace NSL
                     arguments = argsEnum.Select(v => v ?? PrimitiveTypes.voidType),
                     result = PrimitiveTypes.stringType
                 };
-            }, argsEnum =>
+            }, (argsEnum, state) =>
             {
                 return PrimitiveTypes.stringType.Instantiate(String.Join("", argsEnum.Select(v => ToStringUtil.ToString(v.GetValue()))));
             }));
@@ -147,7 +148,7 @@ namespace NSL
                     arguments = argsEnum.Select(v => argsEnum.First() ?? PrimitiveTypes.neverType),
                     result = argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType
                 },
-                impl: argsEnum => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()).ToArray())
+                impl: (argsEnum, state) => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()).ToArray())
             ));
 
             registry.Add(new NSLFunction(
@@ -178,7 +179,28 @@ namespace NSL
                         };
                     }
                 },
-                impl: argsEnum => PrimitiveTypes.voidType.Instantiate(null)
+                impl: (argsEnum, state) =>
+                {
+                    var arrayValue = argsEnum.ElementAt(0);
+                    var actionValue = argsEnum.ElementAt(1);
+                    if (
+                        arrayValue.GetValue() is IEnumerable<object> array &&
+                        actionValue.GetValue() is NSLAction action &&
+                        arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType
+                    )
+                    {
+                        var itemType = arrayType.GetItemType();
+                        var resultArray = array.Where(value =>
+                        {
+                            var result = action.Invoke(state.Runner, itemType.Instantiate(value)).GetValue();
+                            if (result == null) throw new NullReferenceException();
+                            return (bool)result;
+                        }).ToArray();
+
+                        return arrayType.Instantiate(resultArray);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                }
             ));
 
             return registry;
