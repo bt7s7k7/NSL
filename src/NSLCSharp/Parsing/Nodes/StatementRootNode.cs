@@ -28,6 +28,13 @@ namespace NSL.Parsing.Nodes
                 AddChild(variableNode);
                 state.Push(variableNode);
             }
+            else if (next.type == TokenType.Literal || next.type == TokenType.InlineStart)
+            {
+                var statementNode = new StatementNode("echo", next.start, next.end);
+                AddChild(statementNode);
+                state.Push(statementNode);
+                state.index--;
+            }
             else
             {
                 base.OnToken(next, state);
