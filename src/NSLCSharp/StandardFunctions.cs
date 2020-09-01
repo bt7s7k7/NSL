@@ -91,6 +91,31 @@ namespace NSL
                 desc: "Catches errors in the first action, invokes the second action with the caught error"
             ));
 
+            registry.Add(NSLFunction.MakeSimple(
+                name: "while",
+                arguments: new TypeSymbol[] {
+                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.boolType),
+                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType)
+                },
+                result: PrimitiveTypes.voidType,
+                impl: (argsEnum, state) =>
+                {
+                    if (
+                        argsEnum.ElementAt(0).GetValue() is NSLAction predicate &&
+                        argsEnum.ElementAt(1).GetValue() is NSLAction action
+                    )
+                    {
+                        while (predicate.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null)).GetValue<bool>())
+                        {
+                            action.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                        }
+                        return PrimitiveTypes.voidType.Instantiate(null);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                },
+                desc: "Catches errors in the first action, invokes the second action with the caught error"
+            ));
+
             // Error handling
             registry.Add(NSLFunction.MakeAuto<Action<bool>>("assert", (value) =>
             {

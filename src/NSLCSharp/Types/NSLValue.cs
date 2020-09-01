@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 
 namespace NSL.Types
@@ -15,6 +16,7 @@ namespace NSL.Types
 
         public TypeSymbol GetTypeSymbol() => type;
         public object? GetValue() => value;
+        public T GetValue<T>() => (T)(GetValue() ?? throw new NullReferenceException());
         public void SetValue(object? newValue) => value = newValue;
         override public string ToString() => $"{ToStringUtil.ToString(value)} : {type}";
     }
