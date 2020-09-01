@@ -88,7 +88,7 @@ namespace NSL
                     }
                     else throw new ImplWrongValueNSLException();
                 },
-                desc: "Catches errors in the first action, invokes the second action with the caught error"
+                desc: "Runs the first action if the predicate is true, else runs second action"
             ));
 
             registry.Add(NSLFunction.MakeSimple(
@@ -113,7 +113,7 @@ namespace NSL
                     }
                     else throw new ImplWrongValueNSLException();
                 },
-                desc: "Catches errors in the first action, invokes the second action with the caught error"
+                desc: "Executes the second action while the predicate is true"
             ));
 
             // Error handling
