@@ -476,6 +476,20 @@ namespace NSL
                 else throw new ImplWrongValueNSLException();
             }));
 
+            registry.Add(NSLFunction.MakeAuto<Func<double, IEnumerable<object>>>("range", (len) =>
+            {
+                var length = (int)(len);
+                if (length < 0) throw new UserNSLException($"Length ({length}) must be greater than zero");
+                return new object[(int)len].Select((v, i) => (object)((double)i)).ToArray();
+            }, new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.numberType.ToArray() } }, "Creates an array of the specified length"));
+
+            registry.Add(NSLFunction.MakeAuto<Func<double, double, IEnumerable<object>>>("range", (val, len) =>
+            {
+                var length = (int)(len - val) + 1;
+                if (length <= 0) throw new UserNSLException($"Value ({val}) must not be less than length ({len})");
+                return new object[length].Select((v, i) => (object)(val + (double)i)).ToArray();
+            }, new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.numberType.ToArray() } }, "Creates an array of the specified length, starting with the start value"));
+
             return registry;
         }
     }
