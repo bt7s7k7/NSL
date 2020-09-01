@@ -100,8 +100,10 @@ namespace NSL.Types
             var failed = new List<Signature>();
             var failedAction = false;
             var providedArgs = _providedArgs.ToList();
+            var foundFunctionIndex = -1;
             foreach (var function in functions)
             {
+                foundFunctionIndex++;
                 var signature = function.GetSignature(providedArgs);
                 var wantedArgs = signature.arguments.ToArray();
 
@@ -173,6 +175,7 @@ namespace NSL.Types
 
                     if (success)
                     {
+                        if (signature.name[0] != '$') signature.name += $"`{foundFunctionIndex}";
                         return (function, signature);
                     }
                     else

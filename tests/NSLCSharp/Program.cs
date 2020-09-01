@@ -1,7 +1,9 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Diagnostics;
 using System.IO;
+using Process = System.Diagnostics.Process;
 
 namespace NSLCSharp
 {
@@ -9,6 +11,11 @@ namespace NSLCSharp
     {
         static void Main(string[] args)
         {
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine($"procId = {Process.GetCurrentProcess().Id}");
+            }
+
             var replCommand = new Command("--interactive", "Run a REPL");
             replCommand.AddAlias("-i");
 

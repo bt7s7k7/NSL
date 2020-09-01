@@ -6,8 +6,9 @@ namespace NSL.Runtime
     {
         public class State
         {
-            protected Stack<Scope> scopeStack = new Stack<Scope>();
+            protected Stack<Scope> scopeStack = new Stack<Scope>(10);
             protected Scope rootScope;
+            protected Scope topScope;
             public FunctionRegistry FunctionRegistry { get; }
             public Runner Runner { get; protected set; }
 
@@ -16,7 +17,7 @@ namespace NSL.Runtime
                 if (name == "-1")
                 {
                     if (parentName != null) throw new InternalNSLExcpetion("Root scope cannot have a parent");
-                    scopeStack.Push(rootScope);
+                    PushScope(rootScope);
                     return;
                 }
 
@@ -35,25 +36,35 @@ namespace NSL.Runtime
                 }
 
                 var newScope = new Scope(name, parent);
-                scopeStack.Push(newScope);
+                PushScope(newScope);
             }
 
             public void PushScope(Scope scope)
             {
                 scopeStack.Push(scope);
+                topScope = scope;
             }
 
             public void PopScope()
             {
                 scopeStack.Pop();
+                if (scopeStack.TryPeek(out Scope? top))
+                {
+                    topScope = top;
+                }
+                else
+                {
+                    topScope = rootScope;
+                }
             }
 
-            public Scope GetTopScope() => scopeStack.Peek();
+            public Scope GetTopScope() => topScope;
 
             public State(FunctionRegistry functionRegistry, Scope rootScope, Runner runner)
             {
                 FunctionRegistry = functionRegistry;
                 this.rootScope = rootScope;
+                topScope = rootScope;
                 Runner = runner;
             }
         }
