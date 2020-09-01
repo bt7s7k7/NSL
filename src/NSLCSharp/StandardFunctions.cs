@@ -534,6 +534,38 @@ namespace NSL
                 else throw new ImplWrongValueNSLException();
             }));
 
+            registry.Add(new NSLFunction("length", argsEnum =>
+            {
+                var desc = "Get the length of an array";
+                if (
+                    argsEnum.Count() == 1 &&
+                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
+                ) return new NSLFunction.Signature
+                {
+                    name = "length",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { arrayType },
+                    result = PrimitiveTypes.numberType
+                };
+                else return new NSLFunction.Signature
+                {
+                    name = "length",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray() },
+                    result = PrimitiveTypes.numberType
+                };
+            }, (argsEnum, state) =>
+            {
+                var arrayValue = argsEnum.ElementAt(0);
+                if (
+                    arrayValue.GetValue() is IEnumerable<object> array
+                )
+                {
+                    return PrimitiveTypes.numberType.Instantiate(array.Count());
+                }
+                else throw new ImplWrongValueNSLException();
+            }));
+
             registry.Add(new NSLFunction("contains", argsEnum =>
             {
                 var desc = "Tests if the array contains the specified element";
