@@ -87,7 +87,7 @@ namespace NSL.Tokenization
                     }),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword, verifier: (c) => 'a' <= c && 'z' >= c),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c), processor: (token, state) => {
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^-?\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c) || c == '-', processor: (token, state) => {
                         try {
                             var parsed = Double.Parse(token.content, NumberStyles.Float);
                             token.value = PrimitiveTypes.numberType.Instantiate(parsed);
