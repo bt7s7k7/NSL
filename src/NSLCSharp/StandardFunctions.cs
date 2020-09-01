@@ -443,6 +443,97 @@ namespace NSL
                 else throw new ImplWrongValueNSLException();
             }));
 
+            registry.Add(new NSLFunction("index", argsEnum =>
+            {
+                var desc = "Get element at index in an array";
+                if (
+                    argsEnum.Count() == 2 &&
+                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
+                ) return new NSLFunction.Signature
+                {
+                    name = "index",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { arrayType, PrimitiveTypes.numberType },
+                    result = arrayType.GetItemType()
+                };
+                else return new NSLFunction.Signature
+                {
+                    name = "index",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.numberType },
+                    result = PrimitiveTypes.neverType
+                };
+            }, (argsEnum, state) =>
+            {
+                var arrayValue = argsEnum.ElementAt(0);
+                if (
+                    arrayValue.GetValue() is IEnumerable<object> array &&
+                    arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType &&
+                    argsEnum.ElementAt(1).GetValue() is double index
+                )
+                {
+                    try
+                    {
+                        return arrayType.GetItemType().Instantiate(array.ElementAt((int)index));
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        throw new UserNSLException("Index must be greather than zero and less than the length of the array");
+                    }
+                }
+                else throw new ImplWrongValueNSLException();
+            }));
+
+            registry.Add(new NSLFunction("index", argsEnum =>
+            {
+                var desc = "Set element at index in an array";
+                if (
+                    argsEnum.Count() == 3 &&
+                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
+                ) return new NSLFunction.Signature
+                {
+                    name = "index",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { arrayType, PrimitiveTypes.numberType, arrayType.GetItemType() },
+                    result = arrayType.GetItemType()
+                };
+                else return new NSLFunction.Signature
+                {
+                    name = "index",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.numberType, PrimitiveTypes.neverType },
+                    result = PrimitiveTypes.neverType
+                };
+            }, (argsEnum, state) =>
+            {
+                var arrayValue = argsEnum.ElementAt(0);
+                if (
+                    arrayValue.GetValue() is IEnumerable<object> array &&
+                    arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType &&
+                    argsEnum.ElementAt(1).GetValue() is double index &&
+                    argsEnum.ElementAt(2).GetValue() is object value
+                )
+                {
+                    try
+                    {
+                        if (array is IList<object> list)
+                        {
+                            return arrayType.GetItemType().Instantiate(list[(int)index] = value);
+                        }
+                        else
+                        {
+                            arrayValue.SetValue(array.Select((v, i) => i == (int)index ? value : v).ToArray());
+                            return arrayType.GetItemType().Instantiate(value);
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        throw new UserNSLException("Index must be greather than zero and less than the length of the array");
+                    }
+                }
+                else throw new ImplWrongValueNSLException();
+            }));
+
             registry.Add(new NSLFunction("contains", argsEnum =>
             {
                 var desc = "Tests if the array contains the specified element";
