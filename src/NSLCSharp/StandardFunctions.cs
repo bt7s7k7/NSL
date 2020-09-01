@@ -45,51 +45,51 @@ namespace NSL
             }, "Prints all functions"));
 
             registry.Add(NSLFunction.MakeSimple("help", new[] { PrimitiveTypes.stringType }, PrimitiveTypes.stringType, (argsEnum, state) =>
-           {
-               if (argsEnum.ElementAt(0).GetValue() is string name)
-               {
-                   var builder = new StringBuilder();
+            {
+                if (argsEnum.ElementAt(0).GetValue() is string name)
+                {
+                    var builder = new StringBuilder();
 
-                   foreach (var function in state.FunctionRegistry.Find(name))
-                   {
-                       builder.AppendLine(function.GetSignature(new TypeSymbol[] { }).ToString());
-                   }
+                    foreach (var function in state.FunctionRegistry.Find(name))
+                    {
+                        builder.AppendLine(function.GetSignature(new TypeSymbol[] { }).ToString());
+                    }
 
-                   return PrimitiveTypes.stringType.Instantiate(builder.ToString());
-               }
-               else throw new ImplWrongValueNSLException();
-           }, "Prints all overloads for the function"));
+                    return PrimitiveTypes.stringType.Instantiate(builder.ToString());
+                }
+                else throw new ImplWrongValueNSLException();
+            }, "Prints all overloads for the function"));
 
             registry.Add(NSLFunction.MakeSimple(
-                 name: "if",
-                 arguments: new TypeSymbol[] {
-                    PrimitiveTypes.boolType,
-                    new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType),
-                    new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType)
-                 },
-                 result: PrimitiveTypes.voidType,
-                 impl: (argsEnum, state) =>
-                 {
-                     if (
-                         argsEnum.ElementAt(0).GetValue() is bool value &&
-                         argsEnum.ElementAt(1).GetValue() is NSLAction thenAction &&
-                         argsEnum.ElementAt(2).GetValue() is NSLAction elseAction
-                     )
-                     {
-                         if (value)
-                         {
-                             thenAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
-                         }
-                         else
-                         {
-                             elseAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
-                         }
-                         return PrimitiveTypes.voidType.Instantiate(null);
-                     }
-                     else throw new ImplWrongValueNSLException();
-                 },
-                 desc: "Catches errors in the first action, invokes the second action with the caught error"
-             ));
+                name: "if",
+                arguments: new TypeSymbol[] {
+                   PrimitiveTypes.boolType,
+                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType),
+                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType)
+                },
+                result: PrimitiveTypes.voidType,
+                impl: (argsEnum, state) =>
+                {
+                    if (
+                        argsEnum.ElementAt(0).GetValue() is bool value &&
+                        argsEnum.ElementAt(1).GetValue() is NSLAction thenAction &&
+                        argsEnum.ElementAt(2).GetValue() is NSLAction elseAction
+                    )
+                    {
+                        if (value)
+                        {
+                            thenAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                        }
+                        else
+                        {
+                            elseAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                        }
+                        return PrimitiveTypes.voidType.Instantiate(null);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                },
+                desc: "Catches errors in the first action, invokes the second action with the caught error"
+            ));
 
             // Error handling
             registry.Add(NSLFunction.MakeAuto<Action<bool>>("assert", (value) =>
