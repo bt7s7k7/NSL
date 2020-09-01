@@ -95,10 +95,11 @@ namespace NSL.Types
             }, desc);
         }
 
-        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> providedArgs, Func<int, TypeSymbol, TypeSymbol>? expandAction = null)
+        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> _providedArgs, Func<int, TypeSymbol, TypeSymbol>? expandAction = null)
         {
             var failed = new List<Signature>();
             var failedAction = false;
+            var providedArgs = _providedArgs.ToList();
             foreach (var function in functions)
             {
                 var signature = function.GetSignature(providedArgs);
@@ -121,26 +122,39 @@ namespace NSL.Types
                         {
                             continue;
                         }
-                        else if (provided == null && wanted is ActionTypeSymbol action)
+                        else if ((provided == null || provided is ActionTypeSymbol) && wanted is ActionTypeSymbol action)
                         {
-                            if (expandAction == null)
+                            ActionTypeSymbol actionType;
+
+                            if (provided == null)
+                            {
+                                if (expandAction == null) continue;
+                                var resultType = expandAction(i, action.Argument);
+                                actionType = new ActionTypeSymbol(action.Argument, action.Result == PrimitiveTypes.voidType ? PrimitiveTypes.voidType : resultType);
+                            }
+                            else if (provided is ActionTypeSymbol providedAction)
+                            {
+                                if (providedAction.Result != action.Result && action.Result == PrimitiveTypes.voidType)
+                                {
+                                    actionType = new ActionTypeSymbol(providedAction.Argument, PrimitiveTypes.voidType);
+                                }
+                                else
+                                {
+                                    actionType = providedAction;
+                                }
+                            }
+                            else continue;
+
+                            providedArgs[i] = actionType;
+                            if (actionType == wanted)
                             {
                                 continue;
                             }
                             else
                             {
-                                var resultType = expandAction(i, action.Argument);
-                                var actionType = new ActionTypeSymbol(action.Argument, resultType);
-                                if (actionType == wanted)
-                                {
-                                    continue;
-                                }
-                                else
-                                {
-                                    success = false;
-                                    failedAction = true;
-                                    break;
-                                }
+                                success = false;
+                                failedAction = true;
+                                break;
                             }
                         }
                         else
