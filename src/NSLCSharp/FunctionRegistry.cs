@@ -8,16 +8,20 @@ namespace NSL
     public partial class FunctionRegistry
     {
         protected Dictionary<string, List<NSLFunction>> functions = new Dictionary<string, List<NSLFunction>>();
+        protected Dictionary<string, NSLFunction> specificFunctions = new Dictionary<string, NSLFunction>();
 
         public void Add(NSLFunction function)
         {
             if (!functions.ContainsKey(function.Name))
             {
                 functions[function.Name] = new List<NSLFunction> { function };
+                specificFunctions.Add(function.Name + "`" + 0, function);
             }
             else
             {
-                functions[function.Name].Add(function);
+                List<NSLFunction> functionsList = functions[function.Name];
+                specificFunctions.Add(function.Name + "`" + functionsList.Count, function);
+                functionsList.Add(function);
             }
         }
 
@@ -28,6 +32,15 @@ namespace NSL
                 return functionsList;
             }
             else return new List<NSLFunction>();
+        }
+
+        public NSLFunction FindSpecific(string name)
+        {
+            if (specificFunctions.TryGetValue(name, out NSLFunction? function))
+            {
+                return function;
+            }
+            else throw new InternalNSLExcpetion($"Specific function {name} not found");
         }
 
         public static NSLFunction MakeVariableDefinitionFunction(string varName)

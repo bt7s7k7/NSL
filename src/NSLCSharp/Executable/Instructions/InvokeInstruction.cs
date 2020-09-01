@@ -37,7 +37,7 @@ namespace NSL.Executable.Instructions
             else
             {
                 var argumentValues = arguments.Select(v => state.GetTopScope().Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
-                var (function, _) = NSLFunction.GetMatchingFunction(state.FunctionRegistry.Find(funcName), argumentValues.Select(v => v.GetTypeSymbol()));
+                var function = state.FunctionRegistry.FindSpecific(funcName);
                 if (function != null)
                 {
                     var returnValue = function.Invoke(argumentValues, state);

@@ -1,0 +1,11 @@
+#T :: Should execute the correct function based on the value of the predicate
+
+var $x 0
+
+if true !{ $x 1 } !{ assert false }
+
+eq $x 1 | assert
+
+if false !{ assert false } !{ $x 5 }
+
+eq $x 5 | assert
