@@ -76,7 +76,7 @@ namespace NSLCSharp
             ILogger.instance?.End();
 
             emittingResult.program.Log();
-            var returnVariable = emittingResult.program.GetReturnVariable();
+            var returnVariable = emittingResult.program.ReturnVariable;
             ILogger.instance?.Message(returnVariable == null ? ": _" : $": {returnVariable.type}").End().End();
 
             // Running

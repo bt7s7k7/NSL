@@ -5,7 +5,8 @@ namespace NSL.Executable.Instructions
 {
     public class EndInstruction : InstructionBase
     {
-        override public int GetIndentDiff() => -1;
+        override public int IndentDiff => -1;
+
         override public string ToString() => $"end";
         public override void Execute(Runner.State state)
         {

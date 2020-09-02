@@ -5,10 +5,11 @@ namespace NSL.Executable.Instructions
 {
     public class PushInstruction : InstructionBase
     {
+        override public int IndentDiff => 1;
+
         protected string id;
         protected string? parentId;
 
-        override public int GetIndentDiff() => 1;
         override public string ToString() => $"push {id} ← {parentId?.ToString() ?? "null"}";
         public override void Execute(Runner.State state)
         {

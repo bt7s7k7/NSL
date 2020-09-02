@@ -7,8 +7,8 @@ namespace NSL.Executable
     {
         public Position Start { get; }
         public Position End { get; }
+        public int IndentDiff { get; }
 
-        int GetIndentDiff();
         void Execute(Runner.State state);
     }
 
@@ -17,7 +17,7 @@ namespace NSL.Executable
         public Position Start { get; protected set; }
         public Position End { get; protected set; }
 
-        public virtual int GetIndentDiff() => 0;
+        public virtual int IndentDiff => 0;
         public abstract void Execute(Runner.State state);
 
         protected InstructionBase(Position start, Position end)

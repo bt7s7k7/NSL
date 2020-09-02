@@ -16,7 +16,7 @@ namespace NSL.Executable
             public IEnumerable<Diagnostic> diagnostics;
             public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, IProgram.ReturnVariable? returnVariable)
+            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, IProgram.VariableDefinition? returnVariable)
             {
                 this.diagnostics = diagnostics;
                 this.program = new NSLProgram(instructions, returnVariable);
@@ -435,8 +435,8 @@ namespace NSL.Executable
                 {
                     var blockEmission = visitBlock(blockNode, innerContext);
 
-                    IProgram.ReturnVariable returnVariable = new IProgram.ReturnVariable(blockEmission.type!, blockEmission.varName);
-                    IProgram.ReturnVariable argumentVariable = new IProgram.ReturnVariable(
+                    IProgram.VariableDefinition returnVariable = new IProgram.VariableDefinition(blockEmission.type!, blockEmission.varName);
+                    IProgram.VariableDefinition argumentVariable = new IProgram.VariableDefinition(
                         innerContext.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
                         argVarName);
                     target.Add(new EmittedInstruction(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), innerContext));
@@ -474,7 +474,7 @@ namespace NSL.Executable
 
                     result.Add(new PushInstruction(node.Start, node.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
 
-                    TypeSymbol itemType = arrayType.GetItemType();
+                    TypeSymbol itemType = arrayType.ItemType;
                     result.Add(new DefInstruction(sourceEmission.node.Start, sourceEmission.node.End, "$_a", itemType, null), innerContext);
                     innerContext.scope.Add("$_a", itemType);
 
@@ -560,12 +560,12 @@ namespace NSL.Executable
 
             var result = visitBlock(parsingResult.rootNode, context, overrideScopeId: -1);
 
-            IProgram.ReturnVariable? returnVariable = null;
+            IProgram.VariableDefinition? returnVariable = null;
             if (result.type != PrimitiveTypes.voidType)
             {
                 context.scope.Add(result.varName, result.type!);
                 result.EmitTo(state, context);
-                returnVariable = new IProgram.ReturnVariable(result.type!, result.varName);
+                returnVariable = new IProgram.VariableDefinition(result.type!, result.varName);
             }
             else
             {

@@ -5,7 +5,8 @@ namespace NSL.Executable.Instructions
 {
     public class PopInstruction : InstructionBase
     {
-        override public int GetIndentDiff() => -1;
+        override public int IndentDiff => 0;
+
         override public string ToString() => $"pop";
         public override void Execute(Runner.State state)
         {

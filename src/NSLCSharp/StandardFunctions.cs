@@ -330,7 +330,7 @@ namespace NSL
                     if (
                         argsEnum.Count() == 2 &&
                         argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
-                        array.GetItemType() is TypeSymbol itemType &&
+                        array.ItemType is TypeSymbol itemType &&
                         (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(itemType, PrimitiveTypes.boolType))
                     )
                     {
@@ -361,7 +361,7 @@ namespace NSL
                         arrayValue.TypeSymbol is ArrayTypeSymbol arrayType
                     )
                     {
-                        var itemType = arrayType.GetItemType();
+                        var itemType = arrayType.ItemType;
                         var resultArray = array.Where(value =>
                         {
                             var result = action.Invoke(state.Runner, itemType.Instantiate(value)).Value;
@@ -382,7 +382,7 @@ namespace NSL
                     if (
                         argsEnum.Count() == 2 &&
                         argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
-                        array.GetItemType() is TypeSymbol itemType &&
+                        array.ItemType is TypeSymbol itemType &&
                         (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(itemType, PrimitiveTypes.voidType))
                     )
                     {
@@ -413,7 +413,7 @@ namespace NSL
                         arrayValue.TypeSymbol is ArrayTypeSymbol arrayType
                     )
                     {
-                        var itemType = arrayType.GetItemType();
+                        var itemType = arrayType.ItemType;
 
                         foreach (var item in array)
                         {
@@ -436,7 +436,7 @@ namespace NSL
                 {
                     name = "push",
                     desc = desc,
-                    arguments = new TypeSymbol[] { arrayType, arrayType.GetItemType() },
+                    arguments = new TypeSymbol[] { arrayType, arrayType.ItemType },
                     result = arrayType
                 };
                 else return new NSLFunction.Signature
@@ -488,7 +488,7 @@ namespace NSL
                     name = "index",
                     desc = desc,
                     arguments = new TypeSymbol[] { arrayType, PrimitiveTypes.numberType },
-                    result = arrayType.GetItemType()
+                    result = arrayType.ItemType
                 };
                 else return new NSLFunction.Signature
                 {
@@ -533,7 +533,7 @@ namespace NSL
                         }
                         catch (IndexOutOfRangeException) { throwError(); }
                         catch (ArgumentOutOfRangeException) { throwError(); }
-                    }, arrayType.GetItemType());
+                    }, arrayType.ItemType);
                 }
                 else throw new ImplWrongValueNSLException();
             }));
@@ -580,7 +580,7 @@ namespace NSL
                 {
                     name = "contains",
                     desc = desc,
-                    arguments = new TypeSymbol[] { arrayType, arrayType.GetItemType() },
+                    arguments = new TypeSymbol[] { arrayType, arrayType.ItemType },
                     result = PrimitiveTypes.boolType
                 };
                 else return new NSLFunction.Signature

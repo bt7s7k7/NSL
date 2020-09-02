@@ -9,20 +9,21 @@ namespace NSL.Executable.Instructions
 {
     public class InvokeInstruction : InstructionBase
     {
+        override public int IndentDiff => 0;
+
         protected string? retVarName;
         protected string? oldRetVarName = null;
         protected string funcName;
         protected IEnumerable<string> arguments;
 
-        override public int GetIndentDiff() => 0;
         override public string ToString() => $"invoke {retVarName ?? "_"}{(oldRetVarName != null ? $" ({oldRetVarName})" : "")} = {funcName} [{String.Join(',', arguments)}]";
         public override void Execute(Runner.State state)
         {
             if (funcName[0] == '$')
             {
-                var variable = state.GetTopScope().Get(funcName) ?? throw new InternalNSLExcpetion($"Failed to find invoked variable '{funcName}'");
+                var variable = state.TopScope.Get(funcName) ?? throw new InternalNSLExcpetion($"Failed to find invoked variable '{funcName}'");
 
-                var argumentValues = arguments.Select(v => state.GetTopScope().Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
+                var argumentValues = arguments.Select(v => state.TopScope.Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
                 if (argumentValues.Count() == 1)
                 {
                     variable.Value = argumentValues.First().Value;
@@ -30,19 +31,19 @@ namespace NSL.Executable.Instructions
 
                 if (retVarName != null)
                 {
-                    state.GetTopScope().Replace(retVarName, variable);
+                    state.TopScope.Replace(retVarName, variable);
                 }
             }
             else
             {
-                var argumentValues = arguments.Select(v => state.GetTopScope().Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
+                var argumentValues = arguments.Select(v => state.TopScope.Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
                 var function = state.FunctionRegistry.FindSpecific(funcName);
                 if (function != null)
                 {
                     var returnValue = function.Invoke(argumentValues, state);
                     if (retVarName != null)
                     {
-                        state.GetTopScope().Replace(retVarName, returnValue);
+                        state.TopScope.Replace(retVarName, returnValue);
                     }
                 }
                 else

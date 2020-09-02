@@ -31,11 +31,11 @@ namespace NSL.Runtime
         {
             IValue? result = null;
 
-            var returnVariable = program.GetReturnVariable();
+            var returnVariable = program.ReturnVariable;
             if (returnVariable != null)
             {
                 state.PushScope("-1", null);
-                state.GetTopScope().Set(returnVariable.varName, returnVariable.type.Instantiate(null));
+                state.TopScope.Set(returnVariable.varName, returnVariable.type.Instantiate(null));
                 state.PopScope();
             }
 
@@ -47,7 +47,7 @@ namespace NSL.Runtime
                 {
                     if (inst is ActionInstruction action)
                     {
-                        buildingAction = new ActionBuilder(state.GetTopScope(), action.ReturnVariable, action.ArgumentVariable, action.Name, state.GetTopScope());
+                        buildingAction = new ActionBuilder(state.TopScope, action.ReturnVariable, action.ArgumentVariable, action.Name, state.TopScope);
                     }
                     else
                     {
@@ -75,7 +75,7 @@ namespace NSL.Runtime
 
                     if (buildingAction.Depth == 0)
                     {
-                        state.GetTopScope().Set(buildingAction.ActionVarName, buildingAction.Build());
+                        state.TopScope.Set(buildingAction.ActionVarName, buildingAction.Build());
                         buildingAction = null;
                     }
                     else
@@ -88,7 +88,7 @@ namespace NSL.Runtime
             if (returnVariable != null)
             {
                 state.PushScope("-1", null);
-                result = state.GetTopScope().Get(returnVariable.varName);
+                result = state.TopScope.Get(returnVariable.varName);
                 state.PopScope();
             }
 

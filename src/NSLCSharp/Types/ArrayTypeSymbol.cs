@@ -2,13 +2,11 @@ namespace NSL.Types
 {
     public class ArrayTypeSymbol : TypeSymbol
     {
-        protected TypeSymbol item;
+        public TypeSymbol ItemType { get; protected set; }
 
-        public ArrayTypeSymbol(TypeSymbol item) : base(item.GetName() + "[]")
+        public ArrayTypeSymbol(TypeSymbol item) : base(item.Name + "[]")
         {
-            this.item = item;
+            this.ItemType = item;
         }
-
-        public TypeSymbol GetItemType() => item;
     }
 }

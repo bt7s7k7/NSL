@@ -7,15 +7,16 @@ namespace NSL.Executable.Instructions
 {
     public class ForEachInvokeInstruction : InstructionBase
     {
+        override public int IndentDiff => 0;
+
         protected string argVarName;
         protected string actionVarName;
         protected string arrayVarName;
 
-        override public int GetIndentDiff() => 0;
         override public string ToString() => $"for {arrayVarName} : {argVarName} => {actionVarName}";
         public override void Execute(Runner.State state)
         {
-            var scope = state.GetTopScope();
+            var scope = state.TopScope;
             var actionVariable = scope.Get(actionVarName);
             if (actionVariable == null) throw new InternalNSLExcpetion($"Failed to find action variable {actionVarName}");
             if (actionVariable.Value is NSLAction action)

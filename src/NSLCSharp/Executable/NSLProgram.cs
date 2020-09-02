@@ -8,26 +8,27 @@ namespace NSL.Executable
 {
     public interface IProgram
     {
-        public class ReturnVariable
+        public class VariableDefinition
         {
             public TypeSymbol type;
             public string varName;
 
-            public ReturnVariable(TypeSymbol type, string varName)
+            public VariableDefinition(TypeSymbol type, string varName)
             {
                 this.type = type;
                 this.varName = varName;
             }
         }
 
+        IProgram.VariableDefinition? ReturnVariable { get; }
+
         IEnumerator<IInstruction> GetEnumerator();
-        IProgram.ReturnVariable? GetReturnVariable();
     }
 
     public class NSLProgram : IEnumerable<IInstruction>, IProgram
     {
         protected IEnumerable<IInstruction> instructions;
-        protected IProgram.ReturnVariable? returnVariable = null;
+        protected IProgram.VariableDefinition? returnVariable = null;
 
         override public string ToString()
         {
@@ -36,7 +37,7 @@ namespace NSL.Executable
             var indent = 0;
             foreach (var inst in instructions)
             {
-                var indentDelta = inst.GetIndentDiff();
+                var indentDelta = inst.IndentDiff;
                 if (indentDelta < 0) indent += indentDelta;
                 builder.Append(new String(' ', indent * 2))
                     .Append(inst.ToString() ?? inst.GetType().Name)
@@ -54,14 +55,14 @@ namespace NSL.Executable
             var indent = 0;
             foreach (var inst in instructions)
             {
-                var indentDelta = inst.GetIndentDiff();
+                var indentDelta = inst.IndentDiff;
                 if (indentDelta < 0) indent += indentDelta;
                 ILogger.instance?.Message(new String(' ', indent * 2)).Message(inst.ToString() ?? inst.GetType().Name).Pos(inst.Start).End();
                 if (indentDelta > 0) indent += indentDelta;
             }
         }
 
-        public IProgram.ReturnVariable? GetReturnVariable() => returnVariable;
+        public IProgram.VariableDefinition? ReturnVariable => returnVariable;
 
         public IEnumerator<IInstruction> GetEnumerator()
         {
@@ -73,7 +74,7 @@ namespace NSL.Executable
             return ((IEnumerable)instructions).GetEnumerator();
         }
 
-        public NSLProgram(IEnumerable<IInstruction> instructions, IProgram.ReturnVariable? returnVariable)
+        public NSLProgram(IEnumerable<IInstruction> instructions, IProgram.VariableDefinition? returnVariable)
         {
             this.instructions = instructions;
             this.returnVariable = returnVariable;

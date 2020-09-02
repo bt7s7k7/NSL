@@ -5,18 +5,16 @@ namespace NSL.Types
 {
     public class TypeSymbol
     {
-        protected string name;
-
-        public string GetName() => name;
+        public string Name { get; protected set; }
 
         override public string ToString()
         {
-            return name;
+            return Name;
         }
 
         public TypeSymbol(string name)
         {
-            this.name = name;
+            this.Name = name;
         }
 
         public ArrayTypeSymbol ToArray() => new ArrayTypeSymbol(this);
@@ -34,7 +32,7 @@ namespace NSL.Types
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(name);
+            return HashCode.Combine(Name);
         }
     }
 }

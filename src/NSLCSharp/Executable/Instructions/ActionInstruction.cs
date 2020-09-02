@@ -5,18 +5,20 @@ namespace NSL.Executable.Instructions
 {
     public class ActionInstruction : InstructionBase
     {
-        public string Name { get; protected set; }
-        public IProgram.ReturnVariable? ReturnVariable { get; protected set; }
-        public IProgram.ReturnVariable ArgumentVariable { get; protected set; }
+        override public int IndentDiff => 1;
 
-        override public int GetIndentDiff() => 1;
+        public string Name { get; protected set; }
+        public IProgram.VariableDefinition? ReturnVariable { get; protected set; }
+        public IProgram.VariableDefinition ArgumentVariable { get; protected set; }
+
         override public string ToString() => $"action {Name} : {(ReturnVariable == null ? "void" : $"{ReturnVariable.varName} = {ReturnVariable.type}")}";
+
         public override void Execute(Runner.State state)
         {
             throw new System.NotImplementedException();
         }
 
-        public ActionInstruction(Position start, Position end, string name, IProgram.ReturnVariable? returnVariable, IProgram.ReturnVariable argumentVariable) : base(start, end)
+        public ActionInstruction(Position start, Position end, string name, IProgram.VariableDefinition? returnVariable, IProgram.VariableDefinition argumentVariable) : base(start, end)
         {
             Name = name;
             ReturnVariable = returnVariable;

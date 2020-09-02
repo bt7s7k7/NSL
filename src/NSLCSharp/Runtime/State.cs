@@ -24,7 +24,7 @@ namespace NSL.Runtime
                 Scope? parent = null;
                 if (parentName != null)
                 {
-                    Scope currTop = GetTopScope();
+                    Scope currTop = TopScope;
                     if (currTop.Name != parentName)
                     {
                         throw new InternalNSLExcpetion($"Parent name must does not equal the name of the parent '{parentName}' != '{currTop.Name}'");
@@ -58,7 +58,7 @@ namespace NSL.Runtime
                 }
             }
 
-            public Scope GetTopScope() => topScope;
+            public Scope TopScope => topScope;
 
             public State(FunctionRegistry functionRegistry, Scope rootScope, Runner runner)
             {
