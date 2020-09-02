@@ -320,9 +320,9 @@ namespace NSL.Executable
                         {
                             var litEmission = new Emission(makeVarName(), literal);
                             arguments.Add(litEmission);
-                            litEmission.Add(new DefInstruction(literal.Start, literal.End, litEmission.varName, literal.value.GetTypeSymbol(), literal.value.GetValue()), innerContext);
-                            context.scope.Add(litEmission.varName, literal.value.GetTypeSymbol());
-                            litEmission.type = literal.value.GetTypeSymbol();
+                            litEmission.Add(new DefInstruction(literal.Start, literal.End, litEmission.varName, literal.value.TypeSymbol, literal.value.Value), innerContext);
+                            context.scope.Add(litEmission.varName, literal.value.TypeSymbol);
+                            litEmission.type = literal.value.TypeSymbol;
                         }
                         else if (child is StatementNode statement)
                         {
@@ -555,7 +555,7 @@ namespace NSL.Executable
 
             if (runnerRootScope != null) foreach (var (key, value) in runnerRootScope.GetAllVariables())
                 {
-                    context.scope.Add(key, value.GetTypeSymbol());
+                    context.scope.Add(key, value.TypeSymbol);
                 }
 
             var result = visitBlock(parsingResult.rootNode, context, overrideScopeId: -1);

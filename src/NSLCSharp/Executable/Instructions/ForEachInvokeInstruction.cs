@@ -18,30 +18,30 @@ namespace NSL.Executable.Instructions
             var scope = state.GetTopScope();
             var actionVariable = scope.Get(actionVarName);
             if (actionVariable == null) throw new InternalNSLExcpetion($"Failed to find action variable {actionVarName}");
-            if (actionVariable.GetValue() is NSLAction action)
+            if (actionVariable.Value is NSLAction action)
             {
 
                 var arrayVariable = scope.Get(arrayVarName);
                 if (arrayVariable == null) throw new InternalNSLExcpetion($"Failed to find array variable {arrayVarName}");
-                var arrayObject = arrayVariable.GetValue();
+                var arrayObject = arrayVariable.Value;
                 if (arrayObject is IEnumerable arrayEnum)
                 {
                     var argumentVariable = action.ArgumentVariable.type.Instantiate(null);
                     action.Scope.Set(action.ArgumentVariable.varName, argumentVariable);
                     foreach (var element in arrayEnum)
                     {
-                        argumentVariable.SetValue(element);
+                        argumentVariable.Value = element;
                         state.Runner.RunAction(action);
                     }
                 }
                 else
                 {
-                    throw new InternalNSLExcpetion($"Supposed array typed ({arrayVariable.GetTypeSymbol()}) variable's object is not IEnumerable {arrayObject?.GetType().Name ?? "null"}");
+                    throw new InternalNSLExcpetion($"Supposed array typed ({arrayVariable.TypeSymbol}) variable's object is not IEnumerable {arrayObject?.GetType().Name ?? "null"}");
                 }
             }
             else
             {
-                throw new InternalNSLExcpetion($"Supposed action typed ({actionVariable.GetTypeSymbol()}) variable's object is not an NSLAction {actionVariable.GetValue()?.GetType().Name ?? "null"}");
+                throw new InternalNSLExcpetion($"Supposed action typed ({actionVariable.TypeSymbol}) variable's object is not an NSLAction {actionVariable.Value?.GetType().Name ?? "null"}");
             }
         }
 

@@ -17,7 +17,7 @@ namespace NSL.Runtime
 
         public void Add(IInstruction instruction) => instructions.Add(instruction);
 
-        public NSLValue Build() =>
+        public IValue Build() =>
             new ActionTypeSymbol(argumentVariable.type, returnVariable?.type ?? PrimitiveTypes.voidType)
             .Instantiate(new NSLAction(instructions, returnVariable, argumentVariable, scope));
 

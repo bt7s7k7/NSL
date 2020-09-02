@@ -8,18 +8,32 @@ namespace NSL.Runtime
     {
         public class Scope
         {
-            protected Dictionary<string, NSLValue> variables = new Dictionary<string, NSLValue>();
+            protected Dictionary<string, IValue> variables = new Dictionary<string, IValue>();
             public Scope? Parent { get; protected set; } = null;
             public string Name { get; protected set; }
 
-            public void Set(string name, NSLValue value)
+            public void Set(string name, IValue value)
             {
                 variables[name] = value;
             }
 
-            public NSLValue? Get(string name)
+            public bool Replace(string name, IValue value)
             {
-                if (variables.TryGetValue(name, out NSLValue? value))
+                if (variables.ContainsKey(name))
+                {
+                    variables[name] = value;
+                    return true;
+                }
+                else if (Parent != null)
+                {
+                    return Parent.Replace(name, value);
+                }
+                else return false;
+            }
+
+            public IValue? Get(string name)
+            {
+                if (variables.TryGetValue(name, out IValue? value))
                 {
                     return value;
                 }
@@ -30,7 +44,7 @@ namespace NSL.Runtime
                 else return null;
             }
 
-            public IEnumerable<(string key, NSLValue value)> GetAllVariables() => variables.Select(v => (v.Key, v.Value));
+            public IEnumerable<(string key, IValue value)> GetAllVariables() => variables.Select(v => (v.Key, v.Value));
 
             public Scope(string name, Scope? parent)
             {

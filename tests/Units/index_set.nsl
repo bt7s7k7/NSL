@@ -1,0 +1,6 @@
+#T :: Should set the value of the element of the array
+var $arr (arr 1 2 3)
+
+index $arr 1 | set 5
+
+contains $arr 5 | assert

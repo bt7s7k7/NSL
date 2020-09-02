@@ -9,7 +9,7 @@ namespace NSL.Types
     public class NSLFunction
     {
         protected Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator;
-        protected Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl;
+        protected Func<IEnumerable<IValue>, Runner.State, IValue> impl;
         public string Name { get; protected set; }
 
         public struct Signature
@@ -24,13 +24,13 @@ namespace NSL.Types
 
         public Signature GetSignature(IEnumerable<TypeSymbol?> providedArguments) => signatureGenerator(providedArguments);
 
-        public NSLValue Invoke(IEnumerable<NSLValue> arguments, Runner.State state) => impl(arguments, state);
+        public IValue Invoke(IEnumerable<IValue> arguments, Runner.State state) => impl(arguments, state);
 
         public string GetName() => Name;
 
         public override string ToString() => Name;
 
-        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl)
+        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<IValue>, Runner.State, IValue> impl)
         {
             this.signatureGenerator = signatureGenerator;
             this.impl = impl;
@@ -44,7 +44,7 @@ namespace NSL.Types
             { typeof(bool), PrimitiveTypes.boolType }
         };
 
-        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<NSLValue>, Runner.State, NSLValue> impl, string? desc = null) => new NSLFunction(
+        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<IValue>, Runner.State, IValue> impl, string? desc = null) => new NSLFunction(
             name,
             _ => new Signature
             {
@@ -83,7 +83,7 @@ namespace NSL.Types
 
             return NSLFunction.MakeSimple(name, arguments, returnType, (argsEnum, runnerState) =>
             {
-                var values = argsEnum.Select(v => v.GetValue());
+                var values = argsEnum.Select(v => v.Value);
                 try
                 {
                     return returnType.Instantiate(invokeMethod.Invoke(func, values.ToArray()));

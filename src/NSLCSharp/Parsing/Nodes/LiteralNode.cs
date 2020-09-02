@@ -6,9 +6,9 @@ namespace NSL.Parsing.Nodes
 {
     public class LiteralNode : ASTNodeBase
     {
-        public NSLValue value;
+        public IValue value;
 
-        public LiteralNode(NSLValue value, Position start, Position end) : base(start, end)
+        public LiteralNode(IValue value, Position start, Position end) : base(start, end)
         {
             this.value = value;
         }

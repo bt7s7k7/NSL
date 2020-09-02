@@ -8,11 +8,11 @@ namespace NSL.Tokenization.General
     {
         public T type;
         public string content;
-        public NSLValue? value;
+        public IValue? value;
         public Position start;
         public Position end;
 
-        public Token(T type, string content, NSLValue? value, Position start, Position end)
+        public Token(T type, string content, IValue? value, Position start, Position end)
         {
             this.type = type;
             this.content = content;

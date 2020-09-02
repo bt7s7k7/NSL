@@ -25,13 +25,12 @@ namespace NSL.Executable.Instructions
                 var argumentValues = arguments.Select(v => state.GetTopScope().Get(v) ?? throw new InternalNSLExcpetion($"Failed to find variable '{v}'"));
                 if (argumentValues.Count() == 1)
                 {
-                    variable.SetValue(argumentValues.First().GetValue());
+                    variable.Value = argumentValues.First().Value;
                 }
 
                 if (retVarName != null)
                 {
-                    var retVariable = state.GetTopScope().Get(retVarName) ?? throw new InternalNSLExcpetion($"Failed to find return variable '{retVarName}'");
-                    retVariable.SetValue(variable.GetValue());
+                    state.GetTopScope().Replace(retVarName, variable);
                 }
             }
             else
@@ -43,8 +42,7 @@ namespace NSL.Executable.Instructions
                     var returnValue = function.Invoke(argumentValues, state);
                     if (retVarName != null)
                     {
-                        var retVariable = state.GetTopScope().Get(retVarName) ?? throw new InternalNSLExcpetion($"Failed to find return variable '{retVarName}'");
-                        retVariable.SetValue(returnValue.GetValue());
+                        state.GetTopScope().Replace(retVarName, returnValue);
                     }
                 }
                 else

@@ -33,7 +33,7 @@ namespace NSL.Types
             Scope = scope;
         }
 
-        public NSLValue Invoke(Runner runner, NSLValue argument)
+        public IValue Invoke(Runner runner, IValue argument)
         {
             Scope.Set(ArgumentVariable.varName, argument);
             return runner.RunAction(this);

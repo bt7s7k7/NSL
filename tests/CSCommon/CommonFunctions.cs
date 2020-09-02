@@ -20,7 +20,7 @@ namespace CSCommon
                 };
             }, (argsEnum, state) =>
             {
-                Console.WriteLine(String.Join(' ', argsEnum.Select(v => ToStringUtil.ToString(v.GetValue()))));
+                Console.WriteLine(String.Join(' ', argsEnum.Select(v => ToStringUtil.ToString(v.Value))));
                 return PrimitiveTypes.voidType.Instantiate(null);
             }));
 

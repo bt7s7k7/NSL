@@ -13,7 +13,7 @@ namespace NSL.Runtime
         protected FunctionRegistry functions;
         public Scope RootScope { get; protected set; } = new Scope("-1", null);
 
-        public (NSLValue result, IEnumerable<Diagnostic> diagnostics) RunScript(string script, string path)
+        public (IValue result, IEnumerable<Diagnostic> diagnostics) RunScript(string script, string path)
         {
             var result = Emitter.Emit(Parser.Parse(NSLTokenizer.Instance.Tokenize(script, path)), functions, runnerRootScope: RootScope);
             if (result.diagnostics.Count() == 0)
@@ -26,10 +26,10 @@ namespace NSL.Runtime
             }
         }
 
-        public NSLValue Run(IProgram program) => Run(program, new State(functions, RootScope, this));
-        public NSLValue Run(IProgram program, State state)
+        public IValue Run(IProgram program) => Run(program, new State(functions, RootScope, this));
+        public IValue Run(IProgram program, State state)
         {
-            NSLValue? result = null;
+            IValue? result = null;
 
             var returnVariable = program.GetReturnVariable();
             if (returnVariable != null)
@@ -95,7 +95,7 @@ namespace NSL.Runtime
             return result ?? PrimitiveTypes.voidType.Instantiate(null);
         }
 
-        public NSLValue RunAction(NSLAction action)
+        public IValue RunAction(NSLAction action)
         {
             var state = new State(functions, RootScope, this);
             state.PushScope(action.Scope);

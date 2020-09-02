@@ -6,6 +6,7 @@ using System.Linq;
 using NSL.Executable;
 using System.Text;
 using NSL.Types;
+using NSL.Types.Values;
 
 namespace NSL
 {
@@ -46,7 +47,7 @@ namespace NSL
 
             registry.Add(NSLFunction.MakeSimple("help", new[] { PrimitiveTypes.stringType }, PrimitiveTypes.stringType, (argsEnum, state) =>
             {
-                if (argsEnum.ElementAt(0).GetValue() is string name)
+                if (argsEnum.ElementAt(0).Value is string name)
                 {
                     var builder = new StringBuilder();
 
@@ -71,9 +72,9 @@ namespace NSL
                 impl: (argsEnum, state) =>
                 {
                     if (
-                        argsEnum.ElementAt(0).GetValue() is bool value &&
-                        argsEnum.ElementAt(1).GetValue() is NSLAction thenAction &&
-                        argsEnum.ElementAt(2).GetValue() is NSLAction elseAction
+                        argsEnum.ElementAt(0).Value is bool value &&
+                        argsEnum.ElementAt(1).Value is NSLAction thenAction &&
+                        argsEnum.ElementAt(2).Value is NSLAction elseAction
                     )
                     {
                         if (value)
@@ -101,8 +102,8 @@ namespace NSL
                 impl: (argsEnum, state) =>
                 {
                     if (
-                        argsEnum.ElementAt(0).GetValue() is NSLAction predicate &&
-                        argsEnum.ElementAt(1).GetValue() is NSLAction action
+                        argsEnum.ElementAt(0).Value is NSLAction predicate &&
+                        argsEnum.ElementAt(1).Value is NSLAction action
                     )
                     {
                         while (predicate.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null)).GetValue<bool>())
@@ -115,6 +116,39 @@ namespace NSL
                 },
                 desc: "Executes the second action while the predicate is true"
             ));
+
+            registry.Add(new NSLFunction("set", argsEnum =>
+            {
+                var desc = "Sets the reference to a different value";
+                if
+                (
+                    argsEnum.Count() == 2 &&
+                    argsEnum.ElementAt(0) is TypeSymbol valueType
+                )
+                {
+                    return new NSLFunction.Signature
+                    {
+                        name = "set",
+                        desc = desc,
+                        arguments = new TypeSymbol[] { valueType, valueType },
+                        result = valueType
+                    };
+                }
+                else
+                {
+                    return new NSLFunction.Signature
+                    {
+                        name = "set",
+                        desc = desc,
+                        arguments = new TypeSymbol[] { PrimitiveTypes.neverType, PrimitiveTypes.neverType },
+                        result = PrimitiveTypes.neverType
+                    };
+                }
+            }, (argsEnum, state) =>
+            {
+                argsEnum.ElementAt(0).Value = argsEnum.ElementAt(1).Value;
+                return argsEnum.ElementAt(0);
+            }));
 
             // Error handling
             registry.Add(NSLFunction.MakeAuto<Action<bool>>("assert", (value) =>
@@ -145,8 +179,8 @@ namespace NSL
                 impl: (argsEnum, state) =>
                 {
                     if (
-                        argsEnum.ElementAt(0).GetValue() is NSLAction tryAction &&
-                        argsEnum.ElementAt(1).GetValue() is NSLAction catchAction
+                        argsEnum.ElementAt(0).Value is NSLAction tryAction &&
+                        argsEnum.ElementAt(1).Value is NSLAction catchAction
                     )
                     {
                         try
@@ -170,7 +204,7 @@ namespace NSL
                 var args = argsEnum.ToArray();
                 var arg = (args.Length < 1 ? PrimitiveTypes.neverType : args[0]) ?? PrimitiveTypes.neverType;
                 return new NSLFunction.Signature { name = "toString", arguments = new TypeSymbol[] { arg }, result = PrimitiveTypes.stringType };
-            }, (argsEnum, state) => PrimitiveTypes.stringType.Instantiate(ToStringUtil.ToString(argsEnum.First()?.GetValue()))));
+            }, (argsEnum, state) => PrimitiveTypes.stringType.Instantiate(ToStringUtil.ToString(argsEnum.First()?.Value))));
 
             registry.Add(new NSLFunction("concat", (argsEnum) =>
             {
@@ -183,7 +217,7 @@ namespace NSL
                 };
             }, (argsEnum, state) =>
             {
-                return PrimitiveTypes.stringType.Instantiate(String.Join("", argsEnum.Select(v => ToStringUtil.ToString(v.GetValue()))));
+                return PrimitiveTypes.stringType.Instantiate(String.Join("", argsEnum.Select(v => ToStringUtil.ToString(v.Value))));
             }));
 
             registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("contains", (text, substr) => text.Contains(substr)));
@@ -286,7 +320,7 @@ namespace NSL
                     result = argsEnum.Count() != 0 ? argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType,
                     desc = "Creates a new array with the arguments as elements"
                 },
-                impl: (argsEnum, state) => argsEnum.First().GetTypeSymbol().ToArray().Instantiate(argsEnum.Select(v => v.GetValue()).ToArray())
+                impl: (argsEnum, state) => argsEnum.First().TypeSymbol.ToArray().Instantiate(argsEnum.Select(v => v.Value).ToArray())
             ));
 
             registry.Add(new NSLFunction(
@@ -322,15 +356,15 @@ namespace NSL
                     var arrayValue = argsEnum.ElementAt(0);
                     var actionValue = argsEnum.ElementAt(1);
                     if (
-                        arrayValue.GetValue() is IEnumerable<object> array &&
-                        actionValue.GetValue() is NSLAction action &&
-                        arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType
+                        arrayValue.Value is IEnumerable<object> array &&
+                        actionValue.Value is NSLAction action &&
+                        arrayValue.TypeSymbol is ArrayTypeSymbol arrayType
                     )
                     {
                         var itemType = arrayType.GetItemType();
                         var resultArray = array.Where(value =>
                         {
-                            var result = action.Invoke(state.Runner, itemType.Instantiate(value)).GetValue();
+                            var result = action.Invoke(state.Runner, itemType.Instantiate(value)).Value;
                             if (result == null) throw new NullReferenceException();
                             return (bool)result;
                         }).ToArray();
@@ -374,9 +408,9 @@ namespace NSL
                     var arrayValue = argsEnum.ElementAt(0);
                     var actionValue = argsEnum.ElementAt(1);
                     if (
-                        arrayValue.GetValue() is IEnumerable<object> array &&
-                        actionValue.GetValue() is NSLAction action &&
-                        arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType
+                        arrayValue.Value is IEnumerable<object> array &&
+                        actionValue.Value is NSLAction action &&
+                        arrayValue.TypeSymbol is ArrayTypeSymbol arrayType
                     )
                     {
                         var itemType = arrayType.GetItemType();
@@ -416,8 +450,8 @@ namespace NSL
             {
                 var arrayValue = argsEnum.ElementAt(0);
                 if (
-                    arrayValue.GetValue() is IEnumerable<object> array &&
-                    argsEnum.ElementAt(1).GetValue() is object item
+                    arrayValue.Value is IEnumerable<object> array &&
+                    argsEnum.ElementAt(1).Value is object item
                 )
                 {
                     if (array is IList<object> list)
@@ -429,13 +463,13 @@ namespace NSL
                         catch (NotSupportedException)
                         {
                             var result = array.Concat(new object[] { item }).ToList();
-                            arrayValue.SetValue(result);
+                            arrayValue.Value = result;
                         }
                     }
                     else
                     {
                         var result = array.Concat(new object[] { item }).ToList();
-                        arrayValue.SetValue(result);
+                        arrayValue.Value = result;
                     }
 
                     return arrayValue;
@@ -467,69 +501,39 @@ namespace NSL
             {
                 var arrayValue = argsEnum.ElementAt(0);
                 if (
-                    arrayValue.GetValue() is IEnumerable<object> array &&
-                    arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType &&
-                    argsEnum.ElementAt(1).GetValue() is double index
+                    arrayValue.Value is IEnumerable<object> array &&
+                    arrayValue.TypeSymbol is ArrayTypeSymbol arrayType &&
+                    argsEnum.ElementAt(1).Value is double index
                 )
                 {
-                    try
-                    {
-                        return arrayType.GetItemType().Instantiate(array.ElementAt((int)index));
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        throw new UserNSLException("Index must be greather than zero and less than the length of the array");
-                    }
-                }
-                else throw new ImplWrongValueNSLException();
-            }));
+                    void throwError() => throw new UserNSLException("Index must be greather than zero and less than the length of the array");
 
-            registry.Add(new NSLFunction("index", argsEnum =>
-            {
-                var desc = "Set element at index in an array";
-                if (
-                    argsEnum.Count() == 3 &&
-                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
-                ) return new NSLFunction.Signature
-                {
-                    name = "index",
-                    desc = desc,
-                    arguments = new TypeSymbol[] { arrayType, PrimitiveTypes.numberType, arrayType.GetItemType() },
-                    result = arrayType.GetItemType()
-                };
-                else return new NSLFunction.Signature
-                {
-                    name = "index",
-                    desc = desc,
-                    arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.numberType, PrimitiveTypes.neverType },
-                    result = PrimitiveTypes.neverType
-                };
-            }, (argsEnum, state) =>
-            {
-                var arrayValue = argsEnum.ElementAt(0);
-                if (
-                    arrayValue.GetValue() is IEnumerable<object> array &&
-                    arrayValue.GetTypeSymbol() is ArrayTypeSymbol arrayType &&
-                    argsEnum.ElementAt(1).GetValue() is double index &&
-                    argsEnum.ElementAt(2).GetValue() is object value
-                )
-                {
-                    try
+                    return new CallbackValue(() =>
                     {
-                        if (array is IList<object> list)
+                        try
                         {
-                            return arrayType.GetItemType().Instantiate(list[(int)index] = value);
+
+                            return array.ElementAt((int)index);
                         }
-                        else
-                        {
-                            arrayValue.SetValue(array.Select((v, i) => i == (int)index ? value : v).ToArray());
-                            return arrayType.GetItemType().Instantiate(value);
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
+                        catch (IndexOutOfRangeException) { throwError(); return null; }
+                        catch (ArgumentOutOfRangeException) { throwError(); return null; }
+
+                    }, value =>
                     {
-                        throw new UserNSLException("Index must be greather than zero and less than the length of the array");
-                    }
+                        try
+                        {
+                            if (array is IList<object> list)
+                            {
+                                list[(int)index] = value!;
+                            }
+                            else
+                            {
+                                arrayValue.Value = array.Select((v, i) => i == (int)index ? value : v).ToArray();
+                            }
+                        }
+                        catch (IndexOutOfRangeException) { throwError(); }
+                        catch (ArgumentOutOfRangeException) { throwError(); }
+                    }, arrayType.GetItemType());
                 }
                 else throw new ImplWrongValueNSLException();
             }));
@@ -558,7 +562,7 @@ namespace NSL
             {
                 var arrayValue = argsEnum.ElementAt(0);
                 if (
-                    arrayValue.GetValue() is IEnumerable<object> array
+                    arrayValue.Value is IEnumerable<object> array
                 )
                 {
                     return PrimitiveTypes.numberType.Instantiate(array.Count());
@@ -590,8 +594,8 @@ namespace NSL
             {
                 var arrayValue = argsEnum.ElementAt(0);
                 if (
-                    arrayValue.GetValue() is IEnumerable<object> array &&
-                    argsEnum.ElementAt(1).GetValue() is object item
+                    arrayValue.Value is IEnumerable<object> array &&
+                    argsEnum.ElementAt(1).Value is object item
                 )
                 {
                     return PrimitiveTypes.boolType.Instantiate(array.Contains(item));
