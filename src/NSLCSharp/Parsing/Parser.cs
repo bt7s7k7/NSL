@@ -127,7 +127,7 @@ namespace NSL.Parsing
                                         var targetNode = node.Children[targetIndex];
                                         if (targetNode is OperatorNode)
                                         {
-                                            state!.diagnostics.Add(new Diagnostic($"Missing value to suffix with operator ({op.definition})", childOp.Start, childOp.End));
+
                                         }
                                         else
                                         {
@@ -135,10 +135,6 @@ namespace NSL.Parsing
                                             statement.AddChild(targetNode);
                                             repeat = true;
                                         }
-                                    }
-                                    else
-                                    {
-                                        state!.diagnostics.Add(new Diagnostic($"Missing value to suffix with operator ({op.definition})", childOp.Start, childOp.End));
                                     }
                                 }
 
@@ -151,7 +147,7 @@ namespace NSL.Parsing
                                         var targetNode = node.Children[targetIndex];
                                         if (targetNode is OperatorNode)
                                         {
-                                            state!.diagnostics.Add(new Diagnostic($"Missing value to prefix with operator ({op.definition})", childOp.Start, childOp.End));
+
                                         }
                                         else
                                         {
@@ -159,10 +155,6 @@ namespace NSL.Parsing
                                             statement.AddChild(targetNode);
                                             repeat = true;
                                         }
-                                    }
-                                    else
-                                    {
-                                        state!.diagnostics.Add(new Diagnostic($"Missing value to prefix with operator {op.definition}", childOp.Start, childOp.End));
                                     }
                                 }
 
@@ -175,15 +167,14 @@ namespace NSL.Parsing
                                     node.Children.Insert(index, statement);
                                     break;
                                 }
-                                else
-                                {
-                                    var index = node.Children.IndexOf(child);
-                                    node.Children.RemoveAt(index);
-                                    break;
-                                }
                             }
                         }
                     }
+                }
+
+                foreach (var op in node.Children.Where(v => v is OperatorNode).Cast<OperatorNode>())
+                {
+                    state!.diagnostics.Add(new Diagnostic($"Failed to find matching definition for operator {op.Match}", op.Start, op.End));
                 }
             }
 
