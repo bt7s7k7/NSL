@@ -46,7 +46,20 @@ namespace NSL.Parsing.Nodes
                 if (afterPipe != null)
                 {
                     next = afterPipe;
-                    if (next.type == TokenType.Keyword)
+                    if (
+                        next.type == TokenType.Literal ||
+                        next.type == TokenType.InlineStart ||
+                        (next.type == TokenType.Keyword && next.content[0] == '$') ||
+                        next.type == TokenType.Operator
+                    )
+                    {
+                        var statementNode = new StatementNode("echo", next.start, next.end);
+                        state.Push(statementNode);
+                        statementNode.AddChild(this);
+                        prevParent.AddChild(statementNode);
+                        state.index--;
+                    }
+                    else if (next.type == TokenType.Keyword)
                     {
                         var statementNode = new StatementNode(next.content, next.start, next.end);
                         state.Push(statementNode);
@@ -75,7 +88,25 @@ namespace NSL.Parsing.Nodes
                 if (afterPipe != null)
                 {
                     next = afterPipe;
-                    if (next.type == TokenType.Keyword)
+                    if (
+                        next.type == TokenType.Literal ||
+                        next.type == TokenType.InlineStart ||
+                        (next.type == TokenType.Keyword && next.content[0] == '$') ||
+                        next.type == TokenType.Operator
+                    )
+                    {
+                        var forEachNode = new ForEachNode(pipe.start, pipe.end);
+                        prevParent.AddChild(forEachNode);
+                        forEachNode.AddChild(this);
+
+                        var statementNode = new StatementNode("echo", next.start, next.end);
+                        state.Push(statementNode);
+                        forEachNode.AddChild(statementNode);
+                        state.index--;
+
+                        statementNode.AddChild(new StatementNode("$_a", next.start, next.end));
+                    }
+                    else if (next.type == TokenType.Keyword)
                     {
                         var forEachNode = new ForEachNode(pipe.start, pipe.end);
                         prevParent.AddChild(forEachNode);

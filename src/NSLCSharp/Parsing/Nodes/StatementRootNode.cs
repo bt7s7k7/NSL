@@ -12,7 +12,19 @@ namespace NSL.Parsing.Nodes
 
         override protected void OnToken(Token<TokenType> next, Parser.ParsingState state)
         {
-            if (next.type == TokenType.Keyword)
+            if (
+                next.type == TokenType.Literal ||
+                next.type == TokenType.InlineStart ||
+                (next.type == TokenType.Keyword && next.content[0] == '$') ||
+                next.type == TokenType.Operator
+            )
+            {
+                var statementNode = new StatementNode("echo", next.start, next.end);
+                AddChild(statementNode);
+                state.Push(statementNode);
+                state.index--;
+            }
+            else if (next.type == TokenType.Keyword)
             {
                 var statementNode = new StatementNode(next.content, next.start, next.end);
                 AddChild(statementNode);
@@ -27,13 +39,6 @@ namespace NSL.Parsing.Nodes
                 var variableNode = new VariableNode(next.start, next.end);
                 AddChild(variableNode);
                 state.Push(variableNode);
-            }
-            else if (next.type == TokenType.Literal || next.type == TokenType.InlineStart)
-            {
-                var statementNode = new StatementNode("echo", next.start, next.end);
-                AddChild(statementNode);
-                state.Push(statementNode);
-                state.index--;
             }
             else
             {

@@ -125,9 +125,16 @@ namespace NSL.Parsing
                                     {
                                         var targetIndex = index - 1;
                                         var targetNode = node.Children[targetIndex];
-                                        node.Children.RemoveAt(targetIndex);
-                                        statement.AddChild(targetNode);
-                                        repeat = true;
+                                        if (targetNode is OperatorNode)
+                                        {
+                                            state!.diagnostics.Add(new Diagnostic($"Missing value to suffix with operator ({op.definition})", childOp.Start, childOp.End));
+                                        }
+                                        else
+                                        {
+                                            node.Children.RemoveAt(targetIndex);
+                                            statement.AddChild(targetNode);
+                                            repeat = true;
+                                        }
                                     }
                                     else
                                     {
@@ -142,24 +149,38 @@ namespace NSL.Parsing
                                     {
                                         var targetIndex = index + 1;
                                         var targetNode = node.Children[targetIndex];
-                                        node.Children.RemoveAt(targetIndex);
-                                        statement.AddChild(targetNode);
-                                        repeat = true;
+                                        if (targetNode is OperatorNode)
+                                        {
+                                            state!.diagnostics.Add(new Diagnostic($"Missing value to prefix with operator ({op.definition})", childOp.Start, childOp.End));
+                                        }
+                                        else
+                                        {
+                                            node.Children.RemoveAt(targetIndex);
+                                            statement.AddChild(targetNode);
+                                            repeat = true;
+                                        }
                                     }
                                     else
                                     {
-                                        state!.diagnostics.Add(new Diagnostic($"Missing value to suffix with operator {op.definition}", childOp.Start, childOp.End));
+                                        state!.diagnostics.Add(new Diagnostic($"Missing value to prefix with operator {op.definition}", childOp.Start, childOp.End));
                                     }
                                 }
 
                                 if (repeat)
                                 {
+                                    if (op.reverse) statement.Children.Reverse();
+
                                     var index = node.Children.IndexOf(child);
                                     node.Children.RemoveAt(index);
                                     node.Children.Insert(index, statement);
                                     break;
                                 }
-
+                                else
+                                {
+                                    var index = node.Children.IndexOf(child);
+                                    node.Children.RemoveAt(index);
+                                    break;
+                                }
                             }
                         }
                     }

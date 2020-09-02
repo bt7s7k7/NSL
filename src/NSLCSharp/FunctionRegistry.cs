@@ -21,8 +21,9 @@ namespace NSL
             public readonly string function;
             public readonly int priority;
             public readonly Type type;
+            public readonly bool reverse;
 
-            public Operator(string match, string definition, string function, int priority)
+            public Operator(string match, string definition, string function, int priority, bool reverse)
             {
                 this.match = match;
                 this.definition = definition;
@@ -37,6 +38,7 @@ namespace NSL
                 if (type == 0) throw new OperatorNSLException($"Definition ({definition}) specifies neither prefix or suffix, atleast one required");
 
                 this.type = (Type)type;
+                this.reverse = reverse;
             }
         }
 
@@ -95,10 +97,10 @@ namespace NSL
             });
         }
 
-        public void AddOperator(string definition, string function, int priority)
+        public void AddOperator(string definition, string function, int priority, bool reverse = false)
         {
             var match = definition.Replace("_", "");
-            operators.Add(new Operator(match, definition, function, priority));
+            operators.Add(new Operator(match, definition, function, priority, reverse));
 
             operators.Sort((a, b) => a.priority - b.priority);
         }

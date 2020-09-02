@@ -1,5 +1,5 @@
 #T :: Should echo the value of the literal
 
-5 | eq 5 | assert
-"foo" | eq "foo" | assert
-$"i = $<5>" | eq "i = 5" | assert
+5 | == 5 | assert
+"foo" | == "foo" | assert
+$"i = $[5]" | == "i = 5" | assert

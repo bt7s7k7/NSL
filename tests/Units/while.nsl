@@ -1,11 +1,10 @@
 #T :: Should execute the loop action the specified amount of times
 
-var $counter 0
-var $times 5
 var $i 0
+var $times 5
 
-while !{lt $counter $times} !{
-    add $counter 1 | $counter
+while !{$i < $times} !{
+    $i = $i + 1
 }
 
-eq $counter $times | assert
+assert $i == $times

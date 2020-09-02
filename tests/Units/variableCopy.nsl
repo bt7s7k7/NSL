@@ -3,6 +3,6 @@
 var $x 0
 var $y $x
 
-$y 1
+$y = 1
 
-eq $x 0 | assert
+assert $x == 0

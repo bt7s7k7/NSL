@@ -1,4 +1,4 @@
 #T :: Should return the value of the element of the array
 var $arr (arr 1 2 3)
 
-index $arr 1 | eq 2 | assert
+assert $arr->1 == 2
