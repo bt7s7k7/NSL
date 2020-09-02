@@ -2,7 +2,6 @@ using System;
 using CSCommon;
 using NSL;
 using NSL.Runtime;
-using NSL.Tokenization;
 using NSL.Parsing;
 using NSL.Executable;
 using System.Linq;
@@ -13,14 +12,14 @@ namespace NSLCSharp
     {
         private static void Work(string? evalString, bool printOutputs)
         {
-            NSLTokenizer tokenizer = new NSLTokenizer();
             FunctionRegistry functions = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(functions);
             Runner runner = new Runner(functions);
+            var tokenizer = runner.Tokenizer;
 
             void run(string text)
             {
-                var result = Emitter.Emit(Parser.Parse(tokenizer.Tokenize(text)), functions, runnerRootScope: runner.RootScope);
+                var result = Emitter.Emit(Parser.Parse(tokenizer.Tokenize(text), functions), functions, runnerRootScope: runner.RootScope);
 
                 ILogger.instance = new ConsoleLogger();
                 foreach (var diagnostic in result.diagnostics)

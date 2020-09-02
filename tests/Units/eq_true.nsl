@@ -7,3 +7,10 @@ eq false false | assert
 eq "foo" "foo" | assert
 eq "boo" "boo" | assert
 
+assert 1 == 1
+assert 5 == 5
+assert true == true
+assert false == false
+assert "foo" == "foo"
+assert "boo" == "boo"
+

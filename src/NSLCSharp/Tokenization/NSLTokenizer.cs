@@ -3,6 +3,7 @@ using NSL.Types;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -23,7 +24,8 @@ namespace NSL.Tokenization
             InlineStart,
             InlineEnd,
             StatementEnd,
-            VariableDecl
+            VariableDecl,
+            Operator
         }
 
         public enum StateType
@@ -52,7 +54,9 @@ namespace NSL.Tokenization
             stringStack.Push(new StringState(stringCloseChar, stringTemplate));
         }
 
-        public NSLTokenizer() : base(
+        protected FunctionRegistry functions;
+
+        public NSLTokenizer(FunctionRegistry functions) : base(
             new Dictionary<StateType, List<ITokenDefinition<TokenType, StateType>>> {
                 { StateType.Default, new List<ITokenDefinition<TokenType, StateType>>{
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
@@ -60,11 +64,12 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(false)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: ">", resultState: StateType.String, type: TokenType.Literal),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "]", resultState: StateType.String, type: TokenType.Literal),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>",type: TokenType.PipeForEach),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|",type: TokenType.Pipe),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: ".",type: TokenType.Pipe),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "!{",type: TokenType.ActionStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "}",type: TokenType.BlockEnd),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "#",resultState: StateType.Comment),
@@ -87,7 +92,7 @@ namespace NSL.Tokenization
                     }),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword, verifier: (c) => 'a' <= c && 'z' >= c),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^-?\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c) || c == '-', processor: (token, state) => {
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^-?\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c) || c == '-', processor: (token, state) => {
                         try {
                             var parsed = Double.Parse(token.content, NumberStyles.Float);
                             token.value = PrimitiveTypes.numberType.Instantiate(parsed);
@@ -138,7 +143,7 @@ namespace NSL.Tokenization
                             } else if (curr == '$' && stringState.stringTemplate) {
                                 if (next()) return true;
                                 curr = state.code[state.position.index];
-                                if (curr != '<') {
+                                if (curr != '[') {
                                     continue;
                                 } else {
                                     breakForTemplate = true;
@@ -180,9 +185,12 @@ namespace NSL.Tokenization
                 } }
              }
         )
-        { }
+        {
+            this.functions = functions;
 
-        public static NSLTokenizer Instance { get; } = new NSLTokenizer();
-
+            this.grammar[StateType.Default].AddRange(this.functions.Operators.OrderByDescending(v => v.match.Length).Select(
+                op => new RegexTokenDefinition<TokenType, StateType>(pattern: op.match, type: TokenType.Operator)
+            ).ToArray());
+        }
     }
 }

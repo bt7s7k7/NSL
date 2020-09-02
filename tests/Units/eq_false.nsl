@@ -7,3 +7,9 @@ eq false true | not | assert
 eq "foo" "boo" | not | assert
 eq "boo" "foo" | not | assert
 
+assert 5 != 1
+assert 1 != 5
+assert false != true
+assert true != false
+assert "foo" != "boo"
+assert "boo" != "foo"

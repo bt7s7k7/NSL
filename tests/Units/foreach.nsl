@@ -3,6 +3,6 @@
 var $array (arr 1 2 3 4 5)
 var $count 0
 
-$array |> add $count | $count
+$array |> +$count ~> $count
 
-assert (eq $count 15)
+assert $count == 15

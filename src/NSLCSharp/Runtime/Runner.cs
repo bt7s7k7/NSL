@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NSL.Executable;
@@ -12,10 +13,12 @@ namespace NSL.Runtime
     {
         protected FunctionRegistry functions;
         public Scope RootScope { get; protected set; } = new Scope("-1", null);
+        public NSLTokenizer Tokenizer { get => _tokenizer.Value; }
+        protected Lazy<NSLTokenizer> _tokenizer;
 
         public (IValue result, IEnumerable<Diagnostic> diagnostics) RunScript(string script, string path)
         {
-            var result = Emitter.Emit(Parser.Parse(NSLTokenizer.Instance.Tokenize(script, path)), functions, runnerRootScope: RootScope);
+            var result = Emitter.Emit(Parser.Parse(Tokenizer.Tokenize(script, path), functions), functions, runnerRootScope: RootScope);
             if (result.diagnostics.Count() == 0)
             {
                 return (Run(result.program), new Diagnostic[] { });
@@ -105,6 +108,7 @@ namespace NSL.Runtime
         public Runner(FunctionRegistry functions)
         {
             this.functions = functions;
+            _tokenizer = new Lazy<NSLTokenizer>(() => new NSLTokenizer(functions));
         }
     }
 }

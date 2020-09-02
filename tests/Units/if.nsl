@@ -2,10 +2,10 @@
 
 var $x 0
 
-if true !{ $x 1 } !{ assert false }
+if true !{ $x = 1 } !{ assert false }
 
-eq $x 1 | assert
+assert $x == 1
 
-if false !{ assert false } !{ $x 5 }
+if false !{ assert false } !{ $x = 5 }
 
-eq $x 5 | assert
+assert $x == 5

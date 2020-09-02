@@ -1,0 +1,7 @@
+#T :: Should return the correct value and set the result to the correct value
+var $x 2
+assert $x == 2
+assert (--$x) == 1
+assert $x == 1
+assert ($x--) == 1
+assert $x == 0

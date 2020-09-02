@@ -14,8 +14,8 @@ namespace NSLCSharpNUnit
     public static class FileTests
     {
         public static string[] files = Directory.GetFiles("../../../Units/", "*.nsl");
-        public static NSLTokenizer tokenizer = new NSLTokenizer();
         public static FunctionRegistry functions = FunctionRegistry.GetStandardFunctionRegistry();
+        public static NSLTokenizer tokenizer = new NSLTokenizer(functions);
 
 
         [TestCaseSource(nameof(files))]

@@ -3,4 +3,8 @@ var $x 0
 
 set $x 1
 
-eq $x 1 | assert
+assert $x == 1
+
+$x = 2
+
+assert $x == 2

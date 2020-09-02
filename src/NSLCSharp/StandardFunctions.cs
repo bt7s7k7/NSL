@@ -229,7 +229,7 @@ namespace NSL
             registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("neq", (a, b) => a != b));
 
             // Numbers
-            foreach (var operation in new (string name, System.Func<double, double, double> callback)[] {
+            foreach (var (name, callback) in new (string name, System.Func<double, double, double> callback)[] {
                 (name: "add", callback: (a, b) => a + b),
                 (name: "sub", callback: (a, b) => a - b),
                 (name: "mul", callback: (a, b) => a * b),
@@ -243,11 +243,26 @@ namespace NSL
                 (name: "pow", callback: (a, b) => Math.Pow(a, b)),
             })
             {
-                registry.Add(NSLFunction.MakeAuto(operation.name, operation.callback));
+                registry.Add(NSLFunction.MakeAuto(name, callback));
+
+                registry.Add(NSLFunction.MakeSimple(name + "Set", new TypeSymbol[] { PrimitiveTypes.numberType, PrimitiveTypes.numberType }, PrimitiveTypes.numberType, (argsEnum, state) =>
+                {
+                    var targetValue = argsEnum.ElementAt(0);
+                    if (
+                        targetValue.Value is double target &&
+                        argsEnum.ElementAt(1).Value is double operand
+                    )
+                    {
+                        targetValue.Value = callback(target, operand);
+                        return targetValue;
+                    }
+                    else throw new ImplWrongValueNSLException();
+                }));
             }
 
             foreach (var operation in new (string name, System.Func<double, double> callback)[] {
                 (name: "neg", callback: (a) => -a),
+                (name: "not", callback: (a) => ~(int)a),
                 (name: "floor", callback: (a) => Math.Floor(a)),
                 (name: "ceil", callback: (a) => Math.Ceiling(a)),
                 (name: "sqrt", callback: (a) => Math.Sqrt(a)),
@@ -292,6 +307,46 @@ namespace NSL
             registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("eq", (a, b) => a == b));
             registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("neq", (a, b) => a != b));
 
+            foreach (var (name, verb, callback) in new (string name, string verb, Func<double, double> callback)[] {
+                (name: "inc", verb: "Increments", callback: v => v + 1),
+                (name: "dec", verb: "Decrements", callback: v => v - 1)
+            })
+            {
+                registry.Add(new NSLFunction(name + "Post", argsEnum =>
+                {
+                    var desc = verb + " the value of the reference, returns the old value";
+                    return new NSLFunction.Signature
+                    {
+                        name = name + "Post",
+                        desc = desc,
+                        arguments = new TypeSymbol[] { PrimitiveTypes.numberType },
+                        result = PrimitiveTypes.numberType
+                    };
+                }, (argsEnum, state) =>
+                {
+                    var value = (double)argsEnum.ElementAt(0).Value!;
+                    argsEnum.ElementAt(0).Value = callback(value);
+                    return PrimitiveTypes.boolType.Instantiate(value);
+                }));
+
+                registry.Add(new NSLFunction(name + "Prev", argsEnum =>
+                {
+                    var desc = verb + " the value of the reference";
+                    return new NSLFunction.Signature
+                    {
+                        name = name + "Prev",
+                        desc = desc,
+                        arguments = new TypeSymbol[] { PrimitiveTypes.numberType },
+                        result = PrimitiveTypes.numberType
+                    };
+                }, (argsEnum, state) =>
+                {
+                    var value = (double)argsEnum.ElementAt(0).Value!;
+                    argsEnum.ElementAt(0).Value = callback(value);
+                    return PrimitiveTypes.boolType.Instantiate(argsEnum.ElementAt(0).Value);
+                }));
+            }
+
             // Booleans
             foreach (var operation in new (string name, System.Func<bool, bool, bool> callback)[] {
                 (name: "and", callback: (a, b) => a && b),
@@ -309,6 +364,40 @@ namespace NSL
             {
                 registry.Add(NSLFunction.MakeAuto(operation.name, operation.callback));
             }
+
+            registry.Add(new NSLFunction("invPost", argsEnum =>
+            {
+                var desc = "Inverts the value of the reference, returns the old value";
+                return new NSLFunction.Signature
+                {
+                    name = "invPost",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.boolType },
+                    result = PrimitiveTypes.boolType
+                };
+            }, (argsEnum, state) =>
+            {
+                var value = (bool)argsEnum.ElementAt(0).Value!;
+                argsEnum.ElementAt(0).Value = !value;
+                return PrimitiveTypes.boolType.Instantiate(value);
+            }));
+
+            registry.Add(new NSLFunction("invPrev", argsEnum =>
+            {
+                var desc = "Inverts the value of the reference";
+                return new NSLFunction.Signature
+                {
+                    name = "invPrev",
+                    desc = desc,
+                    arguments = new TypeSymbol[] { PrimitiveTypes.boolType },
+                    result = PrimitiveTypes.boolType
+                };
+            }, (argsEnum, state) =>
+            {
+                var value = (bool)argsEnum.ElementAt(0).Value!;
+                argsEnum.ElementAt(0).Value = !value;
+                return PrimitiveTypes.boolType.Instantiate(argsEnum.ElementAt(0).Value);
+            }));
 
             // Arrays
             registry.Add(new NSLFunction(
@@ -616,6 +705,65 @@ namespace NSL
                 if (length <= 0) throw new UserNSLException($"Value ({val}) must not be less than length ({len})");
                 return new object[length].Select((v, i) => (object)(val + (double)i)).ToArray();
             }, new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.numberType.ToArray() } }, "Creates an array of the specified length, starting with the start value"));
+
+            // Operators
+            registry.AddOperator("_->_", "index", -2);
+
+            registry.AddOperator("_++", "incPost", -1);
+            registry.AddOperator("_--", "decPost", -1);
+            registry.AddOperator("_~~", "invPost", -1);
+            registry.AddOperator("++_", "incPrev", -1);
+            registry.AddOperator("--_", "decPrev", -1);
+            registry.AddOperator("~~_", "invPrev", -1);
+
+            registry.AddOperator("!_", "not", 0);
+            registry.AddOperator("~_", "not", 0);
+
+            registry.AddOperator("_**_", "pow", 1);
+
+            registry.AddOperator("_*_", "mul", 1);
+            registry.AddOperator("_/_", "div", 1);
+            registry.AddOperator("_%_", "mod", 1);
+
+            registry.AddOperator("_+_", "add", 4);
+            registry.AddOperator("_-_", "sub", 4);
+
+            registry.AddOperator("_<<_", "shl", 5);
+            registry.AddOperator("_>>_", "shr", 5);
+            registry.AddOperator("-_", "neg", 5);
+
+            registry.AddOperator("_>_", "gt", 6);
+            registry.AddOperator("_<_", "lt", 6);
+            registry.AddOperator("_>=_", "gte", 6);
+            registry.AddOperator("_<=_", "lte", 6);
+
+            registry.AddOperator("_==_", "eq", 7);
+            registry.AddOperator("_!=_", "neq", 7);
+
+            registry.AddOperator("_&_", "and", 8);
+
+            registry.AddOperator("_^_", "xor", 9);
+
+            // Skip bitwise or because it collides with pipe, you can just use logical or
+
+            registry.AddOperator("_&&_", "and", 11);
+
+            registry.AddOperator("_||_", "or", 12);
+
+            registry.AddOperator("_=_", "set", 13);
+            registry.AddOperator("_+=_", "addSet", 13);
+            registry.AddOperator("_-=_", "subSet", 13);
+            registry.AddOperator("_*=_", "mulSet", 13);
+            registry.AddOperator("_/=_", "divSet", 13);
+            registry.AddOperator("_**=_", "powSet", 13);
+            registry.AddOperator("_%=_", "modSet", 13);
+            registry.AddOperator("_&=_", "andSet", 13);
+            registry.AddOperator("_|=_", "orSet", 13);
+            registry.AddOperator("_^=_", "xorSet", 13);
+            registry.AddOperator("_<<=_", "shlSet", 13);
+            registry.AddOperator("_>>=_", "shrSet", 13);
+            registry.AddOperator("_~>_", "set", 13, reverse: true);
+
 
             return registry;
         }
