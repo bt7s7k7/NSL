@@ -229,7 +229,7 @@ namespace NSL
             registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("neq", (a, b) => a != b));
 
             // Numbers
-            foreach (var operation in new (string name, System.Func<double, double, double> callback)[] {
+            foreach (var (name, callback) in new (string name, System.Func<double, double, double> callback)[] {
                 (name: "add", callback: (a, b) => a + b),
                 (name: "sub", callback: (a, b) => a - b),
                 (name: "mul", callback: (a, b) => a * b),
@@ -243,7 +243,21 @@ namespace NSL
                 (name: "pow", callback: (a, b) => Math.Pow(a, b)),
             })
             {
-                registry.Add(NSLFunction.MakeAuto(operation.name, operation.callback));
+                registry.Add(NSLFunction.MakeAuto(name, callback));
+
+                registry.Add(NSLFunction.MakeSimple(name + "Set", new TypeSymbol[] { PrimitiveTypes.numberType, PrimitiveTypes.numberType }, PrimitiveTypes.numberType, (argsEnum, state) =>
+                {
+                    var targetValue = argsEnum.ElementAt(0);
+                    if (
+                        targetValue.Value is double target &&
+                        argsEnum.ElementAt(1).Value is double operand
+                    )
+                    {
+                        targetValue.Value = callback(target, operand);
+                        return targetValue;
+                    }
+                    else throw new ImplWrongValueNSLException();
+                }));
             }
 
             foreach (var operation in new (string name, System.Func<double, double> callback)[] {
@@ -737,6 +751,17 @@ namespace NSL
             registry.AddOperator("_||_", "or", 12);
 
             registry.AddOperator("_=_", "set", 13);
+            registry.AddOperator("_+=_", "addSet", 13);
+            registry.AddOperator("_-=_", "subSet", 13);
+            registry.AddOperator("_*=_", "mulSet", 13);
+            registry.AddOperator("_/=_", "divSet", 13);
+            registry.AddOperator("_**=_", "powSet", 13);
+            registry.AddOperator("_%=_", "modSet", 13);
+            registry.AddOperator("_&=_", "andSet", 13);
+            registry.AddOperator("_|=_", "orSet", 13);
+            registry.AddOperator("_^=_", "xorSet", 13);
+            registry.AddOperator("_<<=_", "shlSet", 13);
+            registry.AddOperator("_>>=_", "shrSet", 13);
             registry.AddOperator("_~>_", "set", 13, reverse: true);
 
 
