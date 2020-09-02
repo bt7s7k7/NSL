@@ -36,10 +36,13 @@ namespace NSLCSharp
         {
             ILogger.instance = null;
 
+            var funcs = FunctionRegistry.GetStandardFunctionRegistry();
+            CommonFunctions.RegisterCommonFunctions(funcs);
+
             // Tokenization
             if (loggerLocation == LoggerStartLocation.Tokenization) ILogger.instance = new ConsoleLogger();
             tokenizerNewTime.Start();
-            var tokenizer = new NSLTokenizer();
+            var tokenizer = new NSLTokenizer(funcs);
             tokenizerNewTime.End();
 
             tokenizationTime.Start();
@@ -57,7 +60,7 @@ namespace NSLCSharp
             if (loggerLocation == LoggerStartLocation.Parsing) ILogger.instance = new ConsoleLogger();
 
             parsingTime.Start();
-            var parsingResult = Parser.Parse(tokenizationResult);
+            var parsingResult = Parser.Parse(tokenizationResult, funcs);
             parsingTime.End();
 
             ILogger.instance?.End()
@@ -66,8 +69,6 @@ namespace NSLCSharp
 
             // Emitting
             if (loggerLocation == LoggerStartLocation.Emitting) ILogger.instance = new ConsoleLogger();
-            var funcs = FunctionRegistry.GetStandardFunctionRegistry();
-            CommonFunctions.RegisterCommonFunctions(funcs);
 
             emittingTime.Start();
             var emittingResult = Emitter.Emit(parsingResult, funcs);

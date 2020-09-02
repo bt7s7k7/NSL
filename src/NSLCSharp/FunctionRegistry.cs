@@ -7,8 +7,43 @@ namespace NSL
 {
     public partial class FunctionRegistry
     {
+        public class Operator
+        {
+            public enum Type
+            {
+                Prefix = 1,
+                Suffix = 2,
+                Infix = Prefix | Suffix
+            }
+
+            public readonly string match;
+            public readonly string definition;
+            public readonly string function;
+            public readonly int priority;
+            public readonly Type type;
+
+            public Operator(string match, string definition, string function, int priority)
+            {
+                this.match = match;
+                this.definition = definition;
+                this.function = function;
+                this.priority = priority;
+
+                var type = 0;
+
+                if (definition[0] == '_') type |= (int)Type.Suffix;
+                if (definition.Last() == '_') type |= (int)Type.Prefix;
+
+                if (type == 0) throw new OperatorNSLException($"Definition ({definition}) specifies neither prefix or suffix, atleast one required");
+
+                this.type = (Type)type;
+            }
+        }
+
         protected Dictionary<string, List<NSLFunction>> functions = new Dictionary<string, List<NSLFunction>>();
         protected Dictionary<string, NSLFunction> specificFunctions = new Dictionary<string, NSLFunction>();
+        protected List<Operator> operators = new List<Operator>();
+        public IEnumerable<Operator> Operators { get => operators; }
 
         public void Add(NSLFunction function)
         {
@@ -58,6 +93,14 @@ namespace NSL
             {
                 return argsEnum.First();
             });
+        }
+
+        public void AddOperator(string definition, string function, int priority)
+        {
+            var match = definition.Replace("_", "");
+            operators.Add(new Operator(match, definition, function, priority));
+
+            operators.Sort((a, b) => a.priority - b.priority);
         }
     }
 }

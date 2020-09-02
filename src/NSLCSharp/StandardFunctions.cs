@@ -617,6 +617,10 @@ namespace NSL
                 return new object[length].Select((v, i) => (object)(val + (double)i)).ToArray();
             }, new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.numberType.ToArray() } }, "Creates an array of the specified length, starting with the start value"));
 
+            // Operators
+
+            registry.AddOperator("_+_", "add", 4);
+
             return registry;
         }
     }

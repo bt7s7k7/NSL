@@ -32,6 +32,10 @@ namespace NSL.Parsing.Nodes
 
                 AddChild(inlineStatement);
             }
+            else if (next.type == TokenType.Operator)
+            {
+                AddChild(new OperatorNode(next.content, next.start, next.end));
+            }
             else if (next.type == TokenType.Pipe)
             {
                 state.Pop();

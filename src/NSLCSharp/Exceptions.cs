@@ -27,6 +27,11 @@ namespace NSL
         public AutoFuncNSLException(string message) : base(message) { }
     }
 
+    public class OperatorNSLException : NSLException
+    {
+        public OperatorNSLException(string message) : base(message) { }
+    }
+
     public class OverloadNotFoundNSLException : InternalNSLExcpetion
     {
         public TypeSymbol ReturnType { get; protected set; }

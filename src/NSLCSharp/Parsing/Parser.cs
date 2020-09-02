@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NSL.Parsing.Nodes;
 using NSL.Tokenization;
 using NSL.Tokenization.General;
+using static NSL.FunctionRegistry;
 
 namespace NSL.Parsing
 {
@@ -74,7 +76,7 @@ namespace NSL.Parsing
 
         }
 
-        public static ParsingResult Parse(NSLTokenizer.TokenizationResult tokenized)
+        public static ParsingResult Parse(NSLTokenizer.TokenizationResult tokenized, FunctionRegistry functions)
         {
             var state = new ParsingState(
                 diagnostics: tokenized.diagnostics,
@@ -99,6 +101,72 @@ namespace NSL.Parsing
             {
                 state.Top().Unbalanced(state);
             }
+
+            void visitNode(IASTNode node)
+            {
+                node.Children.ForEach(v => visitNode(v));
+
+                foreach (var op in functions.Operators)
+                {
+                    var repeat = true;
+                    while (repeat)
+                    {
+                        repeat = false;
+                        foreach (var child in node.Children)
+                        {
+                            if (child is OperatorNode childOp && childOp.Match == op.match)
+                            {
+                                var statement = new StatementNode(op.function, childOp.Start, childOp.End);
+
+                                if (op.type.HasFlag(Operator.Type.Suffix))
+                                {
+                                    var index = node.Children.IndexOf(child);
+                                    if (index > 0)
+                                    {
+                                        var targetIndex = index - 1;
+                                        var targetNode = node.Children[targetIndex];
+                                        node.Children.RemoveAt(targetIndex);
+                                        statement.AddChild(targetNode);
+                                        repeat = true;
+                                    }
+                                    else
+                                    {
+                                        state!.diagnostics.Add(new Diagnostic($"Missing value to suffix with operator ({op.definition})", childOp.Start, childOp.End));
+                                    }
+                                }
+
+                                if (op.type.HasFlag(Operator.Type.Prefix))
+                                {
+                                    var index = node.Children.IndexOf(child);
+                                    if (index < node.Children.Count - 1)
+                                    {
+                                        var targetIndex = index + 1;
+                                        var targetNode = node.Children[targetIndex];
+                                        node.Children.RemoveAt(targetIndex);
+                                        statement.AddChild(targetNode);
+                                        repeat = true;
+                                    }
+                                    else
+                                    {
+                                        state!.diagnostics.Add(new Diagnostic($"Missing value to suffix with operator {op.definition}", childOp.Start, childOp.End));
+                                    }
+                                }
+
+                                if (repeat)
+                                {
+                                    var index = node.Children.IndexOf(child);
+                                    node.Children.RemoveAt(index);
+                                    node.Children.Insert(index, statement);
+                                    break;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+            visitNode(state.rootNode);
 
             return state;
         }
