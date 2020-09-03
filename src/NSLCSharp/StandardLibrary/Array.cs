@@ -315,6 +315,44 @@ namespace NSL
                 if (length <= 0) throw new UserNSLException($"Value ({val}) must not be less than length ({len})");
                 return new object[length].Select((v, i) => (object)(val + (double)i)).ToArray();
             }, new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.numberType.ToArray() } }, "Creates an array of the specified length, starting with the start value"));
+
+            registry.Add(new NSLFunction("join", argsEnum =>
+            {
+                var desc = "Joins the string representations of the elements of the array with the provied separator";
+                if (
+                    argsEnum.Count() == 2 &&
+                    argsEnum.ElementAt(0) is ArrayTypeSymbol arrayType
+                )
+                {
+                    return new NSLFunction.Signature
+                    {
+                        name = "join",
+                        arguments = new TypeSymbol[] { arrayType, PrimitiveTypes.stringType },
+                        result = PrimitiveTypes.stringType,
+                        desc = desc
+                    };
+                }
+                else
+                {
+                    return new NSLFunction.Signature
+                    {
+                        name = "join",
+                        arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.stringType },
+                        result = PrimitiveTypes.stringType,
+                        desc = desc
+                    };
+                }
+            }, (argsEnum, state) =>
+            {
+                if (
+                    argsEnum.ElementAt(0).Value is IEnumerable<object> array &&
+                    argsEnum.ElementAt(1).Value is string separator
+                )
+                {
+                    return PrimitiveTypes.stringType.Instantiate(String.Join(separator, array.Select(v => ToStringUtil.ToString(v))));
+                }
+                else throw new ImplWrongValueNSLException();
+            }));
         }
     }
 }
