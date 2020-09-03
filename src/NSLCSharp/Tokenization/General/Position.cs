@@ -47,7 +47,9 @@ namespace NSL.Tokenization.General
             var lineNum = (line + 1) + ":";
             var currIndex = index;
 
-            if (code.code[index] == '\n')
+            if (currIndex >= code.code.Length) currIndex = code.code.Length - 1;
+
+            if (code.code[currIndex] == '\n')
             {
                 currIndex--;
             }
