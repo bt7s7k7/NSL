@@ -30,6 +30,9 @@ namespace CSCommon
                 PrimitiveTypes.voidType,
                 (argsEnum, state) => { Environment.Exit(0); return PrimitiveTypes.voidType.Instantiate(null); }
             ));
+
+            registry.Add(NSLFunction.MakeAuto<Func<string>>("readline", () => ReadLine.Read(), "Reads a line from user input"));
+            registry.Add(NSLFunction.MakeAuto<Func<string, string>>("readline", (prompt) => ReadLine.Read(prompt), "Reads a line from user input, with the provided prompt"));
         }
     }
 }
