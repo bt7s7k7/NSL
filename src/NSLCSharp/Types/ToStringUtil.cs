@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.Json;
 
 namespace NSL.Types
@@ -7,7 +8,8 @@ namespace NSL.Types
     {
         public static string ToString(object? target)
         {
-
+            var culture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             if (target == null) return "null";
 
             string? ret = null;
@@ -17,6 +19,7 @@ namespace NSL.Types
                 ret = target.GetType().Name + JsonSerializer.Serialize(target);
             }
 
+            CultureInfo.CurrentCulture = culture;
             return ret;
         }
     }
