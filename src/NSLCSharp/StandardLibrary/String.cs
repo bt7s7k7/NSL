@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NSL.Types;
 
@@ -36,6 +37,12 @@ namespace NSL
 
             registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("eq", (a, b) => a == b));
             registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("neq", (a, b) => a != b));
+
+            registry.Add(NSLFunction.MakeAuto<Func<string, string, IEnumerable<object>>>(
+                "split",
+                (text, delim) => text.Split(delim),
+                new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.stringType.ToArray() } }
+            ));
         }
     }
 }
