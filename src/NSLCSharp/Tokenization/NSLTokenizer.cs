@@ -53,6 +53,34 @@ namespace NSL.Tokenization
         {
             stringStack.Push(new StringState(stringCloseChar, stringTemplate));
         }
+        private static Action<Token<TokenType>, TokenizationState> NumberProcessorFactory(int baseNum = 10, bool cut = false)
+        {
+            return (token, state) =>
+            {
+                var text = token.content;
+                if (cut) text = text.Substring(2);
+
+                var parsed = Double.NaN;
+
+                try
+                {
+                    if (baseNum == 10) parsed = Convert.ToDouble(text, CultureInfo.InvariantCulture);
+                    else parsed = Convert.ToInt32(text, baseNum);
+                }
+                catch (FormatException err)
+                {
+                    state.diagnostics.Add(new Diagnostic($"Invalid number format: {err.Message}", token.start, token.end));
+                    ILogger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
+                }
+                catch (OverflowException)
+                {
+                    state.diagnostics.Add(new Diagnostic($"Number doesn't fit in a number type", token.start, token.end));
+                    ILogger.instance?.Source("TOK").Error().Message($"Number doesn't fit in a number type").Pos(token.start).End();
+                }
+
+                token.value = PrimitiveTypes.numberType.Instantiate(parsed);
+            };
+        }
 
         protected FunctionRegistry functions;
 
@@ -64,6 +92,8 @@ namespace NSL.Tokenization
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(false)),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "NaN",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.NaN)),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "Infinity",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.PositiveInfinity)),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "]", resultState: StateType.String, type: TokenType.Literal),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
@@ -93,15 +123,9 @@ namespace NSL.Tokenization
                     }),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword, verifier: (c) => 'a' <= c && 'z' >= c),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^-?\d+(\.\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c) || c == '-', processor: (token, state) => {
-                        try {
-                            var parsed = Double.Parse(token.content, NumberStyles.Float);
-                            token.value = PrimitiveTypes.numberType.Instantiate(parsed);
-                        } catch (FormatException err) {
-                            state.diagnostics.Add(new Diagnostic($"Invalid number format: {err.Message}", token.start, token.end));
-                            ILogger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
-                        }
-                    }),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^0x[\da-f]+", RegexOptions.Compiled),type: TokenType.Literal, processor: NumberProcessorFactory(baseNum: 16, cut: true)),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^0b[10]+", RegexOptions.Compiled),type: TokenType.Literal, processor: NumberProcessorFactory(baseNum: 2, cut: true)),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?([eE][\+\-]?\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c), processor: NumberProcessorFactory()),
                 } },
                 { StateType.String, new List<ITokenDefinition<TokenType, StateType>>{
                     new SimpleTokenDefinition<TokenType, StateType>((state) => {

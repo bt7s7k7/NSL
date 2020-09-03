@@ -1,0 +1,9 @@
+#T :: Should correctly parse the number
+
+assert (parseInt "58") == 58
+assert (parseInt "122") == 122
+assert (parseInt "-14") == -14
+assert (parseInt "foo") == NaN
+
+assert (parseInt "5f" 16) == 95
+assert (parseInt "-a" 16) == -10

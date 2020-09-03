@@ -1,0 +1,8 @@
+#T :: Should correctly parse the number
+
+assert (parseFloat "58") == 58
+assert (parseFloat "87.58") == 87.58
+assert (parseFloat "5e+6") == 5e+6
+assert (parseFloat "122") == 122
+assert (parseFloat "-14") == -14
+assert (parseFloat "foo") == NaN

@@ -117,6 +117,7 @@ namespace NSL.Parsing
                             if (child is OperatorNode childOp && childOp.Match == op.match)
                             {
                                 var statement = new StatementNode(op.function, childOp.Start, childOp.End);
+                                var fail = false;
 
                                 if (op.type.HasFlag(Operator.Type.Suffix))
                                 {
@@ -127,18 +128,19 @@ namespace NSL.Parsing
                                         var targetNode = node.Children[targetIndex];
                                         if (targetNode is OperatorNode)
                                         {
-
+                                            fail = true;
                                         }
                                         else
                                         {
                                             node.Children.RemoveAt(targetIndex);
                                             statement.AddChild(targetNode);
-                                            repeat = true;
+                                            repeat = true && !fail;
                                         }
                                     }
+                                    else fail = true;
                                 }
 
-                                if (op.type.HasFlag(Operator.Type.Prefix))
+                                if (op.type.HasFlag(Operator.Type.Prefix) && !fail)
                                 {
                                     var index = node.Children.IndexOf(child);
                                     if (index < node.Children.Count - 1)
@@ -147,15 +149,16 @@ namespace NSL.Parsing
                                         var targetNode = node.Children[targetIndex];
                                         if (targetNode is OperatorNode)
                                         {
-
+                                            fail = true;
                                         }
                                         else
                                         {
                                             node.Children.RemoveAt(targetIndex);
                                             statement.AddChild(targetNode);
-                                            repeat = true;
+                                            repeat = true && !fail;
                                         }
                                     }
+                                    else fail = true;
                                 }
 
                                 if (repeat)

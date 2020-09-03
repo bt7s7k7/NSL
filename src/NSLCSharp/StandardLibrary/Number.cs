@@ -60,32 +60,52 @@ namespace NSL
             {
                 try
                 {
-                    return Int32.Parse(text, CultureInfo.InvariantCulture);
+                    return Convert.ToInt32(text, 10);
                 }
-                catch (System.FormatException)
-                {
-                    return Double.NaN;
-                }
+                catch (ArgumentOutOfRangeException) { return Double.NaN; }
+                catch (ArgumentException err) { throw new UserNSLException(err.Message); }
+                catch (FormatException) { return Double.NaN; }
+                catch (OverflowException) { return Double.NaN; }
             }));
+
+            registry.Add(NSLFunction.MakeAuto<Func<string, double, double>>("parseInt", (text, baseDouble) =>
+            {
+                var baseInt = (int)baseDouble;
+                var mul = 1;
+                if (text[0] == '-')
+                {
+                    text = text.Substring(1);
+                    mul = -1;
+                }
+                try
+                {
+                    return Convert.ToInt32(text, baseInt) * mul;
+                }
+                catch (ArgumentOutOfRangeException) { return Double.NaN; }
+                catch (ArgumentException err) { throw new UserNSLException(err.Message); }
+                catch (FormatException) { return Double.NaN; }
+                catch (OverflowException) { return Double.NaN; }
+            }));
+
 
             registry.Add(NSLFunction.MakeAuto<Func<string, double>>("parseFloat", text =>
             {
                 try
                 {
-                    return Int32.Parse(text, CultureInfo.InvariantCulture);
+                    return Convert.ToDouble(text, CultureInfo.InvariantCulture);
                 }
-                catch (System.FormatException)
-                {
-                    return Double.NaN;
-                }
+                catch (ArgumentOutOfRangeException) { return Double.NaN; }
+                catch (ArgumentException err) { throw new UserNSLException(err.Message); }
+                catch (FormatException) { return Double.NaN; }
+                catch (OverflowException) { return Double.NaN; }
             }));
 
             registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("lt", (a, b) => a < b));
             registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("gt", (a, b) => a > b));
             registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("lte", (a, b) => a <= b));
             registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("gte", (a, b) => a >= b));
-            registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("eq", (a, b) => a == b));
-            registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("neq", (a, b) => a != b));
+            registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("eq", (a, b) => (Double.IsNaN(a) && Double.IsNaN(b)) || a == b));
+            registry.Add(NSLFunction.MakeAuto<Func<double, double, bool>>("neq", (a, b) => !(Double.IsNaN(a) && Double.IsNaN(b)) && a != b));
 
             foreach (var (name, verb, callback) in new (string name, string verb, Func<double, double> callback)[] {
                 (name: "inc", verb: "Increments", callback: v => v + 1),
