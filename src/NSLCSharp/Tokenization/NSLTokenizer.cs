@@ -59,6 +59,7 @@ namespace NSL.Tokenization
         public NSLTokenizer(FunctionRegistry functions) : base(
             new Dictionary<StateType, List<ITokenDefinition<TokenType, StateType>>> {
                 { StateType.Default, new List<ITokenDefinition<TokenType, StateType>>{
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\n"),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
@@ -121,10 +122,7 @@ namespace NSL.Tokenization
                         stringState.isFirst = false;
 
                         bool next() {
-                            if (state.Next()) {
-                                state.diagnostics.Add(new Diagnostic("Unexpected EOF in the middle of a string", state.position, state.position));
-                                return true;
-                            }
+                            state.Next();
                             return false;
                         }
 
@@ -180,6 +178,7 @@ namespace NSL.Tokenization
                     })
                 } },
                 { StateType.Comment, new List<ITokenDefinition<TokenType, StateType>> {
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\n"),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",resultState: StateType.Default),
                     new RegexTokenDefinition<TokenType, StateType>()
                 } }
