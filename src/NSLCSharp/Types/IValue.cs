@@ -9,6 +9,8 @@ namespace NSL.Types
 
         T GetValue<T>();
         string ToString();
+
+        IValue MakeConstexpr() => new ConstexprTypeSymbol(this).Instantiate(null);
     }
 
     public abstract class NSLValueBase : IValue
