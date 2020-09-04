@@ -162,6 +162,11 @@ namespace NSL.Tokenization.General
 
             }
 
+            if (state.tokens.Count == 0)
+            {
+                state.tokens.Add(new Token<T>(default(T), "", null, state.position, state.position));
+            }
+
             return state;
         }
 
