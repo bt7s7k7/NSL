@@ -40,7 +40,7 @@ namespace NSL
 
             registry.Add(NSLFunction.MakeAuto<Func<string, string, IEnumerable<object>>>(
                 "split",
-                (text, delim) => text.Split(delim),
+                (text, delim) => delim == "" ? text.Select(v => new String(v, 1)).ToArray() : text.Split(delim),
                 new Dictionary<int, TypeSymbol> { { -1, PrimitiveTypes.stringType.ToArray() } }
             ));
         }
