@@ -80,21 +80,36 @@ namespace NSL
             else throw new InternalNSLExcpetion($"Specific function {name} not found");
         }
 
-        public static NSLFunction MakeVariableDefinitionFunction(string varName)
+        public static NSLFunction MakeVariableDefinitionFunction(string varName, bool isConst)
         {
-            return new NSLFunction(varName, argsEnum =>
-            {
-                var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
-                return new NSLFunction.Signature
-                {
-                    name = varName,
-                    arguments = new TypeSymbol[] { type },
-                    result = type
-                };
-            }, (argsEnum, state) =>
-            {
-                return argsEnum.First();
-            });
+            if (isConst) return new NSLFunction(varName, argsEnum =>
+          {
+              var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
+              return new NSLFunction.Signature
+              {
+                  name = varName,
+                  arguments = new TypeSymbol[] { type },
+                  result = type,
+                  useConstexpr = true
+              };
+          }, (argsEnum, state) =>
+          {
+              return argsEnum.First();
+          });
+            else return new NSLFunction(varName, argsEnum =>
+           {
+               var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
+               if (type is ConstexprTypeSymbol constType) type = constType.Base;
+               return new NSLFunction.Signature
+               {
+                   name = varName,
+                   arguments = new TypeSymbol[] { type },
+                   result = type
+               };
+           }, (argsEnum, state) =>
+           {
+               return argsEnum.First();
+           });
         }
 
         public void AddOperator(string definition, string function, int priority, bool reverse = false)

@@ -23,6 +23,7 @@ namespace NSL
             RegisterBoolean(registry);
             RegisterArray(registry);
             RegisterOperator(registry);
+            RegisterType(registry);
 
             return registry;
         }

@@ -122,7 +122,8 @@ namespace NSL
                         name = "set",
                         desc = desc,
                         arguments = new TypeSymbol[] { valueType, valueType },
-                        result = valueType
+                        result = valueType,
+                        targetMustBeMutable = true
                     };
                 }
                 else
@@ -132,7 +133,8 @@ namespace NSL
                         name = "set",
                         desc = desc,
                         arguments = new TypeSymbol[] { PrimitiveTypes.neverType, PrimitiveTypes.neverType },
-                        result = PrimitiveTypes.neverType
+                        result = PrimitiveTypes.neverType,
+                        targetMustBeMutable = true
                     };
                 }
             }, (argsEnum, state) =>

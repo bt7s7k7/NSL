@@ -95,6 +95,7 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "NaN",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.NaN).MakeConstexpr()),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "Infinity",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.PositiveInfinity).MakeConstexpr()),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "const",type: TokenType.VariableDecl),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "]", resultState: StateType.String, type: TokenType.Literal),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),

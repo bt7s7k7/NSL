@@ -37,7 +37,7 @@ namespace NSL
                         return targetValue;
                     }
                     else throw new ImplWrongValueNSLException();
-                }));
+                }, targetMustBeMutable: true));
             }
 
             foreach (var operation in new (string name, System.Func<double, double> callback)[] {
@@ -120,7 +120,8 @@ namespace NSL
                         name = name + "Post",
                         desc = desc,
                         arguments = new TypeSymbol[] { PrimitiveTypes.numberType },
-                        result = PrimitiveTypes.numberType
+                        result = PrimitiveTypes.numberType,
+                        targetMustBeMutable = true
                     };
                 }, (argsEnum, state) =>
                 {
@@ -137,7 +138,8 @@ namespace NSL
                         name = name + "Prev",
                         desc = desc,
                         arguments = new TypeSymbol[] { PrimitiveTypes.numberType },
-                        result = PrimitiveTypes.numberType
+                        result = PrimitiveTypes.numberType,
+                        targetMustBeMutable = true
                     };
                 }, (argsEnum, state) =>
                 {

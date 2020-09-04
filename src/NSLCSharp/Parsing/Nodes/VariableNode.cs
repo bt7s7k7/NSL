@@ -6,8 +6,12 @@ namespace NSL.Parsing.Nodes
     public class VariableNode : StatementNode
     {
         public string? varName = null;
+        public bool IsConstant { get; protected set; }
 
-        public VariableNode(Position start, Position end) : base("var", start, end) { }
+        public VariableNode(bool isConstant, Position start, Position end) : base(isConstant ? "const" : "var", start, end)
+        {
+            IsConstant = isConstant;
+        }
 
         override protected void OnToken(Token<Tokenization.NSLTokenizer.TokenType> next, Parser.ParsingState state)
         {

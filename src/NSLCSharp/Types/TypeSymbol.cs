@@ -49,5 +49,7 @@ namespace NSL.Types
         {
             return HashCode.Combine(Name);
         }
+
+        public static readonly TypeSymbol typeSymbol = new TypeSymbol("Type");
     }
 }
