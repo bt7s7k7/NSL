@@ -10,7 +10,7 @@ namespace NSL.Types
             return base.Instantiate(Value.Value);
         }
 
-        public ConstexprTypeSymbol(IValue value) : base($"#{value}")
+        public ConstexprTypeSymbol(IValue value) : base($"{value.TypeSymbol}(={ToStringUtil.ToString(value.Value)})")
         {
             Value = value;
             Base = value.TypeSymbol;
