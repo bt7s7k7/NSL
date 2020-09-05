@@ -8,22 +8,20 @@ namespace NSL
     {
         private static void RegisterType(FunctionRegistry registry)
         {
-            var stringConstexpr = TypeSymbol.typeSymbol.Instantiate(PrimitiveTypes.stringType).MakeConstexpr();
-            registry.Add(NSLFunction.MakeSimple("String", new TypeSymbol[0], stringConstexpr.TypeSymbol, (argsEnum, state) => stringConstexpr, useConstexpr: true));
-
             registry.Add(new NSLFunction("default", argsEnum =>
             {
                 var desc = "Instantiates the default value for the provided type";
                 if (
                     argsEnum.Count() == 1 &&
-                    argsEnum.ElementAt(0) is ConstexprTypeSymbol typeType
+                    argsEnum.ElementAt(0) is ConstexprTypeSymbol typeType &&
+                    typeType.Value.Value is TypeSymbol type
                 )
                 {
                     return new NSLFunction.Signature
                     {
                         name = "default",
                         desc = desc,
-                        result = typeType.Base,
+                        result = type,
                         arguments = new[] { typeType },
                         useConstexpr = true
                     };
@@ -60,14 +58,15 @@ namespace NSL
                 var desc = "Makes array type of the specified type";
                 if (
                     argsEnum.Count() == 1 &&
-                    argsEnum.ElementAt(0) is ConstexprTypeSymbol typeType
+                    argsEnum.ElementAt(0) is ConstexprTypeSymbol typeType &&
+                    typeType.Value.Value is TypeSymbol type
                 )
                 {
                     return new NSLFunction.Signature
                     {
                         name = "array",
                         desc = desc,
-                        result = TypeSymbol.typeSymbol.Instantiate(typeType.Base.ToArray()).MakeConstexpr().TypeSymbol,
+                        result = TypeSymbol.typeSymbol.Instantiate(type.ToArray()).MakeConstexpr().TypeSymbol,
                         arguments = new[] { typeType },
                         useConstexpr = true
                     };
