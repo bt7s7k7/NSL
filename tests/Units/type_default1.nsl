@@ -1,0 +1,4 @@
+#E :: Should error out because of wrong var type
+var $x (String.default)
+
+$x = 5

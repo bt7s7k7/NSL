@@ -1,0 +1,4 @@
+#T :: Should return an uninitialized value of provided type
+var $x (Number.default)
+
+$x = 5
