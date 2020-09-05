@@ -53,7 +53,8 @@ namespace NSL.Types
             TypeSymbol result,
             Func<IEnumerable<IValue>, Runner.State, IValue> impl,
             string? desc = null,
-            bool targetMustBeMutable = false
+            bool targetMustBeMutable = false,
+            bool useConstexpr = false
         ) => new NSLFunction(
             name,
             _ => new Signature
@@ -62,7 +63,8 @@ namespace NSL.Types
                 result = result,
                 name = name,
                 desc = desc,
-                targetMustBeMutable = targetMustBeMutable
+                targetMustBeMutable = targetMustBeMutable,
+                useConstexpr = useConstexpr
             },
             impl
         );
@@ -118,6 +120,12 @@ namespace NSL.Types
                 var signature = function.GetSignature(providedArgs);
                 if (!signature.useConstexpr && signature.result is ConstexprTypeSymbol constResult) signature.result = constResult.Base;
                 var wantedArgs = signature.arguments.ToArray();
+
+                if (signature.result == PrimitiveTypes.neverType)
+                {
+                    failed.Add(signature);
+                    continue;
+                }
 
                 if (providedArgs.Count() != wantedArgs.Length)
                 {
