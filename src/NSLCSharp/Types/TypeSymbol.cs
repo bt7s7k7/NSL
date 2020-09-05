@@ -20,11 +20,26 @@ namespace NSL.Types
         public ArrayTypeSymbol ToArray() => new ArrayTypeSymbol(this);
         public OptionalTypeSymbol ToOptional() => new OptionalTypeSymbol(this);
 
-        public IValue Instantiate(object? value) => new SimpleValue(value, this);
+        public virtual IValue Instantiate(object? value) => new SimpleValue(value, this);
 
         override public bool Equals(object? obj)
         {
-            return obj != null && obj is TypeSymbol symbol && symbol.ToString() == this.ToString();
+            var one = this;
+            if (obj is TypeSymbol other)
+            {
+                if (one is ConstexprTypeSymbol constOne && other is ConstexprTypeSymbol constOther)
+                {
+                    return constOne.ToString() == constOther.ToString();
+                }
+                else
+                {
+                    if (one is ConstexprTypeSymbol oneConst) one = oneConst.Base;
+                    if (other is ConstexprTypeSymbol otherConst) one = otherConst.Base;
+
+                    return one.ToString() == other.ToString();
+                }
+            }
+            else return false;
         }
 
         public static bool operator ==(TypeSymbol? a, TypeSymbol? b) => a?.Equals(b) ?? Object.ReferenceEquals(a, null) && Object.ReferenceEquals(b, null);
@@ -34,5 +49,7 @@ namespace NSL.Types
         {
             return HashCode.Combine(Name);
         }
+
+        public static readonly TypeSymbol typeSymbol = new TypeSymbol("Type");
     }
 }

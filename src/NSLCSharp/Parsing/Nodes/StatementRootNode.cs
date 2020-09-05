@@ -36,7 +36,7 @@ namespace NSL.Parsing.Nodes
             }
             else if (next.type == TokenType.VariableDecl)
             {
-                var variableNode = new VariableNode(next.start, next.end);
+                var variableNode = new VariableNode(next.content == "const", next.start, next.end);
                 AddChild(variableNode);
                 state.Push(variableNode);
             }

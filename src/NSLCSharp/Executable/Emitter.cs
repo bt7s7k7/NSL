@@ -290,7 +290,7 @@ namespace NSL.Executable
                 }
 
                 var foundFunctions = variableNode != null
-                    ? new[] { FunctionRegistry.MakeVariableDefinitionFunction(variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null")) }
+                    ? new[] { FunctionRegistry.MakeVariableDefinitionFunction(variableNode.varName ?? throw new InternalNSLExcpetion("Variable node has .varName == null"), variableNode.IsConstant) }
                     : node.name[0] == '$' ? makeVariableAssignmentFunction()
                     : functions.Find(node.name);
 

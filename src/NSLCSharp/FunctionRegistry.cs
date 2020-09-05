@@ -68,6 +68,13 @@ namespace NSL
             {
                 return functionsList;
             }
+            else if (Char.IsUpper(name[0]) && NSLFunction.LookupSymbol(name) is TypeSymbol type)
+            {
+                var typeConstexpr = TypeSymbol.typeSymbol.Instantiate(type).MakeConstexpr();
+                return new[] {
+                    NSLFunction.MakeSimple(name, new TypeSymbol[0], typeConstexpr.TypeSymbol, (argsEnum, state) => typeConstexpr, useConstexpr: true)
+                };
+            }
             else return new List<NSLFunction>();
         }
 
@@ -77,24 +84,44 @@ namespace NSL
             {
                 return function;
             }
+            else if (Char.IsUpper(name[0]) && name.Split('`')[0] is string baseName && NSLFunction.LookupSymbol(baseName) is TypeSymbol type)
+            {
+                var typeConstexpr = TypeSymbol.typeSymbol.Instantiate(type).MakeConstexpr();
+                return NSLFunction.MakeSimple(name, new TypeSymbol[0], typeConstexpr.TypeSymbol, (argsEnum, state) => typeConstexpr, useConstexpr: true);
+            }
             else throw new InternalNSLExcpetion($"Specific function {name} not found");
         }
 
-        public static NSLFunction MakeVariableDefinitionFunction(string varName)
+        public static NSLFunction MakeVariableDefinitionFunction(string varName, bool isConst)
         {
-            return new NSLFunction(varName, argsEnum =>
-            {
-                var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
-                return new NSLFunction.Signature
-                {
-                    name = varName,
-                    arguments = new TypeSymbol[] { type },
-                    result = type
-                };
-            }, (argsEnum, state) =>
-            {
-                return argsEnum.First();
-            });
+            if (isConst) return new NSLFunction(varName, argsEnum =>
+          {
+              var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
+              return new NSLFunction.Signature
+              {
+                  name = varName,
+                  arguments = new TypeSymbol[] { type },
+                  result = type,
+                  useConstexpr = true
+              };
+          }, (argsEnum, state) =>
+          {
+              return argsEnum.First();
+          });
+            else return new NSLFunction(varName, argsEnum =>
+           {
+               var type = (argsEnum.Count() == 0 ? null : argsEnum.First()) ?? PrimitiveTypes.neverType;
+               if (type is ConstexprTypeSymbol constType) type = constType.Base;
+               return new NSLFunction.Signature
+               {
+                   name = varName,
+                   arguments = new TypeSymbol[] { type },
+                   result = type
+               };
+           }, (argsEnum, state) =>
+           {
+               return argsEnum.First();
+           });
         }
 
         public void AddOperator(string definition, string function, int priority, bool reverse = false)

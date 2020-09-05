@@ -78,7 +78,7 @@ namespace NSL.Tokenization
                     ILogger.instance?.Source("TOK").Error().Message($"Number doesn't fit in a number type").Pos(token.start).End();
                 }
 
-                token.value = PrimitiveTypes.numberType.Instantiate(parsed);
+                token.value = PrimitiveTypes.numberType.Instantiate(parsed).MakeConstexpr();
             };
         }
 
@@ -90,11 +90,12 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\n"),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true)),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(false)),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "NaN",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.NaN)),
-                    new RegexTokenDefinition<TokenType, StateType>(pattern: "Infinity",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.PositiveInfinity)),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true).MakeConstexpr()),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "false",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(false).MakeConstexpr()),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "NaN",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.NaN).MakeConstexpr()),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "Infinity",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.numberType.Instantiate(Double.PositiveInfinity).MakeConstexpr()),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "var",type: TokenType.VariableDecl),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "const",type: TokenType.VariableDecl),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "]", resultState: StateType.String, type: TokenType.Literal),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),
@@ -121,8 +122,7 @@ namespace NSL.Tokenization
                         state.tokens.Add(new Token<TokenType>(TokenType.Keyword, "concat", null, state.position, state.position));
                         state.tokens.Add(new Token<TokenType>(TokenType.Literal, "", null, state.position, state.position));
                     }),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword, verifier: (c) => 'a' <= c && 'z' >= c),
-                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$[a-z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
+                    new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\$?[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled),type: TokenType.Keyword),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^0x[\da-f]+", RegexOptions.Compiled),type: TokenType.Literal, processor: NumberProcessorFactory(baseNum: 16, cut: true)),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^0b[10]+", RegexOptions.Compiled),type: TokenType.Literal, processor: NumberProcessorFactory(baseNum: 2, cut: true)),
                     new RegexTokenDefinition<TokenType, StateType>(expr: new Regex(@"^\d+(\.\d+)?([eE][\+\-]?\d+)?", RegexOptions.Compiled),type: TokenType.Literal, verifier: (c) => Char.IsDigit(c), processor: NumberProcessorFactory()),
@@ -132,7 +132,7 @@ namespace NSL.Tokenization
                         var stringToken = state.tokens[state.tokens.Count - 1];
                         if (stringStack.Count == 0) {
                             state.diagnostics.Add(new Diagnostic("Unexpected end of a template string embed, not in a template string", state.position, state.position));
-                            stringToken.value = PrimitiveTypes.stringType.Instantiate("");
+                            stringToken.value = PrimitiveTypes.stringType.Instantiate("").MakeConstexpr();
                             stringToken.end = state.position;
                             state.state = StateType.Default;
                             return true;
@@ -181,7 +181,7 @@ namespace NSL.Tokenization
                             if (next()) return true;
                         }
 
-                        stringToken.value = PrimitiveTypes.stringType.Instantiate(stringBuilder.ToString());
+                        stringToken.value = PrimitiveTypes.stringType.Instantiate(stringBuilder.ToString()).MakeConstexpr();
                         stringToken.end = state.position;
 
                         state.state = StateType.Default;

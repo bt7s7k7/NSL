@@ -18,6 +18,8 @@ namespace NSL.Types
             public TypeSymbol result;
             public string name;
             public string? desc;
+            public bool useConstexpr;
+            public bool targetMustBeMutable;
 
             public override string ToString() => $"{name}({String.Join(' ', arguments)}) → {result}" + (desc == null ? "" : " :: " + desc);
         }
@@ -41,22 +43,39 @@ namespace NSL.Types
             { typeof(double), PrimitiveTypes.numberType },
             { typeof(string), PrimitiveTypes.stringType },
             { typeof(void), PrimitiveTypes.voidType },
-            { typeof(bool), PrimitiveTypes.boolType }
+            { typeof(bool), PrimitiveTypes.boolType },
+            { typeof(TypeSymbol), TypeSymbol.typeSymbol }
         };
 
-        public static NSLFunction MakeSimple(string name, IEnumerable<TypeSymbol> arguments, TypeSymbol result, Func<IEnumerable<IValue>, Runner.State, IValue> impl, string? desc = null) => new NSLFunction(
+        private static Dictionary<string, TypeSymbol> typeSymbolLookupByName = typeSymbolLookup.Values.ToDictionary(v => v.Name);
+
+        public static NSLFunction MakeSimple(
+            string name,
+            IEnumerable<TypeSymbol> arguments,
+            TypeSymbol result,
+            Func<IEnumerable<IValue>, Runner.State, IValue> impl,
+            string? desc = null,
+            bool targetMustBeMutable = false,
+            bool useConstexpr = false
+        ) => new NSLFunction(
             name,
             _ => new Signature
             {
                 arguments = arguments,
                 result = result,
                 name = name,
-                desc = desc
+                desc = desc,
+                targetMustBeMutable = targetMustBeMutable,
+                useConstexpr = useConstexpr
             },
             impl
         );
 
-        public static void SetTypeLookup(Type type, TypeSymbol symbol) => typeSymbolLookup[type] = symbol;
+        public static void SetTypeLookup(Type type, TypeSymbol symbol)
+        {
+            typeSymbolLookup[type] = symbol;
+            typeSymbolLookupByName[symbol.Name] = symbol;
+        }
 
         public static TypeSymbol LookupSymbol(Type type)
         {
@@ -67,6 +86,18 @@ namespace NSL.Types
             else
             {
                 throw new AutoFuncNSLException($"Failed to lookup type symbol for type {type}");
+            }
+        }
+
+        public static TypeSymbol? LookupSymbol(string name)
+        {
+            if (typeSymbolLookupByName.TryGetValue(name, out TypeSymbol? foundSymbol))
+            {
+                return foundSymbol!;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -105,7 +136,14 @@ namespace NSL.Types
             {
                 foundFunctionIndex++;
                 var signature = function.GetSignature(providedArgs);
+                if (!signature.useConstexpr && signature.result is ConstexprTypeSymbol constResult) signature.result = constResult.Base;
                 var wantedArgs = signature.arguments.ToArray();
+
+                if (signature.result == PrimitiveTypes.neverType)
+                {
+                    failed.Add(signature);
+                    continue;
+                }
 
                 if (providedArgs.Count() != wantedArgs.Length)
                 {
@@ -119,6 +157,12 @@ namespace NSL.Types
                     {
                         var provided = providedArgs.ElementAt(i);
                         var wanted = wantedArgs[i];
+
+                        if (!signature.useConstexpr)
+                        {
+                            if (provided is ConstexprTypeSymbol constProvided) provided = constProvided.Base;
+                            if (wanted is ConstexprTypeSymbol constWanted && (i == 0 ? !signature.targetMustBeMutable : true)) wanted = constWanted.Base;
+                        }
 
                         if (provided == wanted && provided != PrimitiveTypes.neverType)
                         {

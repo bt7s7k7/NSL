@@ -49,7 +49,8 @@ namespace NSL
                     name = "invPrev",
                     desc = desc,
                     arguments = new TypeSymbol[] { PrimitiveTypes.boolType },
-                    result = PrimitiveTypes.boolType
+                    result = PrimitiveTypes.boolType,
+                    targetMustBeMutable = true
                 };
             }, (argsEnum, state) =>
             {

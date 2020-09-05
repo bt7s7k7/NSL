@@ -136,14 +136,16 @@ namespace NSL
                     name = "push",
                     desc = desc,
                     arguments = new TypeSymbol[] { arrayType, arrayType.ItemType },
-                    result = arrayType
+                    result = arrayType,
+                    targetMustBeMutable = true
                 };
                 else return new NSLFunction.Signature
                 {
                     name = "push",
                     desc = desc,
                     arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.neverType },
-                    result = PrimitiveTypes.neverType
+                    result = PrimitiveTypes.neverType,
+                    targetMustBeMutable = true
                 };
             }, (argsEnum, state) =>
             {
@@ -187,14 +189,16 @@ namespace NSL
                     name = "index",
                     desc = desc,
                     arguments = new TypeSymbol[] { arrayType, PrimitiveTypes.numberType },
-                    result = arrayType.ItemType
+                    result = arrayType.ItemType,
+                    targetMustBeMutable = true
                 };
                 else return new NSLFunction.Signature
                 {
                     name = "index",
                     desc = desc,
                     arguments = new TypeSymbol[] { PrimitiveTypes.neverType.ToArray(), PrimitiveTypes.numberType },
-                    result = PrimitiveTypes.neverType
+                    result = PrimitiveTypes.neverType,
+                    targetMustBeMutable = true
                 };
             }, (argsEnum, state) =>
             {
