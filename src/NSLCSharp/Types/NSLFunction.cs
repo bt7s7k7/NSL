@@ -47,6 +47,8 @@ namespace NSL.Types
             { typeof(TypeSymbol), TypeSymbol.typeSymbol }
         };
 
+        private static Dictionary<string, TypeSymbol> typeSymbolLookupByName = typeSymbolLookup.Values.ToDictionary(v => v.Name);
+
         public static NSLFunction MakeSimple(
             string name,
             IEnumerable<TypeSymbol> arguments,
@@ -69,7 +71,11 @@ namespace NSL.Types
             impl
         );
 
-        public static void SetTypeLookup(Type type, TypeSymbol symbol) => typeSymbolLookup[type] = symbol;
+        public static void SetTypeLookup(Type type, TypeSymbol symbol)
+        {
+            typeSymbolLookup[type] = symbol;
+            typeSymbolLookupByName[symbol.Name] = symbol;
+        }
 
         public static TypeSymbol LookupSymbol(Type type)
         {
@@ -80,6 +86,18 @@ namespace NSL.Types
             else
             {
                 throw new AutoFuncNSLException($"Failed to lookup type symbol for type {type}");
+            }
+        }
+
+        public static TypeSymbol? LookupSymbol(string name)
+        {
+            if (typeSymbolLookupByName.TryGetValue(name, out TypeSymbol? foundSymbol))
+            {
+                return foundSymbol!;
+            }
+            else
+            {
+                return null;
             }
         }
 

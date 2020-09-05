@@ -68,6 +68,13 @@ namespace NSL
             {
                 return functionsList;
             }
+            else if (Char.IsUpper(name[0]) && NSLFunction.LookupSymbol(name) is TypeSymbol type)
+            {
+                var typeConstexpr = TypeSymbol.typeSymbol.Instantiate(type).MakeConstexpr();
+                return new[] {
+                    NSLFunction.MakeSimple(name, new TypeSymbol[0], typeConstexpr.TypeSymbol, (argsEnum, state) => typeConstexpr, useConstexpr: true)
+                };
+            }
             else return new List<NSLFunction>();
         }
 
@@ -76,6 +83,11 @@ namespace NSL
             if (specificFunctions.TryGetValue(name, out NSLFunction? function))
             {
                 return function;
+            }
+            else if (Char.IsUpper(name[0]) && name.Split('`')[0] is string baseName && NSLFunction.LookupSymbol(baseName) is TypeSymbol type)
+            {
+                var typeConstexpr = TypeSymbol.typeSymbol.Instantiate(type).MakeConstexpr();
+                return NSLFunction.MakeSimple(name, new TypeSymbol[0], typeConstexpr.TypeSymbol, (argsEnum, state) => typeConstexpr, useConstexpr: true);
             }
             else throw new InternalNSLExcpetion($"Specific function {name} not found");
         }
