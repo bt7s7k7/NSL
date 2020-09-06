@@ -16,10 +16,10 @@ namespace NSL
                 {
                     name = "arr",
                     arguments = argsEnum.Select(v => argsEnum.First() ?? PrimitiveTypes.neverType),
-                    result = argsEnum.Count() != 0 ? argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType,
+                    result = argsEnum.Count() != 0 ? argsEnum.First()?.NotConstexpr().ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType,
                     desc = "Creates a new array with the arguments as elements"
                 },
-                impl: (argsEnum, state) => argsEnum.First().TypeSymbol.ToArray().Instantiate(argsEnum.Select(v => v.Value).ToArray())
+                impl: (argsEnum, state) => argsEnum.First().TypeSymbol.NotConstexpr().ToArray().Instantiate(argsEnum.Select(v => v.Value).ToArray())
             ));
 
             registry.Add(new NSLFunction(
@@ -30,13 +30,13 @@ namespace NSL
                         argsEnum.Count() == 2 &&
                         argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
                         array.ItemType is TypeSymbol itemType &&
-                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(itemType, PrimitiveTypes.boolType))
+                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(new[] { itemType }, PrimitiveTypes.boolType))
                     )
                     {
                         return new NSLFunction.Signature
                         {
                             name = "filter",
-                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(itemType, PrimitiveTypes.boolType) },
+                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(new[] { itemType }, PrimitiveTypes.boolType) },
                             result = array
                         };
                     }
@@ -45,7 +45,7 @@ namespace NSL
                         return new NSLFunction.Signature
                         {
                             name = "filter",
-                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(PrimitiveTypes.neverType, PrimitiveTypes.neverType) },
+                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(new[] { PrimitiveTypes.neverType }, PrimitiveTypes.neverType) },
                             result = PrimitiveTypes.neverType
                         };
                     }
@@ -63,7 +63,7 @@ namespace NSL
                         var itemType = arrayType.ItemType;
                         var resultArray = array.Where(value =>
                         {
-                            var result = action.Invoke(state.Runner, itemType.Instantiate(value)).Value;
+                            var result = action.Invoke(state.Runner, new[] { itemType.Instantiate(value) }).Value;
                             if (result == null) throw new NullReferenceException();
                             return (bool)result;
                         }).ToArray();
@@ -82,13 +82,13 @@ namespace NSL
                         argsEnum.Count() == 2 &&
                         argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
                         array.ItemType is TypeSymbol itemType &&
-                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(itemType, PrimitiveTypes.voidType))
+                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(new[] { itemType }, PrimitiveTypes.voidType))
                     )
                     {
                         return new NSLFunction.Signature
                         {
                             name = "foreach",
-                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(itemType, PrimitiveTypes.voidType) },
+                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(new[] { itemType, PrimitiveTypes.numberType }, PrimitiveTypes.voidType) },
                             result = PrimitiveTypes.voidType
                         };
                     }
@@ -97,7 +97,7 @@ namespace NSL
                         return new NSLFunction.Signature
                         {
                             name = "foreach",
-                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(PrimitiveTypes.neverType, PrimitiveTypes.neverType) },
+                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(new[] { PrimitiveTypes.neverType, PrimitiveTypes.numberType }, PrimitiveTypes.neverType) },
                             result = PrimitiveTypes.voidType
                         };
                     }
@@ -113,10 +113,11 @@ namespace NSL
                     )
                     {
                         var itemType = arrayType.ItemType;
-
+                        var i = 0;
                         foreach (var item in array)
                         {
-                            action.Invoke(state.Runner, itemType.Instantiate(item));
+                            action.Invoke(state.Runner, new[] { itemType.Instantiate(item), PrimitiveTypes.numberType.Instantiate(i) });
+                            i++;
                         }
 
                         return PrimitiveTypes.voidType.Instantiate(null);

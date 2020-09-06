@@ -19,6 +19,7 @@ namespace NSL.Types
 
         public ArrayTypeSymbol ToArray() => new ArrayTypeSymbol(this);
         public OptionalTypeSymbol ToOptional() => new OptionalTypeSymbol(this);
+        public TypeSymbol NotConstexpr() => this is ConstexprTypeSymbol constexpr ? constexpr.Base : this;
 
         public virtual IValue Instantiate(object? value) => new SimpleValue(value, this);
 

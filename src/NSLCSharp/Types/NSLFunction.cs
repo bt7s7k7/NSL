@@ -126,7 +126,7 @@ namespace NSL.Types
             }, desc);
         }
 
-        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> _providedArgs, Func<int, TypeSymbol, TypeSymbol>? expandAction = null)
+        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> _providedArgs, Func<int, IEnumerable<TypeSymbol>, TypeSymbol>? expandActions = null)
         {
             var failed = new List<Signature>();
             var failedAction = false;
@@ -135,7 +135,8 @@ namespace NSL.Types
             foreach (var function in functions)
             {
                 foundFunctionIndex++;
-                var signature = function.GetSignature(providedArgs);
+                var arguments = providedArgs;
+                var signature = function.GetSignature(arguments);
                 if (!signature.useConstexpr && signature.result is ConstexprTypeSymbol constResult) signature.result = constResult.Base;
                 var wantedArgs = signature.arguments.ToArray();
 
@@ -145,7 +146,7 @@ namespace NSL.Types
                     continue;
                 }
 
-                if (providedArgs.Count() != wantedArgs.Length)
+                if (arguments.Count() != wantedArgs.Length)
                 {
                     failed.Add(signature);
                     continue;
@@ -153,9 +154,9 @@ namespace NSL.Types
                 else
                 {
                     var success = true;
-                    for (int i = 0, len = providedArgs.Count(); i < len; i++)
+                    for (int i = 0, len = arguments.Count(); i < len; i++)
                     {
-                        var provided = providedArgs.ElementAt(i);
+                        var provided = arguments.ElementAt(i);
                         var wanted = wantedArgs[i];
 
                         if (!signature.useConstexpr)
@@ -174,15 +175,15 @@ namespace NSL.Types
 
                             if (provided == null)
                             {
-                                if (expandAction == null) continue;
-                                var resultType = expandAction(i, action.Argument);
-                                actionType = new ActionTypeSymbol(action.Argument, action.Result == PrimitiveTypes.voidType ? PrimitiveTypes.voidType : resultType);
+                                if (expandActions == null) continue;
+                                var resultType = expandActions(i, action.Arguments);
+                                actionType = new ActionTypeSymbol(action.Arguments, action.Result == PrimitiveTypes.voidType && resultType != PrimitiveTypes.neverType ? PrimitiveTypes.voidType : resultType);
                             }
                             else if (provided is ActionTypeSymbol providedAction)
                             {
                                 if (providedAction.Result != action.Result && action.Result == PrimitiveTypes.voidType)
                                 {
-                                    actionType = new ActionTypeSymbol(providedAction.Argument, PrimitiveTypes.voidType);
+                                    actionType = new ActionTypeSymbol(providedAction.Arguments, PrimitiveTypes.voidType);
                                 }
                                 else
                                 {

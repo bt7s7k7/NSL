@@ -56,8 +56,8 @@ namespace NSL
                 name: "if",
                 arguments: new TypeSymbol[] {
                    PrimitiveTypes.boolType,
-                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType),
-                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType)
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType),
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType)
                 },
                 result: PrimitiveTypes.voidType,
                 impl: (argsEnum, state) =>
@@ -70,11 +70,11 @@ namespace NSL
                     {
                         if (value)
                         {
-                            thenAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                            thenAction.Invoke(state.Runner, new IValue[0]);
                         }
                         else
                         {
-                            elseAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                            elseAction.Invoke(state.Runner, new IValue[0]);
                         }
                         return PrimitiveTypes.voidType.Instantiate(null);
                     }
@@ -86,8 +86,8 @@ namespace NSL
             registry.Add(NSLFunction.MakeSimple(
                 name: "while",
                 arguments: new TypeSymbol[] {
-                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.boolType),
-                   new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType)
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.boolType),
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType)
                 },
                 result: PrimitiveTypes.voidType,
                 impl: (argsEnum, state) =>
@@ -97,9 +97,9 @@ namespace NSL
                         argsEnum.ElementAt(1).Value is NSLAction action
                     )
                     {
-                        while (predicate.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null)).GetValue<bool>())
+                        while (predicate.Invoke(state.Runner, new IValue[0]).GetValue<bool>())
                         {
-                            action.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                            action.Invoke(state.Runner, new IValue[0]);
                         }
                         return PrimitiveTypes.voidType.Instantiate(null);
                     }

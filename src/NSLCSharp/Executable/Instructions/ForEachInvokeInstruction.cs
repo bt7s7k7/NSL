@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using NSL.Runtime;
 using NSL.Tokenization.General;
 using NSL.Types;
@@ -27,8 +28,8 @@ namespace NSL.Executable.Instructions
                 var arrayObject = arrayVariable.Value;
                 if (arrayObject is IEnumerable arrayEnum)
                 {
-                    var argumentVariable = action.ArgumentVariable.type.Instantiate(null);
-                    action.Scope.Set(action.ArgumentVariable.varName, argumentVariable);
+                    var argumentVariable = action.ArgumentVariables.ElementAt(0).type.Instantiate(null);
+                    action.Scope.Set(action.ArgumentVariables.ElementAt(0).varName, argumentVariable);
                     foreach (var element in arrayEnum)
                     {
                         argumentVariable.Value = element;

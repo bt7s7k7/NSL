@@ -2,5 +2,5 @@
 
 var $array (arr 1 2 3 4 5)
 
-$array.foreach !{ assert ($array.contains $v) }
-arr 6 7 8 9 | foreach !{ assert !($array.contains $v) }
+$array.foreach $v => !{ assert ($array.contains $v) }
+arr 6 7 8 9 | foreach $v => !{ assert !($array.contains $v) }
