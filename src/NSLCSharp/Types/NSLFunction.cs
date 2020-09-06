@@ -126,7 +126,7 @@ namespace NSL.Types
             }, desc);
         }
 
-        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> _providedArgs, Func<int, TypeSymbol, TypeSymbol>? expandAction = null)
+        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> _providedArgs, Func<int, IEnumerable<TypeSymbol>, TypeSymbol>? expandActions = null)
         {
             var failed = new List<Signature>();
             var failedAction = false;
@@ -174,15 +174,15 @@ namespace NSL.Types
 
                             if (provided == null)
                             {
-                                if (expandAction == null) continue;
-                                var resultType = expandAction(i, action.Argument);
-                                actionType = new ActionTypeSymbol(action.Argument, action.Result == PrimitiveTypes.voidType ? PrimitiveTypes.voidType : resultType);
+                                if (expandActions == null) continue;
+                                var resultType = expandActions(i, action.Arguments);
+                                actionType = new ActionTypeSymbol(action.Arguments, action.Result == PrimitiveTypes.voidType && resultType != PrimitiveTypes.neverType ? PrimitiveTypes.voidType : resultType);
                             }
                             else if (provided is ActionTypeSymbol providedAction)
                             {
                                 if (providedAction.Result != action.Result && action.Result == PrimitiveTypes.voidType)
                                 {
-                                    actionType = new ActionTypeSymbol(providedAction.Argument, PrimitiveTypes.voidType);
+                                    actionType = new ActionTypeSymbol(providedAction.Arguments, PrimitiveTypes.voidType);
                                 }
                                 else
                                 {

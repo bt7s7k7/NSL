@@ -1,17 +1,20 @@
+using System;
+using System.Collections.Generic;
+
 namespace NSL.Types
 {
     public class ActionTypeSymbol : TypeSymbol
     {
-        public TypeSymbol Argument { get; protected set; }
+        public IEnumerable<TypeSymbol> Arguments { get; protected set; }
         public TypeSymbol Result { get; protected set; }
 
-        public ActionTypeSymbol(TypeSymbol argument, TypeSymbol result) : base(argument + " → " + result)
+        public ActionTypeSymbol(IEnumerable<TypeSymbol> arguments, TypeSymbol result) : base("(" + String.Join(", ", arguments) + ")" + " => " + result)
         {
-            this.Argument = argument;
+            this.Arguments = arguments;
             this.Result = result;
         }
 
-        public TypeSymbol GetArgument() => Argument;
+        public IEnumerable<TypeSymbol> GetArguments() => Arguments;
         public TypeSymbol GetResult() => Result;
     }
 }

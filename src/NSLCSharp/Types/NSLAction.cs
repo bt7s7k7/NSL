@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NSL.Executable;
 using NSL.Runtime;
 
@@ -10,7 +11,7 @@ namespace NSL.Types
         protected List<IInstruction> instructions;
 
         public IProgram.VariableDefinition? ReturnVariable { get; protected set; }
-        public IProgram.VariableDefinition ArgumentVariable { get; protected set; }
+        public IEnumerable<IProgram.VariableDefinition> ArgumentVariables { get; protected set; }
         public Runner.Scope Scope { get; internal set; }
 
         public IEnumerator<IInstruction> GetEnumerator()
@@ -23,17 +24,21 @@ namespace NSL.Types
             return ((IEnumerable)instructions).GetEnumerator();
         }
 
-        public NSLAction(List<IInstruction> instructions, IProgram.VariableDefinition? returnVariable, IProgram.VariableDefinition argumentVariable, Runner.Scope scope)
+        public NSLAction(List<IInstruction> instructions, IProgram.VariableDefinition? returnVariable, IEnumerable<IProgram.VariableDefinition> argumentVariables, Runner.Scope scope)
         {
             this.instructions = instructions;
             this.ReturnVariable = returnVariable;
-            this.ArgumentVariable = argumentVariable;
+            this.ArgumentVariables = argumentVariables;
             Scope = scope;
         }
 
-        public IValue Invoke(Runner runner, IValue argument)
+        public IValue Invoke(Runner runner, IEnumerable<IValue> arguments)
         {
-            Scope.Set(ArgumentVariable.varName, argument);
+            if (arguments.Count() != ArgumentVariables.Count()) throw new ActionCallNSLException("Length of arguments doesn't match the length of the action's arguments");
+            foreach (var (name, value) in arguments.Select((v, i) => (ArgumentVariables.ElementAt(i).varName, v)))
+            {
+                Scope.Set(name, value);
+            }
             return runner.RunAction(this);
         }
     }

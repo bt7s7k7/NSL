@@ -29,8 +29,8 @@ namespace NSL
             registry.Add(NSLFunction.MakeSimple(
                 name: "try",
                 arguments: new TypeSymbol[] {
-                    new ActionTypeSymbol(PrimitiveTypes.voidType, PrimitiveTypes.voidType),
-                    new ActionTypeSymbol(UserNSLException.typeSymbol, PrimitiveTypes.voidType)
+                    new ActionTypeSymbol(new[] {PrimitiveTypes.voidType}, PrimitiveTypes.voidType),
+                    new ActionTypeSymbol(new[] {UserNSLException.typeSymbol}, PrimitiveTypes.voidType)
                 },
                 result: PrimitiveTypes.voidType,
                 impl: (argsEnum, state) =>
@@ -42,11 +42,11 @@ namespace NSL
                     {
                         try
                         {
-                            tryAction.Invoke(state.Runner, PrimitiveTypes.voidType.Instantiate(null));
+                            tryAction.Invoke(state.Runner, new[] { PrimitiveTypes.voidType.Instantiate(null) });
                         }
                         catch (UserNSLException err)
                         {
-                            catchAction.Invoke(state.Runner, UserNSLException.typeSymbol.Instantiate(err));
+                            catchAction.Invoke(state.Runner, new[] { UserNSLException.typeSymbol.Instantiate(err) });
                         }
                         return PrimitiveTypes.voidType.Instantiate(null);
                     }

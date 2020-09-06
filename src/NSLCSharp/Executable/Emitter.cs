@@ -370,8 +370,7 @@ namespace NSL.Executable
                         }
                         else if (child is ActionNode actionNode)
                         {
-                            var blockNode = (StatementBlockNode)actionNode.Children[0];
-                            var actionEmission = makeAction(blockNode, innerContext, "$v");
+                            var actionEmission = makeAction(actionNode, innerContext);
 
                             arguments.Add(actionEmission);
 
@@ -387,10 +386,24 @@ namespace NSL.Executable
                     {
                         IEnumerable<Emission> finalArguments = arguments;
 
-                        (_, signature) = NSLFunction.GetMatchingFunction(foundFunctions, providedArgs, (index, argumentType) =>
+                        (_, signature) = NSLFunction.GetMatchingFunction(foundFunctions, providedArgs, (index, argumentTypes) =>
                         {
                             var actionEmission = arguments[index];
-                            actionEmission.instructions[0].context.scope.Add("$v", argumentType);
+                            var actionNode = (ActionNode)node.Children[index];
+
+                            if (argumentTypes.Count() != actionNode.Arguments.Count())
+                            {
+                                actionEmission.emit = null;
+                                return PrimitiveTypes.neverType;
+                            }
+
+                            for (int i = 0, len = actionNode.Arguments.Count(); i < len; i++)
+                            {
+                                var name = actionNode.Arguments.ElementAt(i);
+                                var type = argumentTypes.ElementAt(i);
+                                actionEmission.instructions[0].context.scope.Add(name, type);
+                            }
+
                             actionEmission.EmitTo(emission, innerContext);
 
                             finalArguments = finalArguments.Where(v => v != actionEmission);
@@ -424,22 +437,25 @@ namespace NSL.Executable
                 }
             }
 
-            Emission makeAction(StatementRootNode blockNode, Context context, string argVarName)
+            Emission makeAction(ActionNode actionNode, Context context) => makeBlockAction((StatementBlockNode)actionNode.Children[0], context, actionNode.Arguments);
+            Emission makeBlockAction(StatementRootNode blockNode, Context context, IEnumerable<string> argVarNames)
             {
                 var result = new Emission(makeVarName(), blockNode);
                 var innerContext = context.UpdateScope(context.scopeId);
 
-                result.Add(new EmittedInstruction(new InvokeInstruction(blockNode.Start, blockNode.End, null, "echo", new[] { "$v" }), innerContext));
+                result.Add(new EmittedInstruction(new InvokeInstruction(blockNode.Start, blockNode.End, null, "void`0", new string[0]), innerContext));
 
                 result.emit = (target, emission) =>
                 {
                     var blockEmission = visitBlock(blockNode, innerContext);
 
-                    IProgram.VariableDefinition returnVariable = new IProgram.VariableDefinition(blockEmission.type!, blockEmission.varName);
-                    IProgram.VariableDefinition argumentVariable = new IProgram.VariableDefinition(
+                    var returnVariable = new IProgram.VariableDefinition(blockEmission.type!, blockEmission.varName);
+                    var argumentVariables = argVarNames.Select(argVarName => new IProgram.VariableDefinition(
                         innerContext.scope.Get(argVarName) ?? throw new InternalNSLExcpetion($"Failed to find argument variable {argVarName}"),
-                        argVarName);
-                    target.Add(new EmittedInstruction(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariable), innerContext));
+                        argVarName
+                    )).ToArray();
+
+                    target.Add(new EmittedInstruction(new ActionInstruction(parsingResult.rootNode.Start, parsingResult.rootNode.End, result.varName, returnVariable, argumentVariables), innerContext));
 
                     if (blockEmission.type != PrimitiveTypes.voidType)
                     {
@@ -485,7 +501,7 @@ namespace NSL.Executable
                         var block = new StatementBlockNode(false, false, statementTargetNode.Start, statementTargetNode.End);
                         block.AddChild(statementTargetNode);
 
-                        var actionEmission = makeAction(block, innerContext, "$_a");
+                        var actionEmission = makeBlockAction(block, innerContext, new[] { "$_a" });
 
                         actionEmission.EmitTo(result, innerContext);
 
@@ -493,7 +509,7 @@ namespace NSL.Executable
                     }
                     else if (targetNode is StatementBlockNode statementBlockTargetNode)
                     {
-                        var actionEmission = makeAction(statementBlockTargetNode, innerContext, "$_a");
+                        var actionEmission = makeBlockAction(statementBlockTargetNode, innerContext, new[] { "$_a" });
 
                         actionEmission.EmitTo(result, innerContext);
 

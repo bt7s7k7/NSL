@@ -50,7 +50,7 @@ namespace NSL.Runtime
                 {
                     if (inst is ActionInstruction action)
                     {
-                        buildingAction = new ActionBuilder(state.TopScope, action.ReturnVariable, action.ArgumentVariable, action.Name, state.TopScope);
+                        buildingAction = new ActionBuilder(state.TopScope, action.ReturnVariable, action.ArgumentVariables, action.Name, state.TopScope);
                     }
                     else
                     {
