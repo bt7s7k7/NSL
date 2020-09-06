@@ -20,6 +20,8 @@ namespace NSL.Types
             public string? desc;
             public bool useConstexpr;
             public bool targetMustBeMutable;
+            public delegate void PostProcessDelegate(ref Signature signature);
+            public PostProcessDelegate? postProcess;
 
             public override string ToString() => $"{name}({String.Join(' ', arguments)}) → {result}" + (desc == null ? "" : " :: " + desc);
         }
@@ -177,7 +179,19 @@ namespace NSL.Types
                             {
                                 if (expandActions == null) continue;
                                 var resultType = expandActions(i, action.Arguments);
-                                actionType = new ActionTypeSymbol(action.Arguments, action.Result == PrimitiveTypes.voidType && resultType != PrimitiveTypes.neverType ? PrimitiveTypes.voidType : resultType);
+                                if (action.Result == PrimitiveTypes.voidType && resultType != PrimitiveTypes.neverType)
+                                {
+                                    actionType = new ActionTypeSymbol(action.Arguments, action.Result == PrimitiveTypes.voidType && resultType != PrimitiveTypes.neverType ? PrimitiveTypes.voidType : resultType);
+                                    if (actionType == wanted)
+                                    {
+                                        actionType = new ActionTypeSymbol(action.Arguments, resultType);
+                                        wanted = wantedArgs[i] = actionType;
+                                    }
+                                }
+                                else
+                                {
+                                    actionType = new ActionTypeSymbol(action.Arguments, resultType);
+                                }
                             }
                             else if (provided is ActionTypeSymbol providedAction)
                             {
@@ -221,6 +235,8 @@ namespace NSL.Types
                     if (success)
                     {
                         if (signature.name[0] != '$') signature.name += $"`{foundFunctionIndex}";
+                        signature.arguments = wantedArgs;
+                        if (signature.postProcess != null) signature.postProcess(ref signature);
                         return (function, signature);
                     }
                     else

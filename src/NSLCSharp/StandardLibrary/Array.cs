@@ -126,6 +126,61 @@ namespace NSL
                 }
             ));
 
+            registry.Add(new NSLFunction(
+                name: "map",
+                signatureGenerator: argsEnum =>
+                {
+                    if (
+                        argsEnum.Count() == 2 &&
+                        argsEnum.ElementAt(0) is ArrayTypeSymbol array &&
+                        array.ItemType is TypeSymbol itemType &&
+                        (argsEnum.ElementAt(1) == null || argsEnum.ElementAt(1) == new ActionTypeSymbol(new[] { itemType }, PrimitiveTypes.voidType))
+                    )
+                    {
+                        return new NSLFunction.Signature
+                        {
+                            name = "map",
+                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(new[] { itemType, PrimitiveTypes.numberType }, PrimitiveTypes.voidType) },
+                            result = PrimitiveTypes.voidType,
+                            postProcess = (ref NSLFunction.Signature signature) =>
+                            {
+                                var item = ((ActionTypeSymbol)signature.arguments.ElementAt(1)).Result.NotConstexpr();
+                                signature.result = item == PrimitiveTypes.voidType ? item : item.ToArray();
+                            }
+                        };
+                    }
+                    else
+                    {
+                        return new NSLFunction.Signature
+                        {
+                            name = "map",
+                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(new[] { PrimitiveTypes.neverType, PrimitiveTypes.numberType }, PrimitiveTypes.neverType) },
+                            result = PrimitiveTypes.voidType
+                        };
+                    }
+                },
+                impl: (argsEnum, state) =>
+                {
+                    var arrayValue = argsEnum.ElementAt(0);
+                    var actionValue = argsEnum.ElementAt(1);
+                    if (
+                        arrayValue.Value is IEnumerable<object> array &&
+                        actionValue.Value is NSLAction action &&
+                        arrayValue.TypeSymbol is ArrayTypeSymbol arrayType
+                    )
+                    {
+                        var itemType = arrayType.ItemType;
+                        var result = array.Select((v, i) =>
+                        {
+                            return action.Invoke(state.Runner, new[] { itemType.Instantiate(v), PrimitiveTypes.numberType.Instantiate(i) }).Value;
+                        });
+
+                        return action.ReturnVariable?.type.NotConstexpr().ToArray().Instantiate(result.ToArray()) ?? PrimitiveTypes.voidType.Instantiate(null);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                }
+            ));
+
             registry.Add(new NSLFunction("push", argsEnum =>
             {
                 var desc = "Pushes an element to the end of the array in place";
