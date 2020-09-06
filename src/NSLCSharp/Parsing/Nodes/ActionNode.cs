@@ -12,9 +12,9 @@ namespace NSL.Parsing.Nodes
 
         protected List<string> arguments = new List<string>();
 
-        public void AddArguments(IEnumerable<string> newArguments)
+        public void AddArgument(string newArgument)
         {
-            arguments.AddRange(newArguments);
+            arguments.Add(newArgument);
         }
 
         public override void Unbalanced(Parser.ParsingState state)

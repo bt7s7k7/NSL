@@ -190,18 +190,43 @@ namespace NSL.Parsing.Nodes
                 {
                     var lastChild = Children.Last();
                     Children.RemoveAt(Children.Count - 1);
-                    if (lastChild is StatementNode statementArgument)
-                    {
-                        if (statementArgument.name[0] == '$')
-                        {
-                            var actionNode = new ActionNode(next.start, next.end);
-                            AddChild(actionNode);
 
-                            actionNode.AddArguments(new[] { statementArgument.name });
+                    var actionNode = new ActionNode(next.start, next.end);
+                    AddChild(actionNode);
+
+                    void addArgument(IASTNode argNode)
+                    {
+                        if (argNode is StatementNode statementArgument)
+                        {
+
+                            if (statementArgument.name[0] == '$')
+                            {
+                                actionNode.AddArgument(statementArgument.name);
+                            }
+                            else
+                            {
+                                state.diagnostics.Add(new Diagnostic("Argument does not match variable name format", statementArgument.Start, statementArgument.End));
+                            }
                         }
                         else
                         {
-                            state.diagnostics.Add(new Diagnostic("Argument does not match variable name format", statementArgument.Start, statementArgument.End));
+                            state.diagnostics.Add(new Diagnostic("Invalid action argument specification", argNode.Start, argNode.End));
+                        }
+                    }
+
+                    if (lastChild is StatementNode statementArgument)
+                    {
+                        addArgument(statementArgument);
+                    }
+                    else if (lastChild is StatementBlockNode blockArgument)
+                    {
+                        var children = blockArgument.Children;
+
+                        if (blockArgument.Children.Count > 0 && blockArgument.Children[0] is StatementNode echoNode && echoNode.name == "echo") children = echoNode.Children;
+
+                        foreach (var child in children)
+                        {
+                            addArgument(child);
                         }
                     }
                     else
