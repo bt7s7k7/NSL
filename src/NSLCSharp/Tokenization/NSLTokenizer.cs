@@ -25,7 +25,8 @@ namespace NSL.Tokenization
             InlineEnd,
             StatementEnd,
             VariableDecl,
-            Operator
+            Operator,
+            ActionArgument
         }
 
         public enum StateType
@@ -100,6 +101,7 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>{",type: TokenType.PipeForEachStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|{",type: TokenType.PipeStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|>",type: TokenType.PipeForEach),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "=>",type: TokenType.ActionArgument),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|",type: TokenType.Pipe),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: ".",type: TokenType.Pipe),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "!{",type: TokenType.ActionStart),

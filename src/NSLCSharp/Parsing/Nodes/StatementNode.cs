@@ -1,3 +1,4 @@
+using System.Linq;
 using NSL.Tokenization.General;
 using static NSL.Tokenization.NSLTokenizer;
 
@@ -135,8 +136,16 @@ namespace NSL.Parsing.Nodes
             }
             else if (next.type == TokenType.ActionStart)
             {
-                var actionNode = new ActionNode(next.start, next.end);
-                AddChild(actionNode);
+                ActionNode actionNode;
+                if (Children.Count > 0 && Children.Last() is ActionNode lastActionNode && !lastActionNode.HasBody)
+                {
+                    actionNode = lastActionNode;
+                }
+                else
+                {
+                    actionNode = new ActionNode(next.start, next.end);
+                    AddChild(actionNode);
+                }
 
                 var actionBlock = new StatementBlockNode(false, false, next.start, next.end);
                 state.Push(actionBlock);
@@ -174,6 +183,39 @@ namespace NSL.Parsing.Nodes
                 state.Push(distBlock);
                 distNode.AddChild(this);
                 distNode.AddChild(distBlock);
+            }
+            else if (next.type == TokenType.ActionArgument)
+            {
+                if (Children.Count > 0)
+                {
+                    var lastChild = Children.Last();
+                    Children.RemoveAt(Children.Count - 1);
+                    if (lastChild is StatementNode statementArgument)
+                    {
+                        if (statementArgument.name[0] == '$')
+                        {
+                            var actionNode = new ActionNode(next.start, next.end);
+                            AddChild(actionNode);
+
+                            actionNode.AddArguments(new[] { statementArgument.name });
+                        }
+                        else
+                        {
+                            state.diagnostics.Add(new Diagnostic("Argument does not match variable name format", statementArgument.Start, statementArgument.End));
+                        }
+                    }
+                    else
+                    {
+                        state.diagnostics.Add(new Diagnostic("Invalid action argument specification", lastChild.Start, lastChild.End));
+                    }
+                }
+                else
+                {
+                    state.diagnostics.Add(new Diagnostic("Action argument arrow expected only after action arguments", next.start, next.end));
+                }
+
+
+
             }
             else if (next.type == terminator)
             {
