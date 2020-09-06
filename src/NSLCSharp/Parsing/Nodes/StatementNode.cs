@@ -13,6 +13,8 @@ namespace NSL.Parsing.Nodes
             this.name = name;
         }
 
+        protected bool isPartOfDirectPipe = false;
+
         override protected void OnToken(Tokenization.General.Token<Tokenization.NSLTokenizer.TokenType> next, Parser.ParsingState state)
         {
             if (Parent == null) throw new InternalNSLExcpetion("StatementNode cannot be root");
@@ -76,6 +78,46 @@ namespace NSL.Parsing.Nodes
                 {
                     state.diagnostics.Add(new Diagnostic($"Unexpected EOF after pipe", next.start, next.end));
                     ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
+                }
+            }
+            else if (next.type == TokenType.DirectPipe)
+            {
+                var afterPipe = state.Next();
+                if (afterPipe != null)
+                {
+                    next = afterPipe;
+                    if (next.type == TokenType.Keyword)
+                    {
+                        var statementNode = new StatementNode(next.content, next.start, next.end);
+                        statementNode.isPartOfDirectPipe = true;
+                        if (Children.Count <= (isPartOfDirectPipe ? 1 : 0) || Start.Equals(Children[^1].Start))
+                        {
+                            state.Pop();
+                            state.Push(statementNode);
+                            var prevParent = Parent;
+                            Parent.RemoveChild(this);
+                            statementNode.AddChild(this);
+                            prevParent.AddChild(statementNode);
+                        }
+                        else
+                        {
+                            var lastIndex = Children.Count - 1;
+                            var lastChild = Children[lastIndex];
+                            Children.RemoveAt(lastIndex);
+
+                            statementNode.AddChild(lastChild);
+                            AddChild(statementNode);
+                        }
+                    }
+                    else
+                    {
+                        base.OnToken(next, state);
+                    }
+                }
+                else
+                {
+                    state.diagnostics.Add(new Diagnostic($"Unexpected EOF after direct pipe", next.start, next.end));
+                    ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after direct pipe").Pos(next.start).End();
                 }
             }
             else if (next.type == TokenType.PipeForEach)

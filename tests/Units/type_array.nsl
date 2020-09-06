@@ -1,6 +1,6 @@
 #T :: Should create a valid empty array
 
-var $arr (Number.array.default)
+var $arr Number.array.default
 
 $arr.push 1
 $arr.push 2
