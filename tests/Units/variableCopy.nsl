@@ -1,5 +1,5 @@
-#T :: When assigning a value from a variable to a different variable,
-#     the value should be copied and a reference should not be created
+#T :: When assigning a value from a variable to a different variable,   \
+      the value should be copied and a reference should not be created
 var $x 0
 var $y $x
 
