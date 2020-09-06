@@ -57,26 +57,76 @@ namespace NSL
                 arguments: new TypeSymbol[] {
                    PrimitiveTypes.boolType,
                    new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType),
-                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType)
                 },
-                result: PrimitiveTypes.voidType,
+                result: PrimitiveTypes.boolType,
                 impl: (argsEnum, state) =>
                 {
                     if (
                         argsEnum.ElementAt(0).Value is bool value &&
-                        argsEnum.ElementAt(1).Value is NSLAction thenAction &&
-                        argsEnum.ElementAt(2).Value is NSLAction elseAction
+                        argsEnum.ElementAt(1).Value is NSLAction thenAction
                     )
                     {
                         if (value)
                         {
                             thenAction.Invoke(state.Runner, new IValue[0]);
                         }
-                        else
+                        return PrimitiveTypes.boolType.Instantiate(value);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                },
+                desc: "Runs the first action if the predicate is true, else runs second action"
+            ));
+
+            registry.Add(NSLFunction.MakeSimple(
+                name: "else",
+                arguments: new TypeSymbol[] {
+                   PrimitiveTypes.boolType,
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType),
+                },
+                result: PrimitiveTypes.boolType,
+                impl: (argsEnum, state) =>
+                {
+                    if (
+                        argsEnum.ElementAt(0).Value is bool value &&
+                        argsEnum.ElementAt(1).Value is NSLAction thenAction
+                    )
+                    {
+                        if (!value)
                         {
-                            elseAction.Invoke(state.Runner, new IValue[0]);
+                            thenAction.Invoke(state.Runner, new IValue[0]);
                         }
-                        return PrimitiveTypes.voidType.Instantiate(null);
+                        return PrimitiveTypes.boolType.Instantiate(value);
+                    }
+                    else throw new ImplWrongValueNSLException();
+                },
+                desc: "Runs the first action if the predicate is true, else runs second action"
+            ));
+
+            registry.Add(NSLFunction.MakeSimple(
+                name: "elseif",
+                arguments: new TypeSymbol[] {
+                   PrimitiveTypes.boolType,
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.boolType),
+                   new ActionTypeSymbol(new TypeSymbol[0], PrimitiveTypes.voidType),
+                },
+                result: PrimitiveTypes.boolType,
+                impl: (argsEnum, state) =>
+                {
+                    if (
+                        argsEnum.ElementAt(0).Value is bool value &&
+                        argsEnum.ElementAt(1).Value is NSLAction predicate &&
+                        argsEnum.ElementAt(2).Value is NSLAction thenAction
+                    )
+                    {
+                        if (!value)
+                        {
+                            value = predicate.Invoke(state.Runner, new IValue[0]).GetValue<bool>();
+                            if (value)
+                            {
+                                thenAction.Invoke(state.Runner, new IValue[0]);
+                            }
+                        }
+                        return PrimitiveTypes.boolType.Instantiate(value);
                     }
                     else throw new ImplWrongValueNSLException();
                 },

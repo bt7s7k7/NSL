@@ -1,11 +1,16 @@
-#T :: Should execute the correct function based on the value of the predicate
+#{"type": "T", "output": ["a", "b", "a", "c", "d"]}
 
-var $x 0
+if true !{ output "a" } | else !{ output "b" }
+if false !{ output "a" } | else !{ output "b" }
 
-if true !{ $x = 1 } !{ assert false }
+if true !{ 
+    output "a" 
+} | elseif !{output "c"; false} !{
+    output "d"
+} | else !{ output "b" }
 
-assert $x == 1
-
-if false !{ assert false } !{ $x = 5 }
-
-assert $x == 5
+if false !{ 
+    output "a" 
+} | elseif !{output "c"; true} !{
+    output "d"
+} | else !{ output "b" }
