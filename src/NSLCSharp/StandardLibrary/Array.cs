@@ -16,10 +16,10 @@ namespace NSL
                 {
                     name = "arr",
                     arguments = argsEnum.Select(v => argsEnum.First() ?? PrimitiveTypes.neverType),
-                    result = argsEnum.Count() != 0 ? argsEnum.First()?.ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType,
+                    result = argsEnum.Count() != 0 ? argsEnum.First()?.NotConstexpr().ToArray() ?? PrimitiveTypes.neverType : PrimitiveTypes.neverType,
                     desc = "Creates a new array with the arguments as elements"
                 },
-                impl: (argsEnum, state) => argsEnum.First().TypeSymbol.ToArray().Instantiate(argsEnum.Select(v => v.Value).ToArray())
+                impl: (argsEnum, state) => argsEnum.First().TypeSymbol.NotConstexpr().ToArray().Instantiate(argsEnum.Select(v => v.Value).ToArray())
             ));
 
             registry.Add(new NSLFunction(
@@ -88,7 +88,7 @@ namespace NSL
                         return new NSLFunction.Signature
                         {
                             name = "foreach",
-                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(new[] { itemType }, PrimitiveTypes.voidType) },
+                            arguments = new TypeSymbol[] { array, new ActionTypeSymbol(new[] { itemType, PrimitiveTypes.numberType }, PrimitiveTypes.voidType) },
                             result = PrimitiveTypes.voidType
                         };
                     }
@@ -97,7 +97,7 @@ namespace NSL
                         return new NSLFunction.Signature
                         {
                             name = "foreach",
-                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(new[] { PrimitiveTypes.neverType }, PrimitiveTypes.neverType) },
+                            arguments = new[] { PrimitiveTypes.neverType, new ActionTypeSymbol(new[] { PrimitiveTypes.neverType, PrimitiveTypes.numberType }, PrimitiveTypes.neverType) },
                             result = PrimitiveTypes.voidType
                         };
                     }
@@ -113,10 +113,11 @@ namespace NSL
                     )
                     {
                         var itemType = arrayType.ItemType;
-
+                        var i = 0;
                         foreach (var item in array)
                         {
-                            action.Invoke(state.Runner, new[] { itemType.Instantiate(item) });
+                            action.Invoke(state.Runner, new[] { itemType.Instantiate(item), PrimitiveTypes.numberType.Instantiate(i) });
+                            i++;
                         }
 
                         return PrimitiveTypes.voidType.Instantiate(null);

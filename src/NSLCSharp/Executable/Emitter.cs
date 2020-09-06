@@ -391,7 +391,7 @@ namespace NSL.Executable
                             var actionEmission = arguments[index];
                             var actionNode = (ActionNode)node.Children[index];
 
-                            if (argumentTypes.Count() != actionNode.Arguments.Count())
+                            if (argumentTypes.Count() < actionNode.Arguments.Count())
                             {
                                 actionEmission.emit = null;
                                 return PrimitiveTypes.neverType;

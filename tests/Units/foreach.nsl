@@ -1,8 +1,9 @@
-#T :: Should execute for every item of the array
+#{"type": "T", "output": ["a","b","c","0","a","1","b","2","c"]}
+# Should execute the function for each element in the array
 
-var $array (arr 1 2 3 4 5)
-var $count 0
+var $arr (arr "a" "b" "c")
 
-$array |> +$count ~> $count
+$arr.foreach $v => !{ output $v }
 
-assert $count == 15
+$arr.foreach ($v $i) => !{ output ($i.toString); output $v }
+

@@ -1,7 +1,8 @@
-#T :: Should let only valid elements pass
+#{"type": "T", "output": ["6", "7", "8", "9", "10"]}
+# Should let only valid elements pass
 
 var $array (arr 1 2 3 4 5 6 7 8 9 10)
 
 var $result ($array.filter $v => !{ $v > 5 })
 
-$result.foreach $v => !{ assert (arr 6 7 8 9 10 | contains $v) }
+$result |> toString | output

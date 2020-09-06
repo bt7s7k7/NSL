@@ -135,7 +135,8 @@ namespace NSL.Types
             foreach (var function in functions)
             {
                 foundFunctionIndex++;
-                var signature = function.GetSignature(providedArgs);
+                var arguments = providedArgs;
+                var signature = function.GetSignature(arguments);
                 if (!signature.useConstexpr && signature.result is ConstexprTypeSymbol constResult) signature.result = constResult.Base;
                 var wantedArgs = signature.arguments.ToArray();
 
@@ -145,7 +146,7 @@ namespace NSL.Types
                     continue;
                 }
 
-                if (providedArgs.Count() != wantedArgs.Length)
+                if (arguments.Count() != wantedArgs.Length)
                 {
                     failed.Add(signature);
                     continue;
@@ -153,9 +154,9 @@ namespace NSL.Types
                 else
                 {
                     var success = true;
-                    for (int i = 0, len = providedArgs.Count(); i < len; i++)
+                    for (int i = 0, len = arguments.Count(); i < len; i++)
                     {
-                        var provided = providedArgs.ElementAt(i);
+                        var provided = arguments.ElementAt(i);
                         var wanted = wantedArgs[i];
 
                         if (!signature.useConstexpr)

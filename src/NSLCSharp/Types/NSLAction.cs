@@ -34,9 +34,12 @@ namespace NSL.Types
 
         public IValue Invoke(Runner runner, IEnumerable<IValue> arguments)
         {
-            if (arguments.Count() != ArgumentVariables.Count()) throw new ActionCallNSLException("Length of arguments doesn't match the length of the action's arguments");
-            foreach (var (name, value) in arguments.Select((v, i) => (ArgumentVariables.ElementAt(i).varName, v)))
+            if (arguments.Count() < ArgumentVariables.Count()) throw new ActionCallNSLException("Length of arguments doesn't match the length of the action's arguments");
+            for (int i = 0, len = ArgumentVariables.Count(); i < len; i++)
             {
+                var name = ArgumentVariables.ElementAt(i).varName;
+                var value = arguments.ElementAt(i);
+
                 Scope.Set(name, value);
             }
             return runner.RunAction(this);
