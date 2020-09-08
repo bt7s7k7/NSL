@@ -90,6 +90,7 @@ namespace NSL.Tokenization
             new Dictionary<StateType, List<ITokenDefinition<TokenType, StateType>>> {
                 { StateType.Default, new List<ITokenDefinition<TokenType, StateType>>{
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\n"),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\r\n"),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",type: TokenType.StatementEnd),
                     new WhitespaceTokenDefinition<TokenType,StateType>(),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "true",type: TokenType.Literal, processor: (token, state) => token.value = PrimitiveTypes.boolType.Instantiate(true).MakeConstexpr()),
@@ -206,6 +207,7 @@ namespace NSL.Tokenization
                 } },
                 { StateType.Comment, new List<ITokenDefinition<TokenType, StateType>> {
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\n"),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "\\\r\n"),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "\n",resultState: StateType.Default),
                     new RegexTokenDefinition<TokenType, StateType>()
                 } }
