@@ -32,7 +32,10 @@ namespace CSCommon
             ));
 
             registry.Add(NSLFunction.MakeAuto<Func<string>>("readline", () => ReadLine.Read(), "Reads a line from user input"));
+            registry.Add(NSLFunction.MakeAuto<Func<string>>("readkey", () => Console.ReadKey(intercept: true).Key.ToString(), "Reads a key from user input"));
             registry.Add(NSLFunction.MakeAuto<Func<string, string>>("readline", (prompt) => ReadLine.Read(prompt), "Reads a line from user input, with the provided prompt"));
+
+            registry.Add(NSLFunction.MakeAuto<Action<string>>("write", (text) => Console.Write(text)));
         }
     }
 }
