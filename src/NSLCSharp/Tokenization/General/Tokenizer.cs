@@ -29,6 +29,8 @@ namespace NSL.Tokenization.General
             public S state;
             public bool isEnd;
 
+            public char Curr => code[position.index];
+
             public TokenizationState(string code, string file)
             {
                 this.code = code;
