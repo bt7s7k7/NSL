@@ -113,7 +113,7 @@ namespace NSL
                     )
                     {
                         var itemType = arrayType.ItemType;
-                        var i = 0;
+                        var i = 0.0;
                         foreach (var item in array)
                         {
                             action.Invoke(state.Runner, new[] { itemType.Instantiate(item), PrimitiveTypes.numberType.Instantiate(i) });
@@ -172,7 +172,7 @@ namespace NSL
                         var itemType = arrayType.ItemType;
                         var result = array.Select((v, i) =>
                         {
-                            return action.Invoke(state.Runner, new[] { itemType.Instantiate(v), PrimitiveTypes.numberType.Instantiate(i) }).Value;
+                            return action.Invoke(state.Runner, new[] { itemType.Instantiate(v), PrimitiveTypes.numberType.Instantiate((double)i) }).Value;
                         });
 
                         return action.ReturnVariable?.type.NotConstexpr().ToArray().Instantiate(result.ToArray()) ?? PrimitiveTypes.voidType.Instantiate(null);
