@@ -31,6 +31,7 @@ namespace NSL
             }));
 
             registry.Add(NSLFunction.MakeAuto<Func<string, string, bool>>("contains", (text, substr) => text.Contains(substr)));
+            registry.Add(NSLFunction.MakeAuto<Func<string, double>>("length", (text) => text.Length));
             registry.Add(NSLFunction.MakeAuto<Func<string, string, double>>("indexOf", (text, substr) => text.IndexOf(substr)));
             registry.Add(NSLFunction.MakeAuto<Func<string, double, string>>("substr", (text, index) => text.Substring((int)index)));
             registry.Add(NSLFunction.MakeAuto<Func<string, double, double, string>>("substr", (text, index, length) => text.Substring((int)index, (int)length)));
