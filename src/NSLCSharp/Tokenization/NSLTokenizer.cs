@@ -107,6 +107,7 @@ namespace NSL.Tokenization
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "|",type: TokenType.Pipe),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: ".",type: TokenType.DirectPipe),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "!{",type: TokenType.ActionStart),
+                    new RegexTokenDefinition<TokenType, StateType>(pattern: "{",type: TokenType.ActionStart),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "}",type: TokenType.BlockEnd),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "#",resultState: StateType.Comment),
                     new RegexTokenDefinition<TokenType, StateType>(pattern: "(",type: TokenType.InlineStart),
