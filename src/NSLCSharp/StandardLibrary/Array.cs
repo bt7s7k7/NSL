@@ -265,7 +265,7 @@ namespace NSL
                     argsEnum.ElementAt(1).Value is double index
                 )
                 {
-                    void throwError() => throw new UserNSLException("Index must be greather than zero and less than the length of the array");
+                    void throwError() => throw new UserNSLException($"Index ({(int)index}) must be greather than zero and less than the length ({array.Count()}) of the array");
 
                     return new CallbackValue(() =>
                     {

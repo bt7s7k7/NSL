@@ -1,0 +1,97 @@
+var $mapDef (arr \
+    "###############" \
+    "#             #" \
+    "### # # # ### #" \
+    "#   # # # #   #" \
+    "# ###  O# # # #" \
+    "#   ##### # # #" \
+    "# #   #     # #" \
+    "# ##### # # # #" \
+    "#   X   # # # #" \
+    "###############" \
+)
+
+var $width ($mapDef->0).length
+var $height $mapDef.length
+
+var $map Bool.array.default
+
+var $pX 0
+var $pY 0
+
+var $tX 0
+var $tY 0
+
+$mapDef.foreach ($rowString $y) => {
+    var $row ($rowString.split "")
+
+    $row.foreach ($char $x) => {
+        if $char == "#" {
+            $map.push true
+        } | else {
+            $map.push false
+        }
+
+        if $char == "O" {
+            $pX = $x
+            $pY = $y
+        }
+
+        if $char == "X" {
+            $tX = $x
+            $tY = $y
+        }
+    }
+}
+
+print $"width = $[$width] height = $[$height] player = [$[$pX], $[$pY]] target = [$[$tX], $[$tY]]"
+
+#while { true } {
+    range $height | foreach ($y) => {
+        range $width | foreach $x => {
+            if $x == $pX && $y == $pY {
+                write "O"
+            } | elseif {$x == $tX && $y == $tY} {
+                write "X"
+            } | elseif {$map->($x + $y * $width) == true} {
+                write "#"
+            } | else {
+                write " "
+            }
+        }
+        write "\n"
+    }
+
+    var $inp (readkey)
+
+    var $lpX $pX
+    var $lpY $pY
+
+    if $inp == "W" {
+        $pY += -1
+    }
+
+    if $inp == "S" {
+        $pY += 1
+    }
+
+    if $inp == "A" {
+        $pX += -1
+    }
+
+    if $inp == "D" {
+        $pX += 1
+    }
+
+    if ($map->($pX + $pY * $width) == true) {
+        $pX = $lpX
+        $pY = $lpY
+    }
+
+    if $pX == $tX && $pY == $tY {
+        print "You won!"
+        exit
+    }
+
+    print
+#}
