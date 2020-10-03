@@ -9,7 +9,7 @@ namespace NSL.Parsing
     public interface IASTNode
     {
         List<IASTNode> Children { get; }
-        IASTNode? Parent { get; set; }
+        IASTNode Parent { get; set; }
         Position Start { get; }
         Position End { get; }
 
@@ -24,7 +24,7 @@ namespace NSL.Parsing
     abstract public class ASTNodeBase : IASTNode
     {
         public List<IASTNode> Children { get; protected set; } = new List<IASTNode>();
-        public IASTNode? Parent { get; set; }
+        public IASTNode Parent { get; set; }
         public Position Start { get; protected set; }
         public Position End { get; protected set; }
 

@@ -7,23 +7,23 @@ namespace NSL.Tokenization.General
         where T : struct, IComparable
         where S : struct, IComparable
     {
-        public Regex? expr;
-        public string? pattern;
+        public Regex expr;
+        public string pattern;
         public T? type;
         public S? resultState;
-        public Action<Token<T>, Tokenizer<T, S>.TokenizationState>? processor;
-        public Func<char, bool>? verifier;
-        public Action<Tokenizer<T, S>.TokenizationState>? custom;
+        public Action<Token<T>, Tokenizer<T, S>.TokenizationState> processor;
+        public Func<char, bool> verifier;
+        public Action<Tokenizer<T, S>.TokenizationState> custom;
 
         public RegexTokenDefinition(
-            Regex? expr = null,
-            string? pattern = null,
+            Regex expr = null,
+            string pattern = null,
             T? type = null,
             S? resultState = null,
             Action<Token<T>,
-            Tokenizer<T, S>.TokenizationState>? processor = null,
-            Func<char, bool>? verifier = null,
-            Action<Tokenizer<T, S>.TokenizationState>? custom = null
+            Tokenizer<T, S>.TokenizationState> processor = null,
+            Func<char, bool> verifier = null,
+            Action<Tokenizer<T, S>.TokenizationState> custom = null
         )
         {
             this.expr = expr;
@@ -39,7 +39,7 @@ namespace NSL.Tokenization.General
         {
             var start = state.position;
             var match = false;
-            string? text = null;
+            string text = null;
 
             if (verifier != null)
             {

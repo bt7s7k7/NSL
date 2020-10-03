@@ -12,7 +12,7 @@ namespace NSL.Runtime
             public FunctionRegistry FunctionRegistry { get; }
             public Runner Runner { get; protected set; }
 
-            public void PushScope(string name, string? parentName)
+            public void PushScope(string name, string parentName)
             {
                 if (name == "-1")
                 {
@@ -21,7 +21,7 @@ namespace NSL.Runtime
                     return;
                 }
 
-                Scope? parent = null;
+                Scope parent = null;
                 if (parentName != null)
                 {
                     Scope currTop = TopScope;
@@ -48,7 +48,7 @@ namespace NSL.Runtime
             public void PopScope()
             {
                 scopeStack.Pop();
-                if (scopeStack.TryPeek(out Scope? top))
+                if (scopeStack.TryPeek(out Scope top))
                 {
                     topScope = top;
                 }

@@ -134,7 +134,7 @@ namespace NSLCSharp
 
         public FileRunner(FileInfo filePath, bool verbose, int repeats, bool doTime)
         {
-            string? script = null;
+            string script = null;
 
             using (var reader = new StreamReader(filePath.FullName))
             {

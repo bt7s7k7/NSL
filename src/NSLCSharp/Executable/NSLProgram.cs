@@ -20,7 +20,7 @@ namespace NSL.Executable
             }
         }
 
-        IProgram.VariableDefinition? ReturnVariable { get; }
+        IProgram.VariableDefinition ReturnVariable { get; }
 
         IEnumerator<IInstruction> GetEnumerator();
     }
@@ -28,7 +28,7 @@ namespace NSL.Executable
     public class NSLProgram : IEnumerable<IInstruction>, IProgram
     {
         protected IEnumerable<IInstruction> instructions;
-        protected IProgram.VariableDefinition? returnVariable = null;
+        protected IProgram.VariableDefinition returnVariable = null;
 
         override public string ToString()
         {
@@ -62,7 +62,7 @@ namespace NSL.Executable
             }
         }
 
-        public IProgram.VariableDefinition? ReturnVariable => returnVariable;
+        public IProgram.VariableDefinition ReturnVariable => returnVariable;
 
         public IEnumerator<IInstruction> GetEnumerator()
         {
@@ -74,7 +74,7 @@ namespace NSL.Executable
             return ((IEnumerable)instructions).GetEnumerator();
         }
 
-        public NSLProgram(IEnumerable<IInstruction> instructions, IProgram.VariableDefinition? returnVariable)
+        public NSLProgram(IEnumerable<IInstruction> instructions, IProgram.VariableDefinition returnVariable)
         {
             this.instructions = instructions;
             this.returnVariable = returnVariable;

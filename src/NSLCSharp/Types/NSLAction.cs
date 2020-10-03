@@ -10,7 +10,7 @@ namespace NSL.Types
     {
         protected List<IInstruction> instructions;
 
-        public IProgram.VariableDefinition? ReturnVariable { get; protected set; }
+        public IProgram.VariableDefinition ReturnVariable { get; protected set; }
         public IEnumerable<IProgram.VariableDefinition> ArgumentVariables { get; protected set; }
         public Runner.Scope Scope { get; internal set; }
 
@@ -24,7 +24,7 @@ namespace NSL.Types
             return ((IEnumerable)instructions).GetEnumerator();
         }
 
-        public NSLAction(List<IInstruction> instructions, IProgram.VariableDefinition? returnVariable, IEnumerable<IProgram.VariableDefinition> argumentVariables, Runner.Scope scope)
+        public NSLAction(List<IInstruction> instructions, IProgram.VariableDefinition returnVariable, IEnumerable<IProgram.VariableDefinition> argumentVariables, Runner.Scope scope)
         {
             this.instructions = instructions;
             this.ReturnVariable = returnVariable;

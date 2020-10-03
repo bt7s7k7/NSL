@@ -10,7 +10,7 @@ namespace NSLCSharp
 {
     static class REPLRunner
     {
-        private static void Work(string? evalString, bool printOutputs)
+        private static void Work(string evalString, bool printOutputs)
         {
             FunctionRegistry functions = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(functions);

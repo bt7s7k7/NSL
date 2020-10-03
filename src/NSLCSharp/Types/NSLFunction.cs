@@ -8,7 +8,7 @@ namespace NSL.Types
 {
     public class NSLFunction
     {
-        protected Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator;
+        protected Func<IEnumerable<TypeSymbol>, Signature> signatureGenerator;
         protected Func<IEnumerable<IValue>, Runner.State, IValue> impl;
         public string Name { get; protected set; }
 
@@ -17,16 +17,16 @@ namespace NSL.Types
             public IEnumerable<TypeSymbol> arguments;
             public TypeSymbol result;
             public string name;
-            public string? desc;
+            public string desc;
             public bool useConstexpr;
             public bool targetMustBeMutable;
             public delegate void PostProcessDelegate(ref Signature signature);
-            public PostProcessDelegate? postProcess;
+            public PostProcessDelegate postProcess;
 
             public override string ToString() => $"{name}({String.Join(' ', arguments)}) → {result}" + (desc == null ? "" : " :: " + desc);
         }
 
-        public Signature GetSignature(IEnumerable<TypeSymbol?> providedArguments) => signatureGenerator(providedArguments);
+        public Signature GetSignature(IEnumerable<TypeSymbol> providedArguments) => signatureGenerator(providedArguments);
 
         public IValue Invoke(IEnumerable<IValue> arguments, Runner.State state) => impl(arguments, state);
 
@@ -34,7 +34,7 @@ namespace NSL.Types
 
         public override string ToString() => Name;
 
-        public NSLFunction(string name, Func<IEnumerable<TypeSymbol?>, Signature> signatureGenerator, Func<IEnumerable<IValue>, Runner.State, IValue> impl)
+        public NSLFunction(string name, Func<IEnumerable<TypeSymbol>, Signature> signatureGenerator, Func<IEnumerable<IValue>, Runner.State, IValue> impl)
         {
             this.signatureGenerator = signatureGenerator;
             this.impl = impl;
@@ -56,7 +56,7 @@ namespace NSL.Types
             IEnumerable<TypeSymbol> arguments,
             TypeSymbol result,
             Func<IEnumerable<IValue>, Runner.State, IValue> impl,
-            string? desc = null,
+            string desc = null,
             bool targetMustBeMutable = false,
             bool useConstexpr = false
         ) => new NSLFunction(
@@ -81,7 +81,7 @@ namespace NSL.Types
 
         public static TypeSymbol LookupSymbol(Type type)
         {
-            if (typeSymbolLookup.TryGetValue(type, out TypeSymbol? foundSymbol))
+            if (typeSymbolLookup.TryGetValue(type, out TypeSymbol foundSymbol))
             {
                 return foundSymbol!;
             }
@@ -91,9 +91,9 @@ namespace NSL.Types
             }
         }
 
-        public static TypeSymbol? LookupSymbol(string name)
+        public static TypeSymbol LookupSymbol(string name)
         {
-            if (typeSymbolLookupByName.TryGetValue(name, out TypeSymbol? foundSymbol))
+            if (typeSymbolLookupByName.TryGetValue(name, out TypeSymbol foundSymbol))
             {
                 return foundSymbol!;
             }
@@ -103,16 +103,16 @@ namespace NSL.Types
             }
         }
 
-        public static NSLFunction MakeAuto<T>(string name, T func, string? desc = null) => MakeAuto<T>(name, func, new Dictionary<int, TypeSymbol>(), desc);
-        public static NSLFunction MakeAuto<T>(string name, T func, Dictionary<int, TypeSymbol> replacements, string? desc = null)
+        public static NSLFunction MakeAuto<T>(string name, T func, string desc = null) => MakeAuto<T>(name, func, new Dictionary<int, TypeSymbol>(), desc);
+        public static NSLFunction MakeAuto<T>(string name, T func, Dictionary<int, TypeSymbol> replacements, string desc = null)
         {
             if (func == null) throw new AutoFuncNSLException("Provided function is null");
 
             var funcType = func.GetType();
             var invokeMethod = funcType.GetMethod("Invoke") ?? throw new AutoFuncNSLException("Provided function is not invokable");
-            var arguments = invokeMethod.GetParameters().Select((v, i) => replacements.TryGetValue(i, out TypeSymbol? result) ? result : LookupSymbol(v.ParameterType));
+            var arguments = invokeMethod.GetParameters().Select((v, i) => replacements.TryGetValue(i, out TypeSymbol result) ? result : LookupSymbol(v.ParameterType));
 
-            var returnType = replacements.TryGetValue(-1, out TypeSymbol? ret) ? ret : LookupSymbol(invokeMethod.ReturnType);
+            var returnType = replacements.TryGetValue(-1, out TypeSymbol ret) ? ret : LookupSymbol(invokeMethod.ReturnType);
 
             return NSLFunction.MakeSimple(name, arguments, returnType, (argsEnum, runnerState) =>
             {
@@ -128,7 +128,7 @@ namespace NSL.Types
             }, desc);
         }
 
-        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol?> _providedArgs, Func<int, IEnumerable<TypeSymbol>, TypeSymbol>? expandActions = null)
+        public static (NSLFunction function, Signature signature) GetMatchingFunction(IEnumerable<NSLFunction> functions, IEnumerable<TypeSymbol> _providedArgs, Func<int, IEnumerable<TypeSymbol>, TypeSymbol> expandActions = null)
         {
             var failed = new List<Signature>();
             var failedAction = false;

@@ -65,7 +65,7 @@ namespace CSCommon
             return this;
         }
 
-        public ILogger Object(object? text)
+        public ILogger Object(object text)
         {
             SetColor(ConsoleColor.DarkYellow);
             Console.Write(JsonSerializer.Serialize(text) + " ");

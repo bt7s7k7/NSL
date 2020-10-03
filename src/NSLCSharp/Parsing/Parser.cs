@@ -38,7 +38,7 @@ namespace NSL.Parsing
 
             public int index = 0;
 
-            public Token<NSLTokenizer.TokenType>? Lookahead()
+            public Token<NSLTokenizer.TokenType> Lookahead()
             {
                 try
                 {
@@ -50,7 +50,7 @@ namespace NSL.Parsing
                 }
             }
 
-            public Token<NSLTokenizer.TokenType>? Next()
+            public Token<NSLTokenizer.TokenType> Next()
             {
                 var token = Lookahead();
                 index++;

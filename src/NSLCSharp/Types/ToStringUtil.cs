@@ -6,13 +6,13 @@ namespace NSL.Types
 {
     public static class ToStringUtil
     {
-        public static string ToString(object? target)
+        public static string ToString(object target)
         {
             var culture = CultureInfo.CurrentCulture;
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             if (target == null) return "null";
 
-            string? ret = null;
+            string ret = null;
             if (target.GetType().GetMethod("ToString", Type.EmptyTypes)!.DeclaringType != typeof(object)) ret = target.ToString();
             if (ret == null)
             {

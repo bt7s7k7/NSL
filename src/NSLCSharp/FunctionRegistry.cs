@@ -64,7 +64,7 @@ namespace NSL
 
         public IEnumerable<NSLFunction> Find(string name)
         {
-            if (functions.TryGetValue(name, out List<NSLFunction>? functionsList))
+            if (functions.TryGetValue(name, out List<NSLFunction> functionsList))
             {
                 return functionsList;
             }
@@ -80,7 +80,7 @@ namespace NSL
 
         public NSLFunction FindSpecific(string name)
         {
-            if (specificFunctions.TryGetValue(name, out NSLFunction? function))
+            if (specificFunctions.TryGetValue(name, out NSLFunction function))
             {
                 return function;
             }

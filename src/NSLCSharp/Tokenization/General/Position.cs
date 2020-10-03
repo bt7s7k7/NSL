@@ -25,7 +25,7 @@ namespace NSL.Tokenization.General
             this.code = code;
         }
 
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             if (obj is Position other)
             {

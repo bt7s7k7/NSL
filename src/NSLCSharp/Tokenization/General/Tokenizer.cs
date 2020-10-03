@@ -72,7 +72,7 @@ namespace NSL.Tokenization.General
                 return false;
             }
 
-            public bool Match(Regex pattern, [NotNullWhen(true)] out string? text)
+            public bool Match(Regex pattern, [NotNullWhen(true)] out string text)
             {
                 var match = pattern.Match(code.Substring(position.index));
                 if (match.Success)
@@ -134,10 +134,10 @@ namespace NSL.Tokenization.General
 
             while (!state.isEnd)
             {
-                if (grammar.TryGetValue(state.state, out List<ITokenDefinition<T, S>>? defsInState))
+                if (grammar.TryGetValue(state.state, out List<ITokenDefinition<T, S>> defsInState))
                 {
                     if (defsInState == null) throw new TokenDefinitionExcpetion("Token list in state {state.state} is null");
-                    ITokenDefinition<T, S>? found = null;
+                    ITokenDefinition<T, S> found = null;
                     Position lastPosition = state.position;
 
                     foreach (var def in defsInState)

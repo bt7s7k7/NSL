@@ -5,7 +5,7 @@ namespace NSL.Parsing.Nodes
 {
     public class VariableNode : StatementNode
     {
-        public string? varName = null;
+        public string varName = null;
         public bool IsConstant { get; protected set; }
 
         public VariableNode(bool isConstant, Position start, Position end) : base(isConstant ? "const" : "var", start, end)

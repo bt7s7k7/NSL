@@ -31,7 +31,7 @@ namespace NSLCSharpNUnit
         public static void TestFile(string file)
         {
             output.Clear();
-            string? script = null;
+            string script = null;
 
             using (var reader = new StreamReader(file))
             {

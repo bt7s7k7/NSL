@@ -11,8 +11,8 @@ namespace NSL.Executable.Instructions
     {
         override public int IndentDiff => 0;
 
-        protected string? retVarName;
-        protected string? oldRetVarName = null;
+        protected string retVarName;
+        protected string oldRetVarName = null;
         protected string funcName;
         protected IEnumerable<string> arguments;
 
@@ -61,9 +61,9 @@ namespace NSL.Executable.Instructions
                 retVarName = null;
             }
         }
-        public string? GetRetVarName() => retVarName;
+        public string GetRetVarName() => retVarName;
 
-        public InvokeInstruction(Position start, Position end, string? retVarName, string funcName, IEnumerable<string> arguments) : base(start, end)
+        public InvokeInstruction(Position start, Position end, string retVarName, string funcName, IEnumerable<string> arguments) : base(start, end)
         {
             this.retVarName = retVarName;
             this.funcName = funcName;

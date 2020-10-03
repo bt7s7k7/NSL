@@ -5,7 +5,7 @@ namespace NSL
 {
     public interface ILogger
     {
-        public static ILogger? instance = null;
+        public static ILogger instance = null;
 
         ILogger Error();
         ILogger Source(string text);
@@ -13,6 +13,6 @@ namespace NSL
         ILogger Name(string text);
         ILogger Pos(Position pos);
         ILogger End();
-        ILogger Object(object? text);
+        ILogger Object(object text);
     }
 }

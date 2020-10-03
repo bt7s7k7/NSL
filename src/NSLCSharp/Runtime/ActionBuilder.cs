@@ -9,7 +9,7 @@ namespace NSL.Runtime
     public class ActionBuilder
     {
         protected List<IInstruction> instructions = new List<IInstruction>();
-        protected IProgram.VariableDefinition? returnVariable;
+        protected IProgram.VariableDefinition returnVariable;
         protected IEnumerable<IProgram.VariableDefinition> argumentVariables;
         protected Runner.Scope scope;
         public string ActionVarName { get; protected set; }
@@ -22,7 +22,7 @@ namespace NSL.Runtime
             new ActionTypeSymbol(argumentVariables.Select(v => v.type).ToArray(), returnVariable?.type ?? PrimitiveTypes.voidType)
             .Instantiate(new NSLAction(instructions, returnVariable, argumentVariables, scope));
 
-        public ActionBuilder(Runner.Scope parentScope, IProgram.VariableDefinition? returnVariable, IEnumerable<IProgram.VariableDefinition> argumentVariables, string actionVarName, Runner.Scope scope)
+        public ActionBuilder(Runner.Scope parentScope, IProgram.VariableDefinition returnVariable, IEnumerable<IProgram.VariableDefinition> argumentVariables, string actionVarName, Runner.Scope scope)
         {
             ParentScope = parentScope;
             this.returnVariable = returnVariable;

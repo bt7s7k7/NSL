@@ -5,7 +5,7 @@ namespace NSL.Types
         public IValue Value { get; protected set; }
         public TypeSymbol Base { get; protected set; }
 
-        public override IValue Instantiate(object? value)
+        public override IValue Instantiate(object value)
         {
             return base.Instantiate(Value.Value);
         }

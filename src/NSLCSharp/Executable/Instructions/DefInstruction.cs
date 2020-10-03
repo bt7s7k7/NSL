@@ -11,7 +11,7 @@ namespace NSL.Executable.Instructions
 
         protected string varName;
         protected TypeSymbol type;
-        protected object? value;
+        protected object value;
 
         override public string ToString() => $"def {varName} {type} {ToStringUtil.ToString(value)}";
         public override void Execute(Runner.State state)
@@ -19,7 +19,7 @@ namespace NSL.Executable.Instructions
             state.TopScope.Set(varName, type.Instantiate(value));
         }
 
-        public DefInstruction(Position start, Position end, string varName, TypeSymbol type, object? value) : base(start, end)
+        public DefInstruction(Position start, Position end, string varName, TypeSymbol type, object value) : base(start, end)
         {
             this.varName = varName;
             this.type = type;

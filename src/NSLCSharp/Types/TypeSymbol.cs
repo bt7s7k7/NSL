@@ -21,9 +21,9 @@ namespace NSL.Types
         public OptionalTypeSymbol ToOptional() => new OptionalTypeSymbol(this);
         public TypeSymbol NotConstexpr() => this is ConstexprTypeSymbol constexpr ? constexpr.Base : this;
 
-        public virtual IValue Instantiate(object? value) => new SimpleValue(value, this);
+        public virtual IValue Instantiate(object value) => new SimpleValue(value, this);
 
-        override public bool Equals(object? obj)
+        override public bool Equals(object obj)
         {
             var one = this;
             if (obj is TypeSymbol other)
@@ -43,8 +43,8 @@ namespace NSL.Types
             else return false;
         }
 
-        public static bool operator ==(TypeSymbol? a, TypeSymbol? b) => a?.Equals(b) ?? Object.ReferenceEquals(a, null) && Object.ReferenceEquals(b, null);
-        public static bool operator !=(TypeSymbol? a, TypeSymbol? b) => !(a == b);
+        public static bool operator ==(TypeSymbol a, TypeSymbol b) => a?.Equals(b) ?? Object.ReferenceEquals(a, null) && Object.ReferenceEquals(b, null);
+        public static bool operator !=(TypeSymbol a, TypeSymbol b) => !(a == b);
 
         public override int GetHashCode()
         {

@@ -39,13 +39,13 @@ namespace NSLCSharp
             {
                 replCommand,
                 evalCommand,
-                new Argument<FileInfo?>("file", () => null, "File to run"),
+                new Argument<FileInfo>("file", () => null, "File to run"),
                 new Option<int>(new string[] {"--repeat", "-r"}, () => 1, "How many times to run the file"),
                 new Option<bool>(new string[] {"--time", "-t"}, () => false, "Profile the timing of the execution"),
                 new Option<bool>(new string[] {"--verbose", "-v"}, () => false, "Print detailed compiler output"),
             };
 
-            rootCommand.Handler = CommandHandler.Create<FileInfo?, int, bool, bool>((file, repeat, time, verbose) =>
+            rootCommand.Handler = CommandHandler.Create<FileInfo, int, bool, bool>((file, repeat, time, verbose) =>
             {
                 if (file == null)
                 {

@@ -6,7 +6,7 @@ namespace NSL.Parsing.Nodes
     public class StatementBlockNode : StatementRootNode
     {
         public bool isInline;
-        public string? pushedVarName;
+        public string pushedVarName;
 
         public static int nextVarId = 0;
 

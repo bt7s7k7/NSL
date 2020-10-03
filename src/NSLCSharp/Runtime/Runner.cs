@@ -32,7 +32,7 @@ namespace NSL.Runtime
         public IValue Run(IProgram program) => Run(program, new State(functions, RootScope, this));
         public IValue Run(IProgram program, State state)
         {
-            IValue? result = null;
+            IValue result = null;
 
             var returnVariable = program.ReturnVariable;
             if (returnVariable != null)
@@ -42,7 +42,7 @@ namespace NSL.Runtime
                 state.PopScope();
             }
 
-            ActionBuilder? buildingAction = null;
+            ActionBuilder buildingAction = null;
 
             foreach (var inst in program)
             {

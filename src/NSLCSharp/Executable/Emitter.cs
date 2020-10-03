@@ -16,7 +16,7 @@ namespace NSL.Executable
             public IEnumerable<Diagnostic> diagnostics;
             public NSLProgram program;
 
-            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, IProgram.VariableDefinition? returnVariable)
+            public Result(List<Diagnostic> diagnostics, IEnumerable<IInstruction> instructions, IProgram.VariableDefinition returnVariable)
             {
                 this.diagnostics = diagnostics;
                 this.program = new NSLProgram(instructions, returnVariable);
@@ -101,7 +101,7 @@ namespace NSL.Executable
 
         protected class Emission : IInstructionContainer
         {
-            public TypeSymbol? type;
+            public TypeSymbol type;
             public List<EmittedInstruction> instructions = new List<EmittedInstruction>();
             public string varName;
 
@@ -111,7 +111,7 @@ namespace NSL.Executable
                 this.node = node;
             }
 
-            public Action<IInstructionContainer, Emission>? emit;
+            public Action<IInstructionContainer, Emission> emit;
             public IASTNode node;
 
             public void Add(EmittedInstruction instruction)
@@ -144,16 +144,16 @@ namespace NSL.Executable
         protected class Scope
         {
             protected Dictionary<string, TypeSymbol> variables = new Dictionary<string, TypeSymbol>();
-            protected Scope? parent = null;
+            protected Scope parent = null;
 
             public void Add(string name, TypeSymbol value)
             {
                 variables.Add(name, value);
             }
 
-            public TypeSymbol? Get(string name)
+            public TypeSymbol Get(string name)
             {
-                if (variables.TryGetValue(name, out TypeSymbol? value))
+                if (variables.TryGetValue(name, out TypeSymbol value))
                 {
                     return value;
                 }
@@ -164,7 +164,7 @@ namespace NSL.Executable
                 else return null;
             }
 
-            public Scope(Scope? parent)
+            public Scope(Scope parent)
             {
                 this.parent = parent;
             }
@@ -173,7 +173,7 @@ namespace NSL.Executable
         private static int globalScopeId = 0;
         private static int globalVariableId = 0;
 
-        public static Result Emit(Parser.ParsingResult parsingResult, FunctionRegistry functions, Runner.Scope? runnerRootScope = null)
+        public static Result Emit(Parser.ParsingResult parsingResult, FunctionRegistry functions, Runner.Scope runnerRootScope = null)
         {
             var state = new State(parsingResult.diagnostics);
 
@@ -194,7 +194,7 @@ namespace NSL.Executable
 
                 var innerContext = context.UpdateScope(overrideScopeId ?? globalScopeId++);
                 result.Add(new PushInstruction(rootNode.Start, rootNode.Start, (int)innerContext.scopeId!, context.scopeId), innerContext);
-                Emission? lastEmission = null;
+                Emission lastEmission = null;
                 bool lastEmissionDefined = false;
 
                 foreach (var node in rootNode.Children)
@@ -576,7 +576,7 @@ namespace NSL.Executable
 
             var result = visitBlock(parsingResult.rootNode, context, overrideScopeId: -1);
 
-            IProgram.VariableDefinition? returnVariable = null;
+            IProgram.VariableDefinition returnVariable = null;
             if (result.type != PrimitiveTypes.voidType)
             {
                 context.scope.Add(result.varName, result.type!);

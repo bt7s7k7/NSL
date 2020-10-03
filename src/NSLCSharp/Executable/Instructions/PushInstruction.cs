@@ -8,7 +8,7 @@ namespace NSL.Executable.Instructions
         override public int IndentDiff => 1;
 
         protected string id;
-        protected string? parentId;
+        protected string parentId;
 
         override public string ToString() => $"push {id} ← {parentId?.ToString() ?? "null"}";
         public override void Execute(Runner.State state)
