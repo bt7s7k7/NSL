@@ -72,7 +72,7 @@ namespace NSL.Tokenization.General
                 return false;
             }
 
-            public bool Match(Regex pattern, [NotNullWhen(true)] out string text)
+            public bool Match(Regex pattern, out string text)
             {
                 var match = pattern.Match(code.Substring(position.index));
                 if (match.Success)
@@ -105,10 +105,10 @@ namespace NSL.Tokenization.General
             public void PushToken(Token<T> token)
             {
                 tokens.Add(token);
-                ILogger.instance?
+                LoggerProvider.instance?
                     .Source("TOK")
                     .Message("Found token")
-                    .Name(token.type.ToString()!)
+                    .Name(token.type.ToString())
                     .Object(token.content)
                     .Message("=")
                     .Object(token.value)
@@ -126,7 +126,7 @@ namespace NSL.Tokenization.General
 
         public TokenizationResult Tokenize(string code, string file = "anon")
         {
-            ILogger.instance?.Source("TOK").Message($"Starting tokenization in '{file}'").End();
+            LoggerProvider.instance?.Source("TOK").Message($"Starting tokenization in '{file}'").End();
 
             code = code + "\n";
 
@@ -152,7 +152,7 @@ namespace NSL.Tokenization.General
                     if (found == null)
                     {
                         state.diagnostics.Add(new Diagnostic($"Failed to trigger any token definition in {state.state}", lastPosition, state.position));
-                        ILogger.instance?.Source("TOK").Error().Message("Failed to trigger any token definition in").Name(state.state.ToString()!).Pos(state.position).End();
+                        LoggerProvider.instance?.Source("TOK").Error().Message("Failed to trigger any token definition in").Name(state.state.ToString()).Pos(state.position).End();
                         state.Next();
                     }
                     else if (!state.isEnd && state.position.Equals(lastPosition)) throw new TokenDefinitionExcpetion($"Token definition {found} failed to increment position at {state.position}");

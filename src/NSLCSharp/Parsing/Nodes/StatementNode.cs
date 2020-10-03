@@ -77,7 +77,7 @@ namespace NSL.Parsing.Nodes
                 else
                 {
                     state.diagnostics.Add(new Diagnostic($"Unexpected EOF after pipe", next.start, next.end));
-                    ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
+                    LoggerProvider.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
                 }
             }
             else if (next.type == TokenType.DirectPipe)
@@ -90,7 +90,7 @@ namespace NSL.Parsing.Nodes
                     {
                         var statementNode = new StatementNode(next.content, next.start, next.end);
                         statementNode.isPartOfDirectPipe = true;
-                        if (Children.Count <= (isPartOfDirectPipe ? 1 : 0) || Start.Equals(Children[^1].Start))
+                        if (Children.Count <= (isPartOfDirectPipe ? 1 : 0) || Start.Equals(Children.Last().Start))
                         {
                             state.Pop();
                             state.Push(statementNode);
@@ -117,7 +117,7 @@ namespace NSL.Parsing.Nodes
                 else
                 {
                     state.diagnostics.Add(new Diagnostic($"Unexpected EOF after direct pipe", next.start, next.end));
-                    ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after direct pipe").Pos(next.start).End();
+                    LoggerProvider.instance?.Source("PAR").Error().Message("Unexpected EOF after direct pipe").Pos(next.start).End();
                 }
             }
             else if (next.type == TokenType.PipeForEach)
@@ -169,7 +169,7 @@ namespace NSL.Parsing.Nodes
                 else
                 {
                     state.diagnostics.Add(new Diagnostic($"Unexpected EOF after pipe", next.start, next.end));
-                    ILogger.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
+                    LoggerProvider.instance?.Source("PAR").Error().Message("Unexpected EOF after pipe").Pos(next.start).End();
                 }
             }
             else if (next.type == TokenType.StatementEnd)
@@ -238,16 +238,16 @@ namespace NSL.Parsing.Nodes
 
                     void addArgument(IASTNode argNode)
                     {
-                        if (argNode is StatementNode statementArgument)
+                        if (argNode is StatementNode statementArgument_1)
                         {
 
-                            if (statementArgument.name[0] == '$')
+                            if (statementArgument_1.name[0] == '$')
                             {
-                                actionNode.AddArgument(statementArgument.name);
+                                actionNode.AddArgument(statementArgument_1.name);
                             }
                             else
                             {
-                                state.diagnostics.Add(new Diagnostic("Argument does not match variable name format", statementArgument.Start, statementArgument.End));
+                                state.diagnostics.Add(new Diagnostic("Argument does not match variable name format", statementArgument_1.Start, statementArgument_1.End));
                             }
                         }
                         else

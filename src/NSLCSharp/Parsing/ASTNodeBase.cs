@@ -31,7 +31,7 @@ namespace NSL.Parsing
 
         public virtual void AddChild(IASTNode child)
         {
-            ILogger.instance?.Source("PAR").Message("Added child").Name(child.GetType().Name).Object(child.GetAdditionalInfo()).Pos(child.Start).End()
+            LoggerProvider.instance?.Source("PAR").Message("Added child").Name(child.GetType().Name).Object(child.GetAdditionalInfo()).Pos(child.Start).End()
                 .Message("      → to").Name(GetType().Name).Pos(Start).End();
             Children.Add(child);
 
@@ -40,7 +40,7 @@ namespace NSL.Parsing
 
         public virtual void RemoveChild(IASTNode child)
         {
-            ILogger.instance?.Source("PAR").Message("Removed child").Name(child.GetType().Name).Object(child.GetAdditionalInfo()).Pos(child.Start).End()
+            LoggerProvider.instance?.Source("PAR").Message("Removed child").Name(child.GetType().Name).Object(child.GetAdditionalInfo()).Pos(child.Start).End()
                 .Message("      → from").Name(GetType().Name).Pos(Start).End(); ;
             Children.Remove(child);
 
@@ -62,7 +62,7 @@ namespace NSL.Parsing
         protected virtual void OnToken(Token<NSLTokenizer.TokenType> next, Parser.ParsingState state)
         {
             state.diagnostics.Add(new Diagnostic($"Unexpected {next.type} node ({GetType().Name})", next.start, next.end));
-            ILogger.instance?.Source("PAR").Error().Message("Unexpected").Name(next.type.ToString()).Message("node (").Name(GetType().Name).Message(")").Pos(next.start).End();
+            LoggerProvider.instance?.Source("PAR").Error().Message("Unexpected").Name(next.type.ToString()).Message("node (").Name(GetType().Name).Message(")").Pos(next.start).End();
         }
 
         public abstract void Unbalanced(Parser.ParsingState state);

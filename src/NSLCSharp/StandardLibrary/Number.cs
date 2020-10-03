@@ -125,7 +125,7 @@ namespace NSL
                     };
                 }, (argsEnum, state) =>
                 {
-                    var value = (double)argsEnum.ElementAt(0).Value!;
+                    var value = (double)argsEnum.ElementAt(0).Value;
                     argsEnum.ElementAt(0).Value = callback(value);
                     return PrimitiveTypes.boolType.Instantiate(value);
                 }));
@@ -143,7 +143,7 @@ namespace NSL
                     };
                 }, (argsEnum, state) =>
                 {
-                    var value = (double)argsEnum.ElementAt(0).Value!;
+                    var value = (double)argsEnum.ElementAt(0).Value;
                     argsEnum.ElementAt(0).Value = callback(value);
                     return PrimitiveTypes.boolType.Instantiate(argsEnum.ElementAt(0).Value);
                 }));

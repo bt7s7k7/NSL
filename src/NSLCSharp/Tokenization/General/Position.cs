@@ -38,7 +38,11 @@ namespace NSL.Tokenization.General
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(line, col, file);
+            int hash = 17;
+            hash = hash * 31 + line.GetHashCode();
+            hash = hash * 31 + col.GetHashCode();
+            hash = hash * 31 + file.GetHashCode();
+            return hash;
         }
 
         public string GetDebugLineArrow(int indent = 0)

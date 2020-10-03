@@ -10,7 +10,7 @@ namespace NSL.Types
         T GetValue<T>();
         string ToString();
 
-        IValue MakeConstexpr() => new ConstexprTypeSymbol(this).Instantiate(null);
+        IValue MakeConstexpr();
     }
 
     public abstract class NSLValueBase : IValue
@@ -20,5 +20,6 @@ namespace NSL.Types
 
         public T GetValue<T>() => (T)(Value ?? throw new NullReferenceException());
         public override string ToString() => $"{ToStringUtil.ToString(Value)} : {TypeSymbol}";
+        public IValue MakeConstexpr() => new ConstexprTypeSymbol(this).Instantiate(null);
     }
 }

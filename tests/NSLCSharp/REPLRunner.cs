@@ -21,7 +21,7 @@ namespace NSLCSharp
             {
                 var result = Emitter.Emit(Parser.Parse(tokenizer.Tokenize(text), functions), functions, runnerRootScope: runner.RootScope);
 
-                ILogger.instance = new ConsoleLogger();
+                LoggerProvider.instance = new ConsoleLogger();
                 foreach (var diagnostic in result.diagnostics)
                 {
                     diagnostic.Log();
@@ -33,7 +33,7 @@ namespace NSLCSharp
                     try
                     {
                         var runResult = runner.Run(result.program);
-                        if (printOutputs) ILogger.instance?.Name(runResult.ToString()).End();
+                        if (printOutputs) LoggerProvider.instance?.Name(runResult.ToString()).End();
                     }
                     catch (UserNSLException err)
                     {
@@ -42,7 +42,7 @@ namespace NSLCSharp
                     }
                 }
 
-                ILogger.instance = null;
+                LoggerProvider.instance = null;
             }
 
             if (evalString != null)

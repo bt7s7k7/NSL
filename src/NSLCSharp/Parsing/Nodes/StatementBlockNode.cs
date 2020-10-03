@@ -54,7 +54,7 @@ namespace NSL.Parsing.Nodes
         override public void Unbalanced(Parser.ParsingState state)
         {
             state.diagnostics.Add(new Diagnostic($"Unbalanced block, expected {(isInline ? ")" : "}")}, {Start} →", state.rootNode.End, state.rootNode.End));
-            ILogger.instance?.Source("PAR").Error().Message("Unbalanced block, expected").Object(isInline ? ")" : "}").Pos(state.rootNode.End).End()
+            LoggerProvider.instance?.Source("PAR").Error().Message("Unbalanced block, expected").Object(isInline ? ")" : "}").Pos(state.rootNode.End).End()
                 .Message("      Started at").Pos(Start).End();
             ;
         }

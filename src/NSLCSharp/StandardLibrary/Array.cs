@@ -283,7 +283,7 @@ namespace NSL
                         {
                             if (array is IList<object> list)
                             {
-                                list[(int)index] = value!;
+                                list[(int)index] = value;
                             }
                             else
                             {

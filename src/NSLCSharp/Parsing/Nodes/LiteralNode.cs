@@ -1,4 +1,3 @@
-using System.Text.Json;
 using NSL.Tokenization.General;
 using NSL.Types;
 
@@ -25,7 +24,7 @@ namespace NSL.Parsing.Nodes
 
         override public string GetAdditionalInfo()
         {
-            return JsonSerializer.Serialize(value);
+            return ToStringUtil.ToString(value);
         }
     }
 }

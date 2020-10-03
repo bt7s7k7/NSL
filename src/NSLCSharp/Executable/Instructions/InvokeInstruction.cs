@@ -16,7 +16,7 @@ namespace NSL.Executable.Instructions
         protected string funcName;
         protected IEnumerable<string> arguments;
 
-        override public string ToString() => $"invoke {retVarName ?? "_"}{(oldRetVarName != null ? $" ({oldRetVarName})" : "")} = {funcName} [{String.Join(',', arguments)}]";
+        override public string ToString() => $"invoke {retVarName ?? "_"}{(oldRetVarName != null ? $" ({oldRetVarName})" : "")} = {funcName} [{String.Join(",", arguments)}]";
         public override void Execute(Runner.State state)
         {
             if (funcName[0] == '$')

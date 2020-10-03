@@ -69,7 +69,7 @@ namespace NSL.Tokenization.General
             {
                 if (type != null)
                 {
-                    var token = new Token<T>((T)(type), (text ?? pattern)!, null, start, state.position);
+                    var token = new Token<T>((T)(type), (text ?? pattern), null, start, state.position);
 
                     if (processor != null)
                     {
@@ -82,7 +82,7 @@ namespace NSL.Tokenization.General
 
                 if (resultState != null)
                 {
-                    state.state = (S)resultState!;
+                    state.state = (S)resultState;
                 }
 
                 if (custom != null) custom(state);

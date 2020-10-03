@@ -23,7 +23,7 @@ namespace NSL.Types
             public delegate void PostProcessDelegate(ref Signature signature);
             public PostProcessDelegate postProcess;
 
-            public override string ToString() => $"{name}({String.Join(' ', arguments)}) → {result}" + (desc == null ? "" : " :: " + desc);
+            public override string ToString() => $"{name}({String.Join(" ", arguments)}) → {result}" + (desc == null ? "" : " :: " + desc);
         }
 
         public Signature GetSignature(IEnumerable<TypeSymbol> providedArguments) => signatureGenerator(providedArguments);
@@ -83,7 +83,7 @@ namespace NSL.Types
         {
             if (typeSymbolLookup.TryGetValue(type, out TypeSymbol foundSymbol))
             {
-                return foundSymbol!;
+                return foundSymbol;
             }
             else
             {
@@ -95,7 +95,7 @@ namespace NSL.Types
         {
             if (typeSymbolLookupByName.TryGetValue(name, out TypeSymbol foundSymbol))
             {
-                return foundSymbol!;
+                return foundSymbol;
             }
             else
             {
@@ -248,8 +248,8 @@ namespace NSL.Types
             }
 
             throw new OverloadNotFoundNSLException(
-                $"Failed to find matching overload for '{functions.First().Name}({String.Join(' ', providedArgs.Select(v => v?.ToString() ?? "<action>"))})'\n" +
-                String.Join('\n', failed.Select(v => $"  {v}")) +
+                $"Failed to find matching overload for '{functions.First().Name}({String.Join(" ", providedArgs.Select(v => v?.ToString() ?? "<action>"))})'\n" +
+                String.Join("\n", failed.Select(v => $"  {v}")) +
                 (failedAction ? "\n  -- No other overloads tried because a parameter is an action --\n" : "") +
                 "\n  ",
                 returnType: failed[0].result,

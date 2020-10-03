@@ -34,13 +34,13 @@ namespace NSLCSharp
 
         protected void Run()
         {
-            ILogger.instance = null;
+            LoggerProvider.instance = null;
 
             var funcs = FunctionRegistry.GetStandardFunctionRegistry();
             CommonFunctions.RegisterCommonFunctions(funcs);
 
             // Tokenization
-            if (loggerLocation == LoggerStartLocation.Tokenization) ILogger.instance = new ConsoleLogger();
+            if (loggerLocation == LoggerStartLocation.Tokenization) LoggerProvider.instance = new ConsoleLogger();
             tokenizerNewTime.Start();
             var tokenizer = new NSLTokenizer(funcs);
             tokenizerNewTime.End();
@@ -48,65 +48,65 @@ namespace NSLCSharp
             tokenizationTime.Start();
             var tokenizationResult = tokenizer.Tokenize(code, filePath.FullName);
             tokenizationTime.End();
-            ILogger.instance?.End();
+            LoggerProvider.instance?.End();
 
             foreach (var token in tokenizationResult.tokens)
             {
-                ILogger.instance?.Name(token.type.ToString()).Object(token.content).Pos(token.start).End();
+                LoggerProvider.instance?.Name(token.type.ToString()).Object(token.content).Pos(token.start).End();
             }
-            ILogger.instance?.End();
+            LoggerProvider.instance?.End();
 
             // Parsing
-            if (loggerLocation == LoggerStartLocation.Parsing) ILogger.instance = new ConsoleLogger();
+            if (loggerLocation == LoggerStartLocation.Parsing) LoggerProvider.instance = new ConsoleLogger();
 
             parsingTime.Start();
             var parsingResult = Parser.Parse(tokenizationResult, funcs);
             parsingTime.End();
 
-            ILogger.instance?.End()
+            LoggerProvider.instance?.End()
                 .Message(parsingResult.rootNode.ToString()).End()
                 .End();
 
             // Emitting
-            if (loggerLocation == LoggerStartLocation.Emitting) ILogger.instance = new ConsoleLogger();
+            if (loggerLocation == LoggerStartLocation.Emitting) LoggerProvider.instance = new ConsoleLogger();
 
             emittingTime.Start();
             var emittingResult = Emitter.Emit(parsingResult, funcs);
             emittingTime.End();
 
-            ILogger.instance?.End();
+            LoggerProvider.instance?.End();
 
             emittingResult.program.Log();
             var returnVariable = emittingResult.program.ReturnVariable;
-            ILogger.instance?.Message(returnVariable == null ? ": _" : $": {returnVariable.type}").End().End();
+            LoggerProvider.instance?.Message(returnVariable == null ? ": _" : $": {returnVariable.type}").End().End();
 
             // Running
             if (emittingResult.diagnostics.Count() == 0)
             {
                 try
                 {
-                    if (loggerLocation == LoggerStartLocation.Running) ILogger.instance = new ConsoleLogger();
+                    if (loggerLocation == LoggerStartLocation.Running) LoggerProvider.instance = new ConsoleLogger();
                     runningTime.Start();
                     var runner = new Runner(funcs);
                     var runResult = runner.Run(emittingResult.program);
-                    ILogger.instance?.Message(runResult.ToString()).End();
+                    LoggerProvider.instance?.Message(runResult.ToString()).End();
                     runningTime.End();
                 }
                 catch (UserNSLException err)
                 {
-                    ILogger.instance = new ConsoleLogger();
+                    LoggerProvider.instance = new ConsoleLogger();
                     err.Log();
                     Environment.ExitCode = 1;
                 }
             }
 
             // Finish
-            ILogger.instance = new ConsoleLogger();
+            LoggerProvider.instance = new ConsoleLogger();
             foreach (var diagnostic in emittingResult.diagnostics)
             {
                 diagnostic.Log();
             }
-            if (emittingResult.diagnostics.Count() > 0) ILogger.instance?.End();
+            if (emittingResult.diagnostics.Count() > 0) LoggerProvider.instance?.End();
 
             if (emittingResult.diagnostics.Count() > 0)
             {

@@ -48,7 +48,7 @@ namespace NSL.Types
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Name);
+            return Name.GetHashCode();
         }
 
         public static readonly TypeSymbol typeSymbol = new TypeSymbol("Type");

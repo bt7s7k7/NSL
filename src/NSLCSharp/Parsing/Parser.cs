@@ -59,14 +59,14 @@ namespace NSL.Parsing
 
             public void Push(IASTNode node)
             {
-                ILogger.instance?.Source("PAR").Message("Pushed node").Name(node.GetType().Name).Pos(node.Start).End();
+                LoggerProvider.instance?.Source("PAR").Message("Pushed node").Name(node.GetType().Name).Pos(node.Start).End();
                 stack.Push(node);
             }
 
             public void Pop()
             {
                 var node = stack.Pop();
-                ILogger.instance?.Source("PAR").Message("Popped node").Name(node.GetType().Name).Object(node.GetAdditionalInfo()).Pos(node.Start).End();
+                LoggerProvider.instance?.Source("PAR").Message("Popped node").Name(node.GetType().Name).Object(node.GetAdditionalInfo()).Pos(node.Start).End();
             }
 
             public IASTNode Top()
@@ -177,7 +177,7 @@ namespace NSL.Parsing
 
                 foreach (var op in node.Children.Where(v => v is OperatorNode).Cast<OperatorNode>())
                 {
-                    state!.diagnostics.Add(new Diagnostic($"Failed to find matching definition for operator {op.Match}", op.Start, op.End));
+                    state.diagnostics.Add(new Diagnostic($"Failed to find matching definition for operator {op.Match}", op.Start, op.End));
                 }
             }
 

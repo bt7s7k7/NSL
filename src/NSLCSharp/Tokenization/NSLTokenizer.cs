@@ -72,12 +72,12 @@ namespace NSL.Tokenization
                 catch (FormatException err)
                 {
                     state.diagnostics.Add(new Diagnostic($"Invalid number format: {err.Message}", token.start, token.end));
-                    ILogger.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
+                    LoggerProvider.instance?.Source("TOK").Error().Message($"Invalid number format: {err.Message}").Pos(token.start).End();
                 }
                 catch (OverflowException)
                 {
                     state.diagnostics.Add(new Diagnostic($"Number doesn't fit in a number type", token.start, token.end));
-                    ILogger.instance?.Source("TOK").Error().Message($"Number doesn't fit in a number type").Pos(token.start).End();
+                    LoggerProvider.instance?.Source("TOK").Error().Message($"Number doesn't fit in a number type").Pos(token.start).End();
                 }
 
                 token.value = PrimitiveTypes.numberType.Instantiate(parsed).MakeConstexpr();
@@ -192,7 +192,7 @@ namespace NSL.Tokenization
                         state.state = StateType.Default;
                         state.Next();
 
-                        ILogger.instance?.Message("      → ").Object(stringToken.value).End();
+                        LoggerProvider.instance?.Message("      → ").Object(stringToken.value).End();
 
                         if (!breakForTemplate) {
                             stringStack.Pop();

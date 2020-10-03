@@ -61,10 +61,10 @@ namespace NSL
 
         public void Log()
         {
-            ILogger.instance?.Error().Message(Message).End();
+            LoggerProvider.instance?.Error().Message(Message).End();
             foreach (var frame in stack.Reverse())
             {
-                ILogger.instance?.Message("     ").Pos(frame).End();
+                LoggerProvider.instance?.Message("     ").Pos(frame).End();
             }
         }
 

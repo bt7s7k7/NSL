@@ -48,9 +48,9 @@ namespace NSL.Runtime
             public void PopScope()
             {
                 scopeStack.Pop();
-                if (scopeStack.TryPeek(out Scope top))
+                if (scopeStack.Count > 0)
                 {
-                    topScope = top;
+                    topScope = scopeStack.Peek();
                 }
                 else
                 {

@@ -11,8 +11,8 @@ namespace NSL.Executable.Instructions
         override public int IndentDiff => 1;
 
         public string Name { get; protected set; }
-        public IProgram.VariableDefinition ReturnVariable { get; protected set; }
-        public IEnumerable<IProgram.VariableDefinition> ArgumentVariables { get; protected set; }
+        public VariableDefinition ReturnVariable { get; protected set; }
+        public IEnumerable<VariableDefinition> ArgumentVariables { get; protected set; }
 
         override public string ToString()
         {
@@ -26,7 +26,7 @@ namespace NSL.Executable.Instructions
             throw new System.NotImplementedException();
         }
 
-        public ActionInstruction(Position start, Position end, string name, IProgram.VariableDefinition returnVariable, IEnumerable<IProgram.VariableDefinition> argumentVariables) : base(start, end)
+        public ActionInstruction(Position start, Position end, string name, VariableDefinition returnVariable, IEnumerable<VariableDefinition> argumentVariables) : base(start, end)
         {
             Name = name;
             ReturnVariable = returnVariable;

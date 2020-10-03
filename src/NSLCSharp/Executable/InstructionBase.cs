@@ -5,9 +5,9 @@ namespace NSL.Executable
 {
     public interface IInstruction
     {
-        public Position Start { get; }
-        public Position End { get; }
-        public int IndentDiff { get; }
+        Position Start { get; }
+        Position End { get; }
+        int IndentDiff { get; }
 
         void Execute(Runner.State state);
     }

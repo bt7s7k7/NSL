@@ -25,9 +25,9 @@ namespace NSL
             {
                 var builder = new StringBuilder();
 
-                foreach (var (name, functions) in state.FunctionRegistry.functions)
+                foreach (var keyValue in state.FunctionRegistry.functions)
                 {
-                    foreach (var function in functions)
+                    foreach (var function in keyValue.Value)
                     {
                         builder.AppendLine(function.GetSignature(new TypeSymbol[] { }).ToString());
                     }
