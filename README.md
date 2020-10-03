@@ -44,7 +44,7 @@ String literals start with `"` or `` ` `` and end with their starting character.
 ```
 String literals may be turned into template strings by prefixing them with `$`. Template elements are surrounded by `$<`, `>`.
 ```bash
-print $"Hello $<getName>"
+print $"Hello $[getName]"
 ```
 The statement in the template element will be executed and its result inserted into the string. So if for example `getName` returned Jano, the resulting string will be `Hello Jano`.
 
@@ -84,7 +84,7 @@ findDoor |{
 ### Actions / Callbacks
 You can give a piece of code to a statement to be executed by it. It can give you an argument, accessed with the `$v` variable. The result of the action will be given back to the statement implementation.
 ```bash
-getNumbers | filter !{ gt $v 5 } |> print
+arr 1 2 3 4 5 | filter $v => {$v > 2} |> print
 # Prints all numbers greater than five
 ```
 ## C# Implementation
