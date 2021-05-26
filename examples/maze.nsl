@@ -46,7 +46,7 @@ $mapDef.foreach ($rowString $y) => {
 
 print $"width = $[$width] height = $[$height] player = [$[$pX], $[$pY]] target = [$[$tX], $[$tY]]"
 
-#while { true } {
+while { true } {
     range $height | foreach ($y) => {
         range $width | foreach $x => {
             if $x == $pX && $y == $pY {
@@ -94,4 +94,4 @@ print $"width = $[$width] height = $[$height] player = [$[$pX], $[$pY]] target =
     }
 
     print
-#}
+}
